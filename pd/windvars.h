@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Variables pertaining to each PipeDream document (window) */
 
@@ -352,14 +352,14 @@ typedef struct DOCU
 
     #define rear_window                 (current_p_docu->Xrear_window)
     #define rear__window                ((wimp_w) (current_p_docu->Xrear_window))
-    HOST_HWND Xrear_window;
+    HOST_WND Xrear_window;
 
     #define rear_template               (current_p_docu->Xrear_template)
     void * Xrear_template;              /* should be wimp_wind * but ... */
 
     #define main_window                 (current_p_docu->Xmain_window)
     #define main__window                ((wimp_w) (current_p_docu->Xmain_window))
-    HOST_HWND Xmain_window;
+    HOST_WND Xmain_window;
 
     #define main_template               (current_p_docu->Xmain_template)
     void * Xmain_template;              /* should be wimp_wind* but ... */
@@ -369,7 +369,7 @@ typedef struct DOCU
 
     #define colh_window                 (current_p_docu->Xcolh_window)
     #define colh__window                ((wimp_w) (current_p_docu->Xcolh_window))
-    HOST_HWND Xcolh_window;
+    HOST_WND Xcolh_window;
 
     #define colh_template               (current_p_docu->Xcolh_template)
     void * Xcolh_template;              /* should be wimp_wind * but ... */
@@ -820,6 +820,9 @@ extern void
 select_document(
     _InRef_     P_DOCU p_docu);
 
+extern void
+select_document_none(void);
+
 #else /* NOT TRACE_DOC */
 /*
 functions as macros
@@ -845,6 +848,9 @@ functions as macros
 
 #define select_document(p_docu) \
     current_p_docu_global_register_assign(p_docu)
+
+#define select_document_none() \
+    current_p_docu_global_register_assign(NO_DOCUMENT)
 
 #endif /* TRACE_DOC */
 

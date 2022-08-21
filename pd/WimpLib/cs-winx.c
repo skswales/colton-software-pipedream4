@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 #include "include.h"
 
@@ -160,7 +160,7 @@ win_getfield(wimp_w w, wimp_i i, char *buffer /*out*/, size_t size)
         memcpy(buffer, from, j);
     }
 
-    buffer[j] = NULLCH;
+    buffer[j] = CH_NULL;
     tracef1(" returns \"%s\"]", buffer);
 }
 
@@ -188,7 +188,7 @@ win_setfield(wimp_w w, wimp_i i, const char * value)
 
     maxlen = info.data.indirecttext.bufflen - 1;  /* MUST be term */
     oldlen = strlen(info.data.indirecttext.buffer);
-    info.data.indirecttext.buffer[0] = NULLCH;
+    info.data.indirecttext.buffer[0] = CH_NULL;
     strncat(info.data.indirecttext.buffer, value, maxlen);
     tracef1(" indirect buffer now \"%s\"]", info.data.indirecttext.buffer);
     newlen = strlen(info.data.indirecttext.buffer);
@@ -996,13 +996,13 @@ win_delete_wind(wimp_w * wp)
 *       -------------------------------------------------------------------- w
 *
 * note that the entire child 2 stack is between the parent and child 1
-* and that this applies recursively eg to child1.1 and child1.2 stacks
+* and that this applies recursively e.g. to child1.1 and child1.2 stacks
 *
 * recursive generation of win_open_wind() via wimp_EOPEN of each child
 * window is the key to this happening, either by the child window doing
 * the win_open_wind itself or by allowing the default event handler to
 * do it for it. note that the child windows get events to allow them to
-* set extents etc at a suitable place rather than this routine simply
+* set extents etc. at a suitable place rather than this routine simply
 * calling itself directly.
 *
 */

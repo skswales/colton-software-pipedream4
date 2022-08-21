@@ -296,7 +296,8 @@ file_open(
 extern S32
 file_pad(
     FILE_HANDLE file_handle,
-    S32 alignpwer);
+    S32 alignpower,
+    U8 pad_byte);
 
 extern S32
 file_putbyte(
@@ -346,12 +347,12 @@ file_write(
     size_t nmemb,
     FILE_HANDLE file_handle);
 
-extern S32
-file_write_err(
-    PC_ANY ptr,
-    size_t size,
-    size_t nmemb,
-    FILE_HANDLE file_handle);
+_Check_return_
+extern STATUS
+file_write_bytes(
+    _In_reads_bytes_(bytestowrite) PC_ANY ptr,
+    _InVal_     U32 bytestowrite,
+    _InoutRef_opt_ FILE_HANDLE file_handle);
 
 #if RISCOS
 extern char *
@@ -427,7 +428,8 @@ file_find_on_path_or_relative(
     _In_z_      PC_USTR srcfilename,
     _In_opt_z_  PC_USTR currentfilename);
 
-extern S32
+_Check_return_
+extern BOOL
 file_find_dir_on_path(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
@@ -455,15 +457,18 @@ file_get_prefix(
     _InVal_     U32 elemof_buffer,
     PC_U8 currentfilename);
 
-extern S32
+_Check_return_
+extern BOOL
 file_is_dir(
     PC_U8 dirname);
 
-extern S32
+_Check_return_
+extern BOOL
 file_is_file(
     PC_U8 filename);
 
-extern S32
+_Check_return_
+extern BOOL
 file_is_rooted(
     PC_U8 filename);
 
@@ -488,11 +493,6 @@ file_objinfo_type(
 extern FILETYPE_RISC_OS
 file_objinfo_filetype(
     P_FILE_OBJINFO oip);
-
-extern S32
-file_pad(
-    FILE_HANDLE file_handle,
-    S32 alignpwer);
 
 extern void
 file_path_element_close(

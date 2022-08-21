@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* File handling module (stream section) */
 
@@ -193,7 +193,7 @@ file_buffer(
     {
         /* consider use has done file_buffer(file_handle, b, sizeof(b)) then
          * file_buffer(file_handle, NULL, q) - we have to assume that he's doing
-         * this for a good reason eg. the buffer is going out of scope
+         * this for a good reason e.g. the buffer is going out of scope
          * so failure to alloc can leave file in an unbuffered and error state
         */
         file_handle->flags = file_handle->flags & ~(_FILE_UNBUFFERED | _FILE_USERBUFFER);
@@ -342,7 +342,7 @@ file_create_directory(
 
     reportf("file_create_directory(%u:%s)", strlen32(dirname), dirname);
 
-    memset32(&osfile_block, NULLCH, sizeof32(osfile_block));
+    memset32(&osfile_block, CH_NULL, sizeof32(osfile_block));
 
     if(_kernel_ERROR == _kernel_osfile(OSFile_CreateDir, dirname, &osfile_block))
         /*oops*/ (void) _kernel_last_oserror();
@@ -542,7 +542,7 @@ file_gets(
     S32 count = 0;
     S32 res, newres;
 
-    *buffer = NULLCH;
+    *buffer = CH_NULL;
 
     if(!bufsize--)
         return(0);
@@ -579,7 +579,7 @@ file_gets(
         }
 
         buffer[count++] = res;
-        buffer[count  ] = NULLCH; /* keep terminated */
+        buffer[count  ] = CH_NULL; /* keep terminated */
     }
     while(count < bufsize);
 
@@ -846,10 +846,11 @@ file_open(
 extern S32
 file_pad(
     FILE_HANDLE file_handle,
-    S32 alignpower)
+    S32 alignpower,
+    U8 pad_byte)
 {
     S32 alignment, alignmask, res32;
-    S32    res;
+    S32 res;
 
     if(!alignpower)
         return(0);
@@ -869,8 +870,8 @@ file_pad(
     {
         alignment = alignment - (res32 & alignmask);
         do  {
-            trace_0(TRACE_MODULE_FILE, "file_pad outputting NULLCH");
-            res = file_putc(NULLCH, file_handle);
+            trace_0(TRACE_MODULE_FILE, "file_pad outputting pad_byte");
+            res = file_putc(pad_byte, file_handle);
         }
         while((res >= 0)  &&  --alignment);
     }
@@ -907,7 +908,7 @@ file_putbyte(
 
 /******************************************************************************
 *
-* write a NULLCH terminated string to the file
+* write a CH_NULL terminated string to the file
 *
 ******************************************************************************/
 
@@ -919,7 +920,7 @@ file_puts(
     S32 c;
     S32 res;
 
-    while((c = *s++) != NULLCH)
+    while((c = *s++) != CH_NULL)
         if((res = file_putc(c, file_handle)) < 0)
             return(res);
 
@@ -1177,17 +1178,16 @@ file_write(
 
 /******************************************************************************
 *
-* write to a file but return an error if
-* not all members were written out
+* write to a file but return an error if not all bytes were written out
 *
 ******************************************************************************/
 
-extern S32
-file_write_err(
-    PC_ANY ptr,
-    size_t size,
-    size_t nmemb,
-    FILE_HANDLE file_handle)
+_Check_return_
+extern STATUS
+file_write_bytes(
+    _In_reads_bytes_(bytestowrite) PC_ANY ptr,
+    _InVal_     U32 bytestowrite,
+    _InoutRef_opt_ FILE_HANDLE file_handle)
 {
     S32 res;
 
@@ -1201,20 +1201,18 @@ file_write_err(
 #endif
 
     /* trivial call? */
-    if(!size  ||  !nmemb)
+    if(!bytestowrite)
         return(0);
-
-    myassert4x(((long) size * (long) nmemb) <= S32_MAX, "file_write_err(&%p, %u, %u, &%p): integer overflow size * nmemb", ptr, size, nmemb, file_handle);
 
     /* simple implementation: must flush out buffered data as we're going
      * to write direct to filing system at seqptr
     */
-    if((res = file__flushbuffer(file_handle, "file_write_err")) < 0)
+    if((res = file__flushbuffer(file_handle, "file_write_bytes")) < 0)
         return(res);
 
-    res = file__write(ptr, size, nmemb, file_handle, -1);
+    res = file__write(ptr, 1, bytestowrite, file_handle, -1);
 
-    return(((size_t) res == nmemb)
+    return(((U32) res == bytestowrite)
                 ? res
                 : (res < 0)
                       ? res
@@ -1952,7 +1950,7 @@ file__flsbuf(
             if(file_handle->flags & _FILE_UNBUFFERED)
             {
                 /* explicitly unbuffered i/o required */
-                res = file_write_err(&c, 1, 1, file_handle);
+                res = file_write_bytes(&c, 1, file_handle);
                 return((res < 0) ? res : c);
             }
         }

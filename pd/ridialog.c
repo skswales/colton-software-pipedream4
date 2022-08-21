@@ -878,7 +878,7 @@ dialog__bumpnumericlimited(
 {
     S32 delta = host_shift_pressed() ? 5 : 1;
 #ifdef OLD_BUMP_NUMERIC
-    S32 range = maxval - minval + 1;            /* ie 0..255 is 256 */
+    S32 range = maxval - minval + 1;            /* i.e. 0..255 is 256 */
 #endif
     S32 num;
 
@@ -1964,7 +1964,7 @@ savefile_saveproc(
         if((ms.w == rear__window) || (ms.w == main__window) || (ms.w == colh__window))
             if('Y' != dptr[SAV_BLOCK].option)
                 /* do allow save of marked block into self, e.g. copying a selection */
-                /* could do more checking, eg. curpos not in marked block for save */
+                /* could do more checking, e.g. curpos not in marked block for save */
                 res = reperr_null(create_error(ERR_CANTSAVETOITSELF));
     }
 

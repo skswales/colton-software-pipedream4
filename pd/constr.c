@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that creates the PipeDream data structure
  * Also handles things that fiddle with the structure in non-standard ways
@@ -406,8 +406,8 @@ PROC_QSORT_PROTO(static, rowcomp, SORT_ENTRY)
             longjmp(sortpoint, 1);
 
         slr1.col   = slr2.col = (EV_COL) sort_fields[col].column;
-        slr1.row   = (EV_ROW) ((P_SORT_ENTRY) arg1)->keyrow;
-        slr2.row   = (EV_ROW) ((P_SORT_ENTRY) arg2)->keyrow;
+        slr1.row   = (EV_ROW) ((P_SORT_ENTRY) _arg1)->keyrow;
+        slr2.row   = (EV_ROW) ((P_SORT_ENTRY) _arg2)->keyrow;
         slr1.flags = slr2.flags = 0;
 
         ev_slr_deref(&data1, &slr1, FALSE);

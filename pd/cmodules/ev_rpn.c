@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Routines that traverse expression rpn strings */
 
@@ -237,11 +237,9 @@ ev_len(
 
 /******************************************************************************
 *
-* adjust the references in an rpn string
-* according to the supplied uref block
+* adjust the references in an rpn string according to the supplied uref block
 *
-* this is used only for rpn strings not
-* on the tree (eg replicate/copy/move)
+* this is used only for rpn strings not on the tree (e.g. replicate/copy/move)
 *
 ******************************************************************************/
 

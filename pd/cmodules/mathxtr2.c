@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* More additional math routines */
 
@@ -26,7 +26,7 @@ linest() : multivariate linear fit using least squares
 * ----------------
 *
 * each matrix has all rows in a column stored contiguously to enable
-* swift transposition, ie col1,row0 follows on from col0,rowM
+* swift transposition, i.e. col1,row0 follows on from col0,rowM
 *
 */
 
@@ -36,37 +36,38 @@ linest() : multivariate linear fit using least squares
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 data_in_columns_determinant(
     _InRef_     PC_F64 A /*[m][m]*/,
     _InVal_     U32 m,
     _OutRef_    P_F64 dp)
 {
+    STATUS status = STATUS_OK;
+
     switch(m)
     {
     case 0:
     case 1:
         *dp = 0.0;
-        return(1); /* silly question in this case */
+        break; /* silly question in this case */
 
     case 2:
         *dp = (A[0 + (0*2)] * A[1 + (1*2)]) - (A[1 + (0*2)] * A[0 + (1*2)]);
-        return(1);
+        break;
 
     default:
         { /* recurse evaluating minors */
-        STATUS status;
         P_F64 minorp;
         const U32 minor_m = m - 1;
-        const U32 minor_nbytes_per_col = minor_m * sizeof(*minorp);
+        const U32 minor_nbytes_per_col = minor_m * sizeof32(*minorp);
         U32 col_idx, i_col_idx, o_col_idx;
         F64 minor_D;
-        S32 res = 1;
 
         *dp = 0.0;
 
         if(NULL == (minorp = al_ptr_alloc_elem(F64, minor_m * minor_m, &status)))
-            return(0); /* unable to determine */
+            return(status); /* unable to determine */
 
         for(col_idx = 0; col_idx < m; ++col_idx)
         {
@@ -78,13 +79,13 @@ data_in_columns_determinant(
                 if(i_col_idx == col_idx)
                     ++i_col_idx;
 
+                /* copy all the row data (bar the top row) in this column */
                 memcpy32(&minorp[0 + (o_col_idx * minor_m)], /* to   row_idx 0, o_col_idx */
-                              &A[     1 + (i_col_idx * m)      ], /* from row_idx 1, i_col_idx */
+                              &A[1 + (i_col_idx * m)      ], /* from row_idx 1, i_col_idx */
                               minor_nbytes_per_col);
             }
 
-            if((res = data_in_columns_determinant(minorp, minor_m, &minor_D)) <= 0)
-                break;
+            status_break(status = data_in_columns_determinant(minorp, minor_m, &minor_D));
 
             if(col_idx & 1)
                 minor_D = -minor_D; /* make into cofactor */
@@ -93,9 +94,12 @@ data_in_columns_determinant(
         }
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(&minorp));
-        return(res);
+
+        break;
         }
     }
+
+    return(status);
 }
 
 /******************************************************************************
@@ -108,8 +112,8 @@ static inline void
 linest_permute_for_cramer(
     P_F64 A /*[m][m]*/,
     P_F64 C /*[m]*/,
-    U32 m,
-    U32 j)
+    _InVal_     U32 m,
+    _InVal_     U32 j)
 {
     P_F64 A_j = &A[0 + (j * m)];
 
@@ -125,22 +129,22 @@ linest_permute_for_cramer(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 linest_solve_system(
     P_F64 A /*[m][m]*/ /*abused but preserved*/,
     P_F64 C /*[m]*/ /*abused but preserved*/,
     P_F64 X /*[m]*/ /*out*/,
-    U32 m)
+    _InVal_     U32 m)
 {
     F64 det_A;
     U32 j;
-    S32 res;
+    STATUS status;
 
-    if((res = data_in_columns_determinant(A, m, &det_A)) <= 0)
-        return(res);
+    status_return(data_in_columns_determinant(A, m, &det_A));
 
     if(det_A == 0.0)
-        return(create_error(EVAL_ERR_MATRIX_SINGULAR)); /* insoluble */
+        return(EVAL_ERR_MATRIX_SINGULAR); /* insoluble */
 
     for(j = 0; j < m; ++j)
     {
@@ -149,8 +153,7 @@ linest_solve_system(
         /* swap the jth column of matrix A with the C vector */
         linest_permute_for_cramer(A, C, m, j);
 
-        if((res = data_in_columns_determinant(A, m, &det_B_j)) <= 0)
-            break;
+        status_break(status = data_in_columns_determinant(A, m, &det_B_j));
 
         X[j] = det_B_j / det_A;
 
@@ -158,7 +161,7 @@ linest_solve_system(
         linest_permute_for_cramer(A, C, m, j);
     }
 
-    return(res);
+    return(status);
 }
 
 /*
@@ -168,25 +171,25 @@ normal equations by multiplying both sides by transpose(A)
 */
 
 _Check_return_
-extern S32
+extern STATUS
 linest(
     _InRef_     P_PROC_LINEST_DATA_GET p_proc_get,
     _InRef_     P_PROC_LINEST_DATA_PUT p_proc_put,
     _InVal_     CLIENT_HANDLE client_handle,
-    _InVal_     U32 ext_m,   /* number of independent x variables */
-    _InVal_     U32 n        /* number of data points */)
+    _InVal_     U32 ext_m   /* number of independent x variables */,
+    _InVal_     U32 n       /* number of data points */)
 {
-    U32   m = ext_m + 1;
+    U32 m = ext_m + 1;
     P_F64 M /*[m][m]*/; /* transpose(A).A */
     P_F64 V /*[m]*/; /* transpose(A).C */
     P_F64 X /*[m]*/; /* result vector */
-    U32   i, j, r;
-    F64   c_r;
-    F64   a_ir, a_jr;
-    S32   res;
+    U32 i, j, r;
+    F64 c_r;
+    F64 a_ir, a_jr;
+    STATUS status;
                                 /* X,  V,  M */
-    if(NULL == (X = al_ptr_alloc_bytes(P_F64, (1 + 1 + m) * m * sizeof32(*X), &res)))
-        return(res);
+    if(NULL == (X = al_ptr_alloc_bytes(P_F64, (1 + 1 + m) * m * sizeof32(*X), &status)))
+        return(status);
 
     V = X + m;
     M = V + m;
@@ -235,18 +238,21 @@ linest(
         }
     }
 
-    if(0 < (res = linest_solve_system(M, V, X, m)))
+    if(status_ok(status = linest_solve_system(M, V, X, m)))
     {
+        STATUS put_status;
+
         /* output the result vector */
         for(i = 0; i < m; ++i)
-            if((* p_proc_put) (client_handle, LINEST_A_COLOFF, i, &X[i]) <= 0)
-                res = 0;
+            if(status_fail(put_status = (* p_proc_put) (client_handle, LINEST_A_COLOFF, i, &X[i])))
+                if(status_ok(status))
+                    status = put_status;
                 /* but keep looping anyway? */
     }
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(&X));
 
-    return(res);
+    return(status);
 }
 
 /* end of mathxtr2.c */

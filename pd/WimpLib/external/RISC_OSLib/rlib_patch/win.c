@@ -258,7 +258,7 @@
    /* --- get the window's details --- */
      winfo->w = w;
 -    wimpt_noerr(wimp_get_wind_info(winfo));
-+    if(wimpt_safe(wimp_get_wind_info(winfo)))
++    if(NULL != wimp_get_wind_info(winfo))
 +        return;
 +
 +    myassert1x(winfo->info.nicons <= MAX_N_ICONS, "win_settitle: reading info for %d icons corrupted stack", winfo->info.nicons);

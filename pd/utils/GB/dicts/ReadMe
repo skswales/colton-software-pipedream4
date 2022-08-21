@@ -1,0 +1,5 @@
+Master-4 is the PipeDream 4 Master dictionary
+Master-s is an updated Master dictionary with -ise endings
+Master-z is an updated Master dictionary with -ize endings
+
+Simply rename the existing Master dictionary (in !PipeDream.Resource.Dicts) out of the way and copy in the appropriate one from this archive.

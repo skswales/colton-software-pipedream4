@@ -58,7 +58,7 @@ exported functions
 */
 
 _Check_return_
-extern S32
+extern STATUS
 linest(
     _InRef_     P_PROC_LINEST_DATA_GET p_proc_get,
     _InRef_     P_PROC_LINEST_DATA_PUT p_proc_put,

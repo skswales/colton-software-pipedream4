@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* PipeDream datatypes */
 
@@ -271,7 +271,7 @@ typedef struct DIALOG
     uchar type;         /* type of field, text, number, special */
     uchar ch1;          /* first character of save option string */
     uchar ch2;          /* second character of save option string */
-    optiontype option;  /* single character option eg Y, sometimes int index */
+    optiontype option;  /* single character option e.g. Y, sometimes int index */
     PC_U8 *optionlist; /* range of possible values for option, first is default */
     char *textfield;    /* user specified name of something */
     U32 offset;         /* of corresponding variable in windvars */
@@ -323,7 +323,7 @@ structure of reference to a draw file
 
 typedef struct DRAW_FILE_REF
 {
-    GR_CACHE_HANDLE draw_file_key;
+    IMAGE_CACHE_HANDLE draw_file_key;
     EV_DOCNO docno;
     COL col;
     ROW row;

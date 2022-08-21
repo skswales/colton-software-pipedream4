@@ -5,7 +5,7 @@ REM License, v. 2.0. If a copy of the MPL was not distributed with this
 REM file, You can obtain one at http://mozilla.org/MPL/2.0/.
 REM
 REM Copyright (C) 1992-1998 Colton Software Limited
-REM Copyright (C) 1998-2014 R W Colton
+REM Copyright (C) 1998-2015 R W Colton
 :
 REM TRACE TO "$.Temp.BRGen_out": TRACE ON
 PROCmain(FNreadargs)

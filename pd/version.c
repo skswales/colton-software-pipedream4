@@ -12,15 +12,17 @@
 /*#include "common/gflags.h"*/
 
 /* NB See also
- * r32.Makefile (for !Boot/!Run building)
- * r32.RiscPkg.Control
- * r32.!PipeDream.Resource.Relnotes
+ * Build.r32.Makefile (for !Boot/!Run building)
+ * Build.r32.MakeRiscPkg
+ * Build.r32.RiscPkg.Control
+ * Build.r32.!PipeDream.Resource.Relnotes
  */
 
-#define Version      "4.54"
-#define CurrentDate  "(22-Nov-2015)"
+#define Version      "4.55"
+#define CurrentDate  "(21-May-2016)"
 
 /*
+* 21 May 2016 - 4.55
 * 22 Nov 2015 - 4.54
 * 21 Sep 2015 - 4.53/06
 * 14 Sep 2015 - 4.53/05

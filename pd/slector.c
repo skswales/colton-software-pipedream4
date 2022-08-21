@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1988-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that deals with load file selector */
 
@@ -73,7 +73,10 @@ add_path_or_relative_using_dir( /* may be relative to current document */
     reportf("add_path_or_relative_using_dir(%u:%s, dir=%s)", strlen32(src), src, dir);
 
     if(file_is_rooted(src))
-        return(file_readable(src) > 0);
+    {
+        xstrkpy(filename, elemof_buffer, src);
+        return(file_readable(filename) > 0);
+    }
 
     /* first try looking up dir.src along path */
     xstrkpy(buffer, elemof32(buffer), dir);
@@ -108,7 +111,7 @@ add_prefix_to_name_using_dir(
         /* see if we can invent a file in an existing directory */
         (void) file_add_prefix_to_name(buffer, elemof_buffer, dir, allow_cwd ? currentfilename : NULL);
 
-        if(file_is_dir(buffer) > 0)
+        if(file_is_dir(buffer))
         {
             /* dir of that name exists, so add file */
             xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);

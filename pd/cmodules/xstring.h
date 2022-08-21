@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Library module for string handling */
 
@@ -14,15 +14,63 @@
 #ifndef __xstring_h
 #define __xstring_h
 
-#if 0 /*def __lint*/
+#if RISCOS && CROSS_COMPILE
 #define u8_from_int(i) ((U8) (i))
 #else
 #define u8_from_int(i) (i)
 #endif
 
+/* skip spaces on byte-oriented string (either U8 or UTF-8, but not TSTR) */
+
+#define PtrSkipSpaces(__ptr_type, ptr__ref) /*void*/ \
+    while(CH_SPACE == PtrGetByte(ptr__ref)) \
+        PtrIncByte(__ptr_type, ptr__ref)
+
+/* skip spaces on characted-oriented string (either U8 or TSTR, but not UTF-8) */
+
+#define StrSkipSpaces(ptr__ref) /*void*/ \
+    while(CH_SPACE == *(ptr__ref)) \
+        ++(ptr__ref)
+
 /*
 exported functions
 */
+
+_Check_return_
+_Ret_writes_bytes_maybenull_(entry_size)
+extern P_ANY
+_bfind(
+    _In_reads_bytes_(entry_size) PC_ANY key,
+    _In_bytecount_x_(entry_size * n_entries) PC_ANY p_start,
+    _InVal_     S32 n_entries,
+    _InVal_     U32 entry_size,
+    _InRef_     P_PROC_BSEARCH p_proc_bsearch,
+    _OutRef_    P_BOOL p_hit);
+
+#define bfind(key, p_start, n_entries, entry_size, __base_type, p_proc_bsearch, p_hit) ( \
+    (__base_type *) _bfind(key, p_start, n_entries, entry_size, p_proc_bsearch, p_hit) )
+
+_Check_return_
+_Ret_writes_bytes_maybenull_(entry_size)
+extern P_ANY
+xlsearch(
+    _In_reads_bytes_(entry_size) PC_ANY key,
+    _In_bytecount_x_(entry_size * n_entries) PC_ANY p_start,
+    _InVal_     S32 n_entries,
+    _InVal_     U32 entry_size,
+    _InRef_     P_PROC_BSEARCH p_proc_bsearch);
+
+#define lsearch(key, p_start, n_entries, entry_size, __base_type, p_proc_bsearch) ( \
+    (__base_type *) xlsearch(key, p_start, n_entries, entry_size, p_proc_bsearch) )
+
+extern void __cdecl /* declared as qsort replacement */
+check_sorted(
+    const void * base,
+    size_t num,
+    size_t width,
+    int (__cdecl * p_proc_compare) (
+        const void * a1,
+        const void * a2));
 
 _Check_return_
 extern U32
@@ -107,19 +155,19 @@ _strnicmp(
     ((U32) strlen(s))
 
 #define strlen32p1(s) \
-    (1U /*NULLCH*/ + strlen32(s))
+    (1U /*CH_NULL*/ + strlen32(s))
 
 #define ustrlen32(tstr) \
     ((U32) strlen(tstr))
 
 #define ustrlen32p1(s) \
-    (1U /*NULLCH*/ + ustrlen32(s))
+    (1U /*CH_NULL*/ + ustrlen32(s))
 
 #define tstrlen32(tstr) \
     ((U32) tstrlen(tstr))
 
 #define tstrlen32p1(s) \
-    (1U /*NULLCH*/ + tstrlen32(s))
+    (1U /*CH_NULL*/ + tstrlen32(s))
 
 extern S32
 stricmp_wild(

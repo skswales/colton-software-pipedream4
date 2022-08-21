@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RISC OS Draw file / object structure definition */
 
@@ -24,6 +24,8 @@ typedef S32 DRAW_COORD; typedef DRAW_COORD * P_DRAW_COORD; typedef const DRAW_CO
 
 #define DRAW_COORD_MAX S32_MAX
 
+#define DRAW_COORD_TFMT TEXT("%d")
+
 /*
 points, or simply pairs of coordinates
 */
@@ -33,6 +35,13 @@ typedef struct DRAW_POINT
     DRAW_COORD x, y;
 }
 DRAW_POINT, * P_DRAW_POINT; typedef const DRAW_POINT * PC_DRAW_POINT;
+
+#define DRAW_POINT_TFMT \
+    TEXT("x = ") DRAW_COORD_TFMT TEXT(", y = ") DRAW_COORD_TFMT
+
+#define DRAW_POINT_ARGS(draw_point__ref) \
+    (draw_point__ref).x, \
+    (draw_point__ref).y
 
 typedef struct DRAW_SIZE
 {
@@ -50,6 +59,16 @@ typedef struct DRAW_BOX
 }
 DRAW_BOX, * P_DRAW_BOX; typedef const DRAW_BOX * PC_DRAW_BOX;
 
+#define DRAW_BOX_TFMT \
+    TEXT("x0 = ") GR_COORD_TFMT TEXT(", y0 = ") DRAW_COORD_TFMT TEXT("; ") \
+    TEXT("x1 = ") GR_COORD_TFMT TEXT(", y1 = ") DRAW_COORD_TFMT
+
+#define DRAW_BOX_ARGS(draw_box__ref) \
+    (draw_box__ref).x0, \
+    (draw_box__ref).y0, \
+    (draw_box__ref).x1, \
+    (draw_box__ref).y1
+
 /*
 matrix transforms
 */
@@ -59,7 +78,7 @@ typedef struct DRAW_TRANSFORM
     S32 a, b, c, d;
     S32 e, f;
 }
-DRAW_TRANSFORM;
+DRAW_TRANSFORM, * P_DRAW_TRANSFORM; typedef const DRAW_TRANSFORM * PC_DRAW_TRANSFORM;
 
 /*
 Draw file header
@@ -70,7 +89,7 @@ typedef struct DRAW_FILE_HEADER
     U8 title[4];                    /* 1 word   */ /* 'Draw' */
     S32 major_stamp;                /* 1 word   */
     S32 minor_stamp;                /* 1 word   */
-    U8 creator_id[12];              /* 3 words  */ /* NB filled with spaces, NOT NULLCH terminated */
+    U8 creator_id[12];              /* 3 words  */ /* NB filled with spaces, NOT CH_NULL-terminated */
     DRAW_BOX bbox;                  /* 4 words  */
 }                                   /* 10 words */
 DRAW_FILE_HEADER, * P_DRAW_FILE_HEADER; typedef const DRAW_FILE_HEADER * PC_DRAW_FILE_HEADER;
@@ -138,7 +157,7 @@ DRAW_OBJECT_FONTLIST, * P_DRAW_OBJECT_FONTLIST;
 typedef struct DRAW_FONTLIST_ELEM
 {
     U8 fontref8;                    /* 1 byte   */
-    U8Z szHostFontName[31];         /* >= 2 bytes */ /* Latin-N string, NULLCH terminated (size only for compiler and debugger - do not use sizeof()) */
+    SBCHARZ szHostFontName[31];     /* >= 2 bytes */ /* SBSTR U8 Latin-N string, CH_NULL-terminated (size only for compiler and debugger - do not use sizeof()) */
 }
 DRAW_FONTLIST_ELEM, * P_DRAW_FONTLIST_ELEM; typedef const DRAW_FONTLIST_ELEM * PC_DRAW_FONTLIST_ELEM;
 
@@ -236,7 +255,7 @@ DRAW_OBJECT_PATH, * P_DRAW_OBJECT_PATH;
 
 typedef struct DRAW_DASH_HEADER
 {
-    U32 dashstart;                  /* 1 word   */  /* distance into pattern */
+    DRAW_COORD dashstart;           /* 1 word   */  /* distance into pattern */
     U32 dashcount;                  /* 1 word   */  /* number of elements    */
 }
 DRAW_DASH_HEADER, * P_DRAW_DASH_HEADER; typedef const DRAW_DASH_HEADER * PC_DRAW_DASH_HEADER;
@@ -264,7 +283,7 @@ DRAW_PATH_MOVE;
 
 typedef struct DRAW_PATH_CLOSE
 {
-#define DRAW_PATH_TYPE_CLOSE_WITH_GAP   4 /* close current subpath with a gap */
+#define DRAW_PATH_TYPE_CLOSE_WITH_GAP   4 /* close current subpath with a gap  */
 #define DRAW_PATH_TYPE_CLOSE_WITH_LINE  5 /* close current subpath with a line */
     U32 tag;
 }
@@ -317,7 +336,7 @@ DRAW_OBJECT_SPRITE, * P_DRAW_OBJECT_SPRITE;
 A group of objects
 */
 
-typedef struct DRAW_OBJECT_GROUP
+typedef struct DRAW_GROUP
 {
 #define DRAW_OBJECT_TYPE_GROUP 6
     DRAW_OBJECT_HEADER_;            /* 6 words  */
@@ -343,7 +362,62 @@ typedef struct DRAW_OBJECT_TAG
 }
 DRAW_OBJECT_TAG;
 
+/*
+A (RO3) options object
+*/
+
+typedef struct DRAW_OBJECT_OPTIONS
+{
 #define DRAW_OBJECT_TYPE_OPTIONS    11 /*RO3*/
+    DRAW_OBJECT_HEADER_;            /* 6 words  */ /* NB bounding box should be ignored */
+
+    U32 paper_size;                 /* 1 word   */ /* (paper size + 1) × &100 (i.e. &500 for A4) */
+
+    struct DRAW_OBJECT_OPTIONS_PAPER_LIMITS
+    {
+        UBF show            : 1;    /* bit 0 */
+        UBF _reserved_1_3   : 3;    /* bits 1 - 3 reserved (must be zero) */
+        UBF landscape       : 1;    /* bit 4 */
+        UBF _reserved_5_7   : 3;    /* bits 5 - 7 reserved (must be zero) */
+
+        UBF defaults        : 1;    /* bit 8 */ /* printer limits are default */
+        UBF _reserved_9_31  : 23;   /* bits 9 - 31 reserved (must be zero) */
+
+    } paper_limits;                 /* 1 word   */
+
+    BYTE grid_spacing[8];           /* 2 words  */ /* ARM format double */
+    U32 grid_division;              /* 1 word   */
+    U32 grid_type;                  /* 1 word   */ /* zero = rectangular, non-zero = isometric */
+    U32 grid_auto_adjustment;       /* 1 word   */ /* zero = off, non-zero = on */
+    U32 grid_shown;                 /* 1 word   */ /* zero = no, non-zero = yes */
+    U32 grid_locking;               /* 1 word   */ /* zero = off, non-zero = on */
+    U32 grid_units;                 /* 1 word   */ /* zero = inches, non-zero = centimetres */
+
+    U32 zoom_multiplier;            /* 1 word   */ /* 1 - 8 */
+    U32 zoom_divider;               /* 1 word   */ /* 1 - 8 */
+    U32 zoom_locking;               /* 1 word   */ /* zero = none, non-zero = locked to powers of two */
+
+    U32 toolbox_presence;           /* 1 word   */ /* zero = no, non-zero = yes */
+
+    struct DRAW_OBJECT_OPTIONS_ENTRY_MODE
+    {
+        /* NB only one of: */
+        UBF line            : 1;    /* bit 0 */
+        UBF closed_line     : 1;    /* bit 1 */
+        UBF curve           : 1;    /* bit 2 */
+        UBF closed_curve    : 1;    /* bit 3 */
+        UBF rectangle       : 1;    /* bit 4 */
+        UBF ellipse         : 1;    /* bit 5 */
+        UBF text_line       : 1;    /* bit 6 */
+        UBF select          : 1;    /* bit 7 */
+
+        UBF _reserved_8_31  : 24;   /* bits 8 - 31 reserved (must be zero) */
+
+    } initial_entry_mode;           /* 1 word   */
+
+    U32 undo_buffer_bytes;          /* 1 word   */
+}
+DRAW_OBJECT_OPTIONS;
 
 #define DRAW_OBJECT_TYPE_TRFMTEXT   12 /*RO3*/
 
@@ -391,14 +465,14 @@ typedef struct DRAW_WINDOWS_LOGFONT
     BYTE lfPitchAndFamily;
     U8Z lfFaceName[32];
 }
-DRAW_WINDOWS_LOGFONT;
+DRAW_DS_WINDOWS_LOGFONT, * P_DRAW_DS_WINDOWS_LOGFONT; typedef const DRAW_DS_WINDOWS_LOGFONT * PC_DRAW_DS_WINDOWS_LOGFONT;
 
-typedef struct DRAW_WIN_FONTLIST_ELEM
+typedef struct DRAW_DS_WINFONTLIST_ELEM
 {
-    DRAW_FONT_REF16 fontref16;
-    DRAW_WINDOWS_LOGFONT logfont;
+    DRAW_FONT_REF16 draw_font_ref16;
+    DRAW_DS_WINDOWS_LOGFONT draw_ds_windows_logfont;
 }
-DRAW_WIN_FONTLIST_ELEM, * P_DRAW_WIN_FONTLIST_ELEM;
+DRAW_DS_WINFONTLIST_ELEM, * P_DRAW_DS_WINFONTLIST_ELEM; typedef const DRAW_DS_WINFONTLIST_ELEM * PC_DRAW_DS_WINFONTLIST_ELEM;
 
 /*
 A Windows BMP object (DIB)
@@ -470,7 +544,7 @@ typedef BITMAPINFO * P_BITMAPINFO;
 #endif
 
 /* same structure (but different member names) as sprite_area from RISC_OSLib:sprite.h */
-typedef struct SAH /* ie NOT a spritefileheader */
+typedef struct SAH /* i.e. NOT a spritefileheader */
 {
     S32 area_size; /* this word omitted from Sprite (FF9) files */
     S32 number_of_sprites;
@@ -493,41 +567,111 @@ typedef struct SCB
 }
 SCB, * P_SCB; typedef const SCB * PC_SCB;
 
-typedef struct SPRITE_TYPE
+typedef struct SPRITE_MODE_WORD /* See https://www.riscosopen.org/wiki/documentation/show/Sprite%20Mode%20Word */
 {
-    unsigned int sprite_type_bit : 1;
-    unsigned int h_dpi           : 13;
-    unsigned int v_dpi           : 13;
-    unsigned int type            : 5;
+    union SPRITE_MODE_WORD_U
+    {
+        struct SPRITE_MODE_WORD_RISCOS_3_5
+        {
+            unsigned int mode_word_bit      : 1; /* always 1 for Mode Word */
+            unsigned int h_dpi              : 13;
+            unsigned int v_dpi              : 13;
+            unsigned int type               : 4;
+            unsigned int wide_mask          : 1;
+        } riscos_3_5;
+
+        struct SPRITE_MODE_WORD_RISCOS_5
+        {
+            unsigned int mode_word_bit      : 1; /* always 1 for Mode Word */
+            unsigned int zeros_1_3          : 3;
+            unsigned int x_eig              : 2;
+            unsigned int y_eig              : 2;
+            unsigned int mode_flags_8_15    : 8;
+            unsigned int zeros_16_19        : 4;
+            unsigned int type               : 7;
+            unsigned int ones_27_30         : 4;
+            unsigned int wide_mask          : 1;
+        } riscos_5;
+
+        U32 u32; /* if < 256 it is a Mode Number */
+
+    } u;
 }
-SPRITE_TYPE;
+SPRITE_MODE_WORD;
 
-#define SPRITE_TYPE_OLD   0
-#define SPRITE_TYPE_1BPP  1
-#define SPRITE_TYPE_2BPP  2
-#define SPRITE_TYPE_4BPP  3
-#define SPRITE_TYPE_8BPP  4
-#define SPRITE_TYPE_16BPP 5
-#define SPRITE_TYPE_32BPP 6
+#define SPRITE_TYPE_OLD             0
+#define SPRITE_TYPE_1BPP            1 /* palletised */
+#define SPRITE_TYPE_2BPP            2 /* palletised */
+#define SPRITE_TYPE_4BPP            3 /* palletised */
+#define SPRITE_TYPE_8BPP            4 /* palletised */
+#define SPRITE_TYPE_16BPP_TBGR_1555 5 /* 1:5:5:5 TBGR */
+#define SPRITE_TYPE_32BPP_TBGR_8888 6 /* 8:8:8:8 TBGR */
+#define SPRITE_TYPE_32BPP_CMYK      7 /* CMYK */
+#define SPRITE_TYPE_24BPP           8
+#define SPRITE_TYPE_JPEG            9
+#define SPRITE_TYPE_16BPP_BGR_565   10 /* 5:6:5 BGR */
+#define SPRITE_TYPE_RO5_WORD        15
 
-#if WINDOWS
+/* RISC OS 5.1 expanded types */
+#define SPRITE_TYPE_16BPP_TBGR_4444 16 /* 4:4:4:4 TBGR */
 
-#include "cmodules/coltsoft/oak_draw.h"
+#if RISCOS
 
-typedef enum __drawmod_filltype
+/* Draw module cap & join block (PRM v3, p.542) */
+
+typedef struct DRAW_MODULE_CAP_JOIN_SPEC
 {
-    fill_FBext          = 0x00000008,  /* plot boundary exterior pixels */
-    fill_FNonbint       = 0x00000010,  /* plot boundary interior pixels */
-    fill_FBint          = 0x00000020,  /* plot non-boundary interior pixels */
+    U8 join_style;
+    U8 leading_cap_style;
+    U8 trailing_cap_style;
+    U8 reserved;
 
-    fill_PClose         = 0x08000000,  /* close open subpaths */
-    fill_PFlatten       = 0x10000000,  /* flatten the path */
-    fill_PThicken       = 0x20000000,  /* thicken the path */
-    fill_PReflatten     = 0x40000000   /* re-flatten the path */
+    U32 mitre_limit;
+
+    U16 leading_tricap_width;
+    U16 leading_tricap_height;
+
+    U16 trailing_tricap_width;
+    U16 trailing_tricap_height;
 }
-_drawmod_filltype;
+DRAW_MODULE_CAP_JOIN_SPEC;
+
+#elif WINDOWS
+
+/* Dial Solutions Draw cap & join block */
+
+typedef struct DS_DRAW_CAP_JOIN_SPEC
+{
+    U8 join_style;
+    U8 leading_cap_style;
+    U8 trailing_cap_style;
+    U8 reserved;
+
+    U32 mitre_limit;
+
+    U16 leading_tricap_width; /* NB different order than RISC OS Draw module */
+    U16 trailing_tricap_width;
+
+    U16 leading_tricap_height;
+    U16 trailing_tricap_height;
+}
+DS_DRAW_CAP_JOIN_SPEC;
 
 #endif /* OS */
+
+/* Draw_ProcessPath fill style options (PRM v3, p.540) */
+
+#define DMFT_PLOT_NonBext   0x00000004  /* plot non-boundary exterior pixels */
+#define DMFT_PLOT_Bext      0x00000008  /* plot boundary exterior pixels */
+#define DMFT_PLOT_Bint      0x00000010  /* plot boundary interior pixels */
+#define DMFT_PLOT_NonBint   0x00000020  /* plot non-boundary interior pixels */
+
+/* Draw_ProcessPath path processing options (PRM v3, p.546) */
+
+#define DMFT_PATH_Close     0x08000000  /* close open subpaths */
+#define DMFT_PATH_Flatten   0x10000000  /* flatten the path */
+#define DMFT_PATH_Thicken   0x20000000  /* thicken the path */
+#define DMFT_PATH_Reflatten 0x40000000  /* re-flatten the path */
 
 #endif /* __drawxtra_h */
 

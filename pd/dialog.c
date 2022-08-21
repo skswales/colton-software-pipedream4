@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Dialog box handling */
 
@@ -1043,7 +1043,7 @@ getoption(
          * 'cos there may be more than one
         */
         if(dptr == d_user_open)
-            dict_number((char *) from, TRUE);
+            (void) dict_number((char *) from, TRUE);
 
         if(dptr == d_protect)
             add_to_protect_list(from);
@@ -1209,7 +1209,7 @@ save_options_to_list(void)
 
 #if 0
     save_opt_to_list(d_open_box, 1);
-    /* SKS after 4.11 08jan92 - restore size position etc from saved choices. removed again 'cos it's silly */
+    /* SKS after 4.11 08jan92 - restore size position etc. from saved choices. removed again 'cos it's silly */
 #endif
 
 /* no update_fontinfo_from_dialog(); needed */
@@ -1691,7 +1691,7 @@ read_parm(
 /******************************************************************************
 *
 * when execing a file read parameters from \ commands into dialog box
-* eg \GS |I a1|m
+* e.g. \GS |I a1|m
 * exec_ptr has the first parameter, leave exec_ptr pointing at |M
 *
 ******************************************************************************/

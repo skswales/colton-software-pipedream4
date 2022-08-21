@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module to handle bar, line and scatter chart galleries */
 
@@ -223,7 +223,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
     P_U8            currname;
     char            leafname[BUF_MAX_GENLEAFNAME + MAX_GENLEAFNAME + 1 /* sep_ch */];
     char            filename[BUF_MAX_PATHSTRING];
-    GR_CACHE_HANDLE cah;
+    IMAGE_CACHE_HANDLE cah;
     S32             using_default;
     S32             res;
 
@@ -275,7 +275,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
     if(res <= 0)
         return(0);
 
-    res = gr_cache_entry_ensure(&cah, filename);
+    res = image_cache_entry_ensure(&cah, filename);
 
     if(res <= 0)
         return(0);
@@ -309,7 +309,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
     P_U8            currname;
     char            leafname[BUF_MAX_GENLEAFNAME + MAX_GENLEAFNAME + 1 /* sep_ch */];
     char            filename[BUF_MAX_PATHSTRING];
-    GR_CACHE_HANDLE cah;
+    IMAGE_CACHE_HANDLE cah;
     S32             res;
 
     switch(id.name)
@@ -363,7 +363,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
                     return(0);
             }
 
-            res = gr_cache_entry_ensure(&cah, filename);
+            res = image_cache_entry_ensure(&cah, filename);
 
             if(res <= 0)
                 return(0);

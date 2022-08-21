@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RCM Aug 1991 */
 
@@ -37,11 +37,11 @@ colh_draw_mark_state_indicator(
 
 extern void
 colh_draw_slot_count(
-    char *text);
+    _In_opt_z_      char *text);
 
 extern void
 colh_draw_slot_count_in_document(
-    char *text);
+    _In_opt_z_      char *text);
 
 extern BOOL
 colh_event_handler(
@@ -168,8 +168,8 @@ formline_claim_focus(void);
 typedef struct FORMULA_WINDOW
 {
     struct MLEC_STRUCT * mlec;      /* was editexpression_mlec     */
-    HOST_HWND    mainwindow;        /* editexpression_mainwindow   */
-    HOST_HWND    panewindow;        /* editexpression_panewindow   */
+    HOST_WND     mainwindow;        /* editexpression_mainwindow   */
+    HOST_WND     panewindow;        /* editexpression_panewindow   */
     void        *maintemplate;      /* editexpression_maintemplate */
     void        *panetemplate;      /* editexpression_panetemplate */
 

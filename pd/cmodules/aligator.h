@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Header file for aligator.c */
 
@@ -210,8 +210,9 @@ ARRAY_BLOCK, * P_ARRAY_BLOCK; typedef const ARRAY_BLOCK * PC_ARRAY_BLOCK;
 
 /*
 different typedef for root allocation allows us to see better in debugger
-eg watch and expand array_root.p_array_block[25]
-and it also makes aligator.c implementation simpler
+e.g. watch and expand
+    array_root.p_array_block[<array_handle>]
+and it also makes implementation in aligator.c simpler
 */
 
 typedef struct ARRAY_ROOT_BLOCK
@@ -228,7 +229,7 @@ typedef struct ARRAY_ROOT_BLOCK
 }
 ARRAY_ROOT_BLOCK;
 
-/* NB. SKS 1.03 19mar93 made handle zero info kosher - ie. NULL pointer, zero size, zero element size etc. */
+/* NB. SKS 1.03 19mar93 made handle zero info kosher - i.e. NULL pointer, zero size, zero element size etc. */
 
 /*
 functions as macros
@@ -559,6 +560,33 @@ _al_array_alloc(
     (__base_type *) _al_array_alloc(p_array_handle, num_elements, p_array_init_block, p_status \
     CODE_ANALYSIS_ONLY_ARG((num_elements) * sizeof32(__base_type))) )
 
+#define AL_ARRAY_ALLOC_PROTO(_e_s, __base_type) \
+_Check_return_ \
+_Ret_writes_maybenull_(num_elements)  /* may be NULL */ \
+_e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
+al_array_alloc_ ## __base_type( \
+    _OutRef_    P_ARRAY_HANDLE p_array_handle, \
+    _InVal_     U32 num_elements, \
+    _InRef_     PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _OutRef_    P_STATUS p_status)
+
+#define AL_ARRAY_ALLOC_IMPL(_e_s, __base_type) \
+__pragma(warning(push)) /*__pragma(warning(disable:6386))*/ /* mask the 'return value' Buffer overrun warning */ \
+_Check_return_ \
+_Ret_writes_maybenull_(num_elements)  /* may be NULL */ \
+_e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
+al_array_alloc_ ## __base_type( \
+    _OutRef_    P_ARRAY_HANDLE p_array_handle, \
+    _InVal_     U32 num_elements, \
+    _InRef_     PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _OutRef_    P_STATUS p_status) \
+{ \
+    return((__base_type *) _al_array_alloc(p_array_handle, num_elements, p_array_init_block, p_status \
+    CODE_ANALYSIS_ONLY_ARG((num_elements) & sizeof32(__base_type)) \
+    )); \
+} \
+__pragma(warning(pop))
+
 _Check_return_
 extern STATUS
 al_array_alloc_zero(
@@ -670,6 +698,36 @@ _al_array_insert_before(
     (__base_type *) _al_array_insert_before(p_array_handle, num_elements, p_array_init_block, p_status, insert_before \
     CODE_ANALYSIS_ONLY_ARG((num_elements) * sizeof32(__base_type))) )
 
+#define AL_ARRAY_INSERT_BEFORE_PROTO(_e_s, __base_type) \
+_Check_return_ \
+_Ret_writes_maybenull_(num_elements) /* may be NULL */ \
+_e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
+al_array_insert_before_ ## __base_type( \
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
+    _InVal_     S32 num_elements, \
+    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _OutRef_    P_STATUS p_status, \
+    _InVal_     ARRAY_INDEX insert_before)
+
+#define AL_ARRAY_INSERT_BEFORE_IMPL(_e_s, __base_type) \
+__pragma(warning(push)) /*__pragma(warning(disable:6386))*/ /* mask the 'return value' Buffer overrun warning */ \
+_Check_return_ \
+_Ret_writes_maybenull_(num_elements) /* may be NULL */ \
+_e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
+al_array_insert_before_ ## __base_type( \
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
+    _InVal_     S32 num_elements, \
+    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _OutRef_    P_STATUS p_status, \
+    _InVal_     ARRAY_INDEX insert_before) \
+{ \
+    return( (__base_type *) \
+        _al_array_insert_before(p_array_handle, num_elements, p_array_init_block, p_status, insert_before \
+        CODE_ANALYSIS_ONLY_ARG((U32) (num_elements) * sizeof32(__base_type)) \
+        )); \
+} \
+__pragma(warning(pop))
+
 extern void
 al_array_qsort(
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
@@ -693,6 +751,34 @@ _al_array_extend_by(
 #define al_array_extend_by(p_array_handle, __base_type, add_elements, p_array_init_block, p_status) ( \
     (__base_type *) _al_array_extend_by(p_array_handle, add_elements, p_array_init_block, p_status \
     CODE_ANALYSIS_ONLY_ARG((add_elements) * sizeof32(__base_type))) )
+
+#define AL_ARRAY_EXTEND_BY_PROTO(_e_s, __base_type) \
+_Check_return_ \
+_Ret_writes_maybenull_(add_elements) /* may be NULL */ \
+_e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
+al_array_extend_by_ ## __base_type( \
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
+    _InVal_     U32 add_elements, \
+    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _OutRef_    P_STATUS p_status)
+
+#define AL_ARRAY_EXTEND_BY_IMPL(_e_s, __base_type) \
+__pragma(warning(push)) /*__pragma(warning(disable:6386))*/ /* mask the 'return value' Buffer overrun warning */ \
+_Check_return_ \
+_Ret_writes_maybenull_(add_elements) /* may be NULL */ \
+_e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
+al_array_extend_by_ ## __base_type( \
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
+    _InVal_     U32 add_elements, \
+    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _OutRef_    P_STATUS p_status) \
+{ \
+    return( (__base_type *) \
+        _al_array_extend_by(p_array_handle, add_elements, p_array_init_block, p_status \
+        CODE_ANALYSIS_ONLY_ARG((add_elements) * sizeof32(__base_type)) \
+        )); \
+} \
+__pragma(warning(pop))
 
 extern void
 al_array_shrink_by(
@@ -746,11 +832,38 @@ al_list_big_handles(
 #endif
 
 /*
+templated exported data & routines
+*/
+
+extern const ARRAY_INIT_BLOCK
+array_init_block_u8;
+
+AL_ARRAY_ALLOC_PROTO(extern, U8);
+AL_ARRAY_EXTEND_BY_PROTO(extern, U8);
+AL_ARRAY_INSERT_BEFORE_PROTO(extern, U8);
+
+AL_ARRAY_ALLOC_PROTO(extern, BYTE);
+AL_ARRAY_EXTEND_BY_PROTO(extern, BYTE);
+
+#define array_init_block_byte array_init_block_u8
+
+#define array_init_block_uchars array_init_block_u8
+
+extern const ARRAY_INIT_BLOCK
+array_init_block_tchar;
+
+AL_ARRAY_ALLOC_PROTO(extern, TCHAR);
+AL_ARRAY_EXTEND_BY_PROTO(extern, TCHAR);
+
+AL_ARRAY_ALLOC_PROTO(extern, ARRAY_HANDLE);
+AL_ARRAY_EXTEND_BY_PROTO(extern, ARRAY_HANDLE);
+
+/*
 simply-typed variants of ARRAY_HANDLE
 */
 
-#define    ARRAY_HANDLE_SBSTR    ARRAY_HANDLE
-#define  P_ARRAY_HANDLE_SBSTR  P_ARRAY_HANDLE
+#define    ARRAY_HANDLE_SBSTR     ARRAY_HANDLE
+#define  P_ARRAY_HANDLE_SBSTR   P_ARRAY_HANDLE
 
 #define    ARRAY_HANDLE_UCHARS    ARRAY_HANDLE
 #define  P_ARRAY_HANDLE_UCHARS  P_ARRAY_HANDLE

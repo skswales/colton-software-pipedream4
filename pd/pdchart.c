@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* PipeDream to charting module interface */
 
@@ -51,7 +51,7 @@ callback functions
 
 null_event_proto(static, pdchart_null_handler);
 
-gr_cache_tagstrip_proto(extern, pdchart_tagstrip);
+image_cache_tagstrip_proto(extern, pdchart_tagstrip);
 
 gr_chart_travel_proto(static, pdchart_travel_for_input);
 
@@ -242,7 +242,7 @@ pdchart_add(
     {
     /* look at what's already allocated in this chart for a
      * hint about series label usage from all these dependencies
-     * ie. find the first valid non-category labels range of the same orientation as us!
+     * i.e. find the first valid non-category labels range of the same orientation as us!
     */
     P_PDCHART_ELEMENT ep = pdchart->elem.base;
     U32 ix = 0;
@@ -634,14 +634,14 @@ pdchart_dispose(
     /* remove any cache entry that may have been this chart's Draw file */
     {
     U8 filename[BUF_MAX_PATHSTRING];
-    GR_CACHE_HANDLE cah;
+    IMAGE_CACHE_HANDLE cah;
 
     gr_chart_name_query(&pdchart->ch, filename, sizeof32(filename) - 1);
 
-    if(gr_cache_entry_query(&cah, filename))
+    if(image_cache_entry_query(&cah, filename))
     {
-        gr_cache_ref(&cah, 1);
-        gr_cache_ref(&cah, 0); /* autokill will remove this entry from the cache if refs go to zero, else it's referenced elsewhere */
+        image_cache_ref(&cah, 1);
+        image_cache_ref(&cah, 0); /* autokill will remove this entry from the cache if refs go to zero, else it's referenced elsewhere */
     }
     } /*block*/
 
@@ -3197,7 +3197,7 @@ ChartEdit_notify_proc(
             gr_chartedit_dispose(&pdchart->ceh);
 
             /* may have been saved into a PipeDream window */
-            nRefs = gr_cache_refs(name_buffer);
+            nRefs = image_cache_refs(name_buffer);
 
             /* if there is no use of this chart elsewhere in PipeDream then kill completely */
             if(!nRefs)
@@ -3298,7 +3298,7 @@ dependent_charts_warning(void)
         P_PDCHART_HEADER  pdchart;
         U8                filename[BUF_MAX_PATHSTRING];
         P_PDCHART_ELEMENT ep, last_ep;
-        S32               saved_to_disc;
+        BOOL              saved_to_disc;
         S32               hit_doc_cur   = 0;
         S32               hit_doc_other = 0;
 
@@ -3390,9 +3390,9 @@ pdchart_dependent_documents(
 
                     if(file_is_rooted(filename))
                     {
-                        GR_CACHE_HANDLE cah;
+                        IMAGE_CACHE_HANDLE cah;
 
-                        if(gr_cache_entry_query(&cah, filename))
+                        if(image_cache_entry_query(&cah, filename))
                         {
                             /* loop over draw file references and see who
                              * (other than us) has a use of this chart
@@ -3459,7 +3459,7 @@ expand_slot_for_chart_export(
                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                        FALSE /*allow_fonty_result*/, TRUE /*cff*/);
 
-    /* remove highlights & funny spaces etc from plain non-fonty string */
+    /* remove highlights & funny spaces etc. from plain non-fonty string */
     ptr = to = buffer;
     do  {
         ch = *ptr++;
@@ -3886,8 +3886,8 @@ pdchart_make_range_for_save(
 
 PROC_QSORT_PROTO(static, pdchart_sort_list, PDCHART_SORT_ELEM)
 {
-    P_PDCHART_SORT_ELEM slip1 = (P_PDCHART_SORT_ELEM) arg1;
-    P_PDCHART_SORT_ELEM slip2 = (P_PDCHART_SORT_ELEM) arg2;
+    P_PDCHART_SORT_ELEM slip1 = (P_PDCHART_SORT_ELEM) _arg1;
+    P_PDCHART_SORT_ELEM slip2 = (P_PDCHART_SORT_ELEM) _arg2;
 
     /* NB no sb global register furtling required */
 
@@ -4337,7 +4337,7 @@ gr_ext_construct_load_this(
     return(1);
 }
 
-gr_cache_tagstrip_proto(extern, pdchart_tagstrip)
+image_cache_tagstrip_proto(extern, pdchart_tagstrip)
 {
     P_PDCHART_TAGSTRIP_INFO p_tag_info = handle;
     STATUS res;
@@ -4351,7 +4351,7 @@ gr_cache_tagstrip_proto(extern, pdchart_tagstrip)
     }
 
     /* name needed for doc creation */
-    gr_cache_name_query(&p_info->cah, pdchart_load_save_docname, sizeof(pdchart_load_save_docname)-1);
+    image_cache_name_query(&p_info->image_cache_handle, pdchart_load_save_docname, sizeof(pdchart_load_save_docname)-1);
 
     /* set the name up in the newly created chart */
     if(status_fail(res = gr_chart_name_set(&pdchart_load_save_pdchart->ch, pdchart_load_save_docname)))

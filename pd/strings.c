@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Strings from PipeDream */
 
@@ -103,7 +103,7 @@ string(10, USERDICT_STR,                        "UserDict");
 /* dictionary definition files go in this subdirectory */
 string(11, DICTDEFNS_SUBDIR_STR,                "DictDefn");
 string(12, DEFAULT_DICTDEFN_FILE_STR,           "Latin1"); /* <<< can be Deutsch,English etc. */
-string(13, OLD_DICTDEFN_FILE_STR,               "ODctDefn");
+/*string(13, spare_13_STR, "");*/
 
 /* ini templates go in this subdirectory */
 string(410, LTEMPLATE_SUBDIR_STR,               "Templates");
@@ -152,7 +152,7 @@ string(63, Zs_of_Zs_STR,                        "%s of %s");
 string(64, Zs_complete_STR,                     "... %s complete ...");
 
 string(65, Page_Zd_wait_between_pages_STR,      "Page %d.. Press M=Miss page, A=All pages, ENTER=Print this page, ESC=stop print");
-string(66, Miss_Page_Chars_STR,                 "M"); /* eg. German has "UU" for Uberspringen (properly umlauted) */
+string(66, Miss_Page_Chars_STR,                 "M"); /* e.g. German has "UU" for Uberspringen (properly umlauted) */
 string(67, All_Pages_Chars_STR,                 "A");
 
 string(68, save_edited_file_Zs_STR,             "Do you want to save edited document '%s'?");

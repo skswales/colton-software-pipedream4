@@ -21,7 +21,7 @@
 /* maximum size of symbol */
 #define EV_INTNAMLEN        25
 #define BUF_EV_INTNAMLEN    (EV_INTNAMLEN + 1)
-#define EV_LONGNAMLEN       (1/*[*/ + MAX_PATHSTRING/*rooted-doc*/ + 1/*]*/ + EV_MAX_RANGE_LEN + 1/*NULLCH*/) /* was 200 */
+#define EV_LONGNAMLEN       (1/*[*/ + MAX_PATHSTRING/*rooted-doc*/ + 1/*]*/ + EV_MAX_RANGE_LEN + 1/*CH_NULL*/) /* was 200 */
 #define BUF_EV_LONGNAMLEN   (1 + EV_LONGNAMLEN)
 
 /* maximum size of a string value  -

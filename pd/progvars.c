@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Global variables used in PipeDream */
 
@@ -21,7 +21,7 @@
 
 /* ensure we get enlarged root stack segment */
 
-/* NB. menu_new() and menu_extend() use acres of stack ie. about 11K so beware */
+/* NB. menu_new() and menu_extend() use acres of stack i.e. about 11K so beware */
 #ifndef ROOT_STACK_SIZE
 #define ROOT_STACK_SIZE 32 /*16*/
 #endif

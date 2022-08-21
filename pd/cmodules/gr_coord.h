@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Coordinate manipulation */
 
@@ -26,6 +26,8 @@ typedef S32 GR_COORD; typedef GR_COORD * P_GR_COORD;
 
 #define GR_COORD_MAX S32_MAX
 
+#define GR_COORD_TFMT TEXT("%d")
+
 /*
 points, or simply pairs of coordinates
 */
@@ -35,6 +37,13 @@ typedef struct GR_POINT
     GR_COORD x, y;
 }
 GR_POINT, * P_GR_POINT; typedef const GR_POINT * PC_GR_POINT;
+
+#define GR_POINT_TFMT \
+    TEXT("x = ") GR_COORD_TFMT TEXT(", y = ") GR_COORD_TFMT
+
+#define GR_POINT_ARGS(gr_point__ref) \
+    (gr_point__ref).x, \
+    (gr_point__ref).y
 
 typedef struct GR_SIZE
 {
@@ -52,11 +61,21 @@ typedef struct GR_BOX
 }
 GR_BOX, * P_GR_BOX; typedef const GR_BOX * PC_GR_BOX;
 
+#define GR_BOX_TFMT \
+    TEXT("x0 = ") GR_COORD_TFMT TEXT(", y0 = ") GR_COORD_TFMT TEXT("; ") \
+    TEXT("x1 = ") GR_COORD_TFMT TEXT(", y1 = ") GR_COORD_TFMT
+
+#define GR_BOX_ARGS(gr_box__ref) \
+    (gr_box__ref).x0, \
+    (gr_box__ref).y0, \
+    (gr_box__ref).x1, \
+    (gr_box__ref).y1
+
 /*
 ordered rectangles
 */
 
-#if defined(UNUSED)
+#if defined(UNUSED_KEEP_ALIVE)
 
 typedef struct GR_RECT
 {
@@ -64,7 +83,7 @@ typedef struct GR_RECT
 }
 GR_RECT, * P_GR_RECT; typedef const GR_RECT * PC_GR_RECT;
 
-#endif /* UNUSED */
+#endif /* UNUSED_KEEP_ALIVE */
 
 typedef S32 GR_SCALE; /* signed 16.16 fixed point number */
 
@@ -181,7 +200,7 @@ gr_coord_from_f64(
         return(+GR_COORD_MAX);
     if(d <= -GR_COORD_MAX)
         return(-GR_COORD_MAX);
-    return((GR_COORD) d);
+    return((GR_COORD) floor(d));
 }
 
 _Check_return_
@@ -310,12 +329,20 @@ draw_box_make_bad(
 }
 
 static inline void
+draw_box_sort(
+    _OutRef_    P_DRAW_BOX sbox,
+    _InRef_     PC_DRAW_BOX abox)
+{
+    (void) gr_box_sort((const P_GR_BOX) sbox, (const PC_GR_BOX) abox);
+}
+
+static inline void
 draw_box_translate(
     _OutRef_    P_DRAW_BOX xbox,
     _In_opt_    PC_DRAW_BOX abox /*NULL->src xbox*/,
     _InRef_     PC_DRAW_POINT spoint)
 {
-    gr_box_translate((const P_GR_BOX) xbox, (PC_GR_BOX) abox, (const PC_GR_POINT) spoint);
+    (void) gr_box_translate((const P_GR_BOX) xbox, (const PC_GR_BOX) abox, (const PC_GR_POINT) spoint);
 }
 
 static inline void
@@ -324,7 +351,7 @@ draw_box_union(
     _In_opt_    PC_DRAW_BOX abox /*NULL->src ubox*/,
     _InRef_     PC_DRAW_BOX bbox)
 {
-    gr_box_union((const P_GR_BOX) ubox, (PC_GR_BOX) abox, (const PC_GR_BOX) bbox);
+    (void) gr_box_union((const P_GR_BOX) ubox, (const PC_GR_BOX) abox, (const PC_GR_BOX) bbox);
 }
 
 static inline void
@@ -333,11 +360,20 @@ draw_box_xform(
     _In_opt_    PC_DRAW_BOX abox /*NULL->src xbox*/,
     _InRef_     PC_GR_XFORMMATRIX xform)
 {
-    gr_box_xform((const P_GR_BOX) xbox, (PC_GR_BOX) abox, xform);
+    (void) gr_box_xform((const P_GR_BOX) xbox, (const PC_GR_BOX) abox, xform);
+}
+
+_Check_return_
+static inline DRAW_COORD
+draw_coord_scale(
+    _InVal_     DRAW_COORD coord,
+    _InVal_     GR_SCALE scale)
+{
+    return((DRAW_COORD) gr_coord_scale((GR_COORD) coord, scale));
 }
 
 /*
-point
+point operations
 */
 
 static inline void

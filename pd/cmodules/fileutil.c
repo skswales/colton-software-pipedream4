@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* File handling module (utils section) */
 
@@ -53,7 +53,7 @@ file_add_prefix_to_name(
     PC_U8 srcfilename,
     PC_U8 currentfilename)
 {
-    *destfilename = NULLCH;
+    *destfilename = CH_NULL;
 
     if(!file_is_rooted(srcfilename))
         file_get_prefix(destfilename, elemof_buffer, currentfilename);
@@ -75,7 +75,7 @@ file_combined_path(
     _InVal_     U32 elemof_buffer,
     PC_U8 currentfilename)
 {
-    *destpath = NULLCH;
+    *destpath = CH_NULL;
 
     file_get_cwd(destpath, elemof_buffer, currentfilename);
 
@@ -94,7 +94,7 @@ file_combined_path(
 *
 * return the extension part of a filename
 *
-* eg.
+* e.g.
 *   file.c -> c
 *   fixx_z -> z
 *
@@ -190,7 +190,7 @@ file_find_first_subdir(
     if(subdir)
         xstrkpy(p->subdir, elemof32(p->subdir), subdir);
     else
-        *p->subdir = NULLCH;
+        *p->subdir = CH_NULL;
 
     xstrkpy(p->pattern, elemof32(p->pattern), pattern);
 
@@ -645,7 +645,8 @@ file_find_on_path_or_relative(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 file_find_dir_on_path(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
@@ -655,7 +656,7 @@ file_find_dir_on_path(
     char rawpath[BUF_MAX_PATHSTRING];
     P_FILE_PATHENUM path;
     char * pathelem;
-    S32 res;
+    BOOL res;
 
     reportf("file_find_dir_on_path(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, currentfilename ? strlen32(currentfilename) : 0, currentfilename ? currentfilename : "<NULL>");
 
@@ -670,7 +671,7 @@ file_find_dir_on_path(
 
     pathelem = file_path_element_first(&path, rawpath);
 
-    res = 0;
+    res = FALSE;
 
     while(pathelem)
     {
@@ -678,8 +679,8 @@ file_find_dir_on_path(
         {
             xstrkpy(filename, elemof_buffer, pathelem);
             xstrkat(filename, elemof_buffer, srcfilename);
-
-            if((res = file_is_dir(filename)) != 0)
+            res = file_is_dir(filename);
+            if(res)
                 break;
         }
 
@@ -688,7 +689,7 @@ file_find_dir_on_path(
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_dir_on_path() yields dirname \"%s\" & %s",
-            filename, trace_boolstring(res > 0));
+            filename, trace_boolstring(res));
     return(res);
 }
 
@@ -707,7 +708,7 @@ file_get_cwd(
     PC_U8 namep;
     char * res;
 
-    *destpath = NULLCH;
+    *destpath = CH_NULL;
 
     if((namep = currentfilename) != NULL)
     {
@@ -762,7 +763,7 @@ file_get_prefix(
 
     pathelem = file_path_element_first(&path, rawpath);
 
-    *destpath = NULLCH;
+    *destpath = CH_NULL;
 
     while(pathelem)
     {
@@ -785,6 +786,7 @@ file_get_prefix(
 *
 ******************************************************************************/
 
+_Check_return_
 extern BOOL
 file_is_dir(
     PC_U8 dirname)
@@ -815,7 +817,7 @@ file_is_dir(
     res = FALSE;
     #endif
 
-    reportf("file_is_dir(%u:%s): %d", strlen(dirname), dirname, res);
+    reportf("file_is_dir(%u:%s): %s", strlen(dirname), dirname, report_boolstring(res));
 
     return(res);
 }
@@ -826,6 +828,7 @@ file_is_dir(
 *
 ******************************************************************************/
 
+_Check_return_
 extern BOOL
 file_is_file(
     PC_U8 filename)
@@ -854,7 +857,7 @@ file_is_file(
     res = FALSE;
     #endif
 
-    reportf("file_is_file(%u:%s): %d", strlen(filename), filename, res);
+    reportf("file_is_file(%u:%s): %s", strlen(filename), filename, report_boolstring(res));
 
     return(res);
 }
@@ -866,11 +869,12 @@ file_is_file(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 file_is_rooted(
     PC_U8 filename)
 {
-    S32 res;
+    BOOL res;
 
     #if RISCOS
     res = (strpbrk(filename, ":$&%@\\") != NULL);
@@ -892,7 +896,7 @@ file_is_rooted(
     #endif
 
     trace_2(TRACE_MODULE_FILE,
-            "file_is_rooted(%s) yields %s", filename, trace_boolstring(res));
+            "file_is_rooted(%s) yields %s", filename, report_boolstring(res));
     return(res);
 }
 
@@ -999,7 +1003,7 @@ file_path_element_first(
 
     /* initialise path enumeration structure */
     p->ptr = p->path;
-    p->pushed = NULLCH;
+    p->pushed = CH_NULL;
 
     xstrnkpy(p->path, BUF_MAX_PATHSTRING, path, ptr - path);
 
@@ -1035,9 +1039,9 @@ file_path_element_next(
 
     if(p->pushed)
     {
-        /* last operation pushed a char to make way for a dir sep and NULLCH */
+        /* last operation pushed a char to make way for a dir sep and CH_NULL */
         *res = p->pushed;
-        p->pushed = NULLCH;
+        p->pushed = CH_NULL;
     }
 
     ch = *res;
@@ -1060,13 +1064,13 @@ file_path_element_next(
 
     /* loop till we find a path separator or eos */
     ptr = res;
-    lastch = NULLCH;
+    lastch = CH_NULL;
 
     do  {
         if(ch == '\"')
         {
             /* end the returned part of the string */
-            *ptr = NULLCH;
+            *ptr = CH_NULL;
             ch = *ptr;
         }
 
@@ -1088,22 +1092,22 @@ file_path_element_next(
         #endif
         )
     {
-        /* overwrite path sep or last NULLCH */
+        /* overwrite path sep or last CH_NULL */
         lastch = *ptr;
         *ptr++ = FILE_DIR_SEP_CH;
         ch     = *ptr;
-        *ptr   = NULLCH;
+        *ptr   = CH_NULL;
 
         if(lastch)
             p->pushed = ch;
         else
-            /* that was the last path element, leave the pointer on this NULLCH */
+            /* that was the last path element, leave the pointer on this CH_NULL */
             ;
     }
     else if(ch)
     {
         /* kill the path sep, start on next element next time */
-        *ptr++ = NULLCH;
+        *ptr++ = CH_NULL;
     }
     /* otherwise got a correctly terminated end element */
 

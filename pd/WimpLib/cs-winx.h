@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 #ifndef __cs_winx_h
 #define __cs_winx_h
@@ -81,7 +81,7 @@ extern void
 win_setfield(wimp_w w, wimp_i i, const char * value);
 
 /* --------------------------- win_fadefield -------------------------------
- * Description:   Makes an icon unselectable (ie. faded by WIMP).
+ * Description:   Makes an icon unselectable (i.e. faded by WIMP).
  *
  * Parameters:    wimp_w w -- the window in which icon resides
  *                wimp_i i -- the icon to be faded.
@@ -94,7 +94,7 @@ extern void
 win_fadefield(wimp_w w, wimp_i i);
 
 /* ---------------------------- win_unfadefield ----------------------------
- * Description:   Makes an icon selectable (ie "unfades" it).
+ * Description:   Makes an icon selectable (i.e. "unfades" it).
  *
  * Parameters:    wimp_w w -- the window in which icon resides
  *                wimp_i i -- the icon to be unfaded.

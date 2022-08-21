@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Coordinate manipulation */
 
@@ -526,7 +526,7 @@ gr_xform_make_combination(
     else
         p = xform;
 
-    /* 16.16p 16.16 = 32.32 ie take middle word for new 16.16 */
+    /* 16.16p 16.16 = 32.32 i.e. take middle word for new 16.16 */
 
     p->a  = muldiv64(bxform->a, axform->a, GR_SCALE_ONE);
     p->a += muldiv64(bxform->c, axform->b, GR_SCALE_ONE);

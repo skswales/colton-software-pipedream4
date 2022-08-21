@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Library module for type packing and unpacking */
 
@@ -32,7 +32,7 @@ extern F64
 readval_F64_from_8087(
     _In_bytecount_c_(sizeof(F64)) PC_ANY from)
 {
-    union READVAL_F64_FROM_8087_U
+    union
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -86,7 +86,7 @@ extern F64
 readval_F64_from_ARM(
     _In_bytecount_c_(sizeof(F64)) PC_ANY from)
 {
-    union READVAL_F64_FROM_ARM_U
+    union
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -133,18 +133,18 @@ readval_F64_from_ARM(
 
 /******************************************************************************
 *
-* read an unsigned 16-bit value from unaligned memory
+* read an unsigned 16-bit value from unaligned memory (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef readval_U16
+#ifndef readval_U16_LE
 
 _Check_return_
 extern U16
-readval_U16(
+readval_U16_LE(
     _In_bytecount_c_(sizeof(U16)) PC_ANY from)
 {
-    union READVAL_U16_U
+    union
     {
         U16 u16;
         BYTE bytes[sizeof32(U16)];
@@ -156,22 +156,58 @@ readval_U16(
     return(u.u16);
 }
 
+#endif /* readval_U16_LE */
+
+#ifndef readval_U16_BE
+
+_Check_return_
+extern U16
+readval_U16_BE(
+    _In_bytecount_c_(sizeof(U16)) PC_ANY from)
+{
+    union
+    {
+        U16 u16;
+        BYTE bytes[sizeof32(U16)];
+    } u;
+
+    u.bytes[1] = PtrGetByteOff(from, 0);
+    u.bytes[0] = PtrGetByteOff(from, 1);
+
+    return(u.u16);
+}
+
+#endif /* readval_U16_BE */
+
+#ifndef readval_U16
+
+extern U16
+readval_U16(
+    _In_bytecount_c_(sizeof(U16)) PC_ANY from)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    return(readval_U16_BE(from));
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    return(readval_U16_LE(from));
+#endif /* BYTE_ORDER */
+}
+
 #endif /* readval_U16 */
 
 /******************************************************************************
 *
-* read an unsigned 32-bit value from unaligned memory
+* read an unsigned 32-bit value from unaligned memory (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef readval_U32
+#ifndef readval_U32_LE
 
 _Check_return_
 extern U32
-readval_U32(
+readval_U32_LE(
     _In_bytecount_c_(sizeof(U32)) PC_ANY from)
 {
-    union READVAL_U32_U
+    union
     {
         U32 u32;
         BYTE bytes[sizeof32(U32)];
@@ -185,22 +221,60 @@ readval_U32(
     return(u.u32);
 }
 
+#endif /* readval_U32_LE */
+
+#ifndef readval_U32_BE
+
+_Check_return_
+extern U32
+readval_U32_BE(
+    _In_bytecount_c_(sizeof(U32)) PC_ANY from)
+{
+    union
+    {
+        U32 u32;
+        BYTE bytes[sizeof32(U32)];
+    } u;
+
+    u.bytes[3] = PtrGetByteOff(from, 0);
+    u.bytes[2] = PtrGetByteOff(from, 1);
+    u.bytes[1] = PtrGetByteOff(from, 2);
+    u.bytes[0] = PtrGetByteOff(from, 3);
+
+    return(u.u32);
+}
+
+#endif /* readval_U32_BE */
+
+#ifndef readval_U32
+
+extern U32
+readval_U32(
+    _In_bytecount_c_(sizeof(U32)) PC_ANY from)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    return(readval_U32_BE(from));
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    return(readval_U32_LE(from));
+#endif /* BYTE_ORDER */
+}
+
 #endif /* readval_U32 */
 
 /******************************************************************************
 *
-* read a signed 16-bit value from unaligned memory
+* read a signed 16-bit value from unaligned memory (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef readval_S16
+#ifndef readval_S16_LE
 
 _Check_return_
 extern S16
-readval_S16(
+readval_S16_LE(
     _In_bytecount_c_(sizeof(S16)) PC_ANY from)
 {
-    union READVAL_S16_U
+    union
     {
         S16 s16;
         BYTE bytes[sizeof32(S16)];
@@ -212,22 +286,58 @@ readval_S16(
     return(u.s16);
 }
 
+#endif /* readval_S16_LE */
+
+#ifndef readval_S16_BE
+
+_Check_return_
+extern S16
+readval_S16_BE(
+    _In_bytecount_c_(sizeof(S16)) PC_ANY from)
+{
+    union
+    {
+        S16 s16;
+        BYTE bytes[sizeof32(S16)];
+    } u;
+
+    u.bytes[1] = PtrGetByteOff(from, 0);
+    u.bytes[0] = PtrGetByteOff(from, 1);
+
+    return(u.s16);
+}
+
+#endif /* readval_S16_BE */
+
+#ifndef readval_S16
+
+extern S16
+readval_S16(
+    _In_bytecount_c_(sizeof(S16)) PC_ANY from)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    return(readval_S16_BE(from));
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    return(readval_S16_LE(from));
+#endif /* BYTE_ORDER */
+}
+
 #endif /* readval_S16 */
 
 /******************************************************************************
 *
-* read a signed 32-bit value from unaligned memory
+* read a signed 32-bit value from unaligned memory (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef readval_S32
+#ifndef readval_S32_LE
 
 _Check_return_
 extern S32
-readval_S32(
+readval_S32_LE(
     _In_bytecount_c_(sizeof(S32)) PC_ANY from)
 {
-    union READVAL_S32_U
+    union
     {
         S32 s32;
         BYTE bytes[sizeof32(S32)];
@@ -239,6 +349,44 @@ readval_S32(
     u.bytes[3] = PtrGetByteOff(from, 3);
 
     return(u.s32);
+}
+
+#endif /* readval_S32_LE */
+
+#ifndef readval_S32_BE
+
+_Check_return_
+extern S32
+readval_S32_BE(
+    _In_bytecount_c_(sizeof(S32)) PC_ANY from)
+{
+    union
+    {
+        S32 s32;
+        BYTE bytes[sizeof32(S32)];
+    } u;
+
+    u.bytes[3] = PtrGetByteOff(from, 0);
+    u.bytes[2] = PtrGetByteOff(from, 1);
+    u.bytes[1] = PtrGetByteOff(from, 2);
+    u.bytes[0] = PtrGetByteOff(from, 3);
+
+    return(u.s32);
+}
+
+#endif /* readval_S32_BE */
+
+#ifndef readval_S32
+
+extern S32
+readval_S32(
+    _In_bytecount_c_(sizeof(S32)) PC_ANY from)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    return(readval_S32_BE(from));
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    return(readval_S32_LE(from));
+#endif /* BYTE_ORDER */
 }
 
 #endif /* readval_S32 */
@@ -260,7 +408,7 @@ writeval_F64_as_8087(
     _Out_bytecapcount_x_(sizeof(F64)) P_ANY to,
     _InVal_     F64 f64)
 {
-    union WRITEVAL_F64_AS_8087_U
+    union
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -312,7 +460,7 @@ writeval_F64_as_ARM(
     _Out_bytecapcount_x_(sizeof(F64)) P_ANY to,
     _InVal_     F64 f64)
 {
-    union WRITEVAL_F64_AS_ARM_U
+    union
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -357,18 +505,18 @@ writeval_F64_as_ARM(
 
 /******************************************************************************
 *
-* output unsigned 16-bit value
+* output unsigned 16-bit value (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef writeval_U16
+#ifndef writeval_U16_LE
 
 extern void
-writeval_U16(
+writeval_U16_LE(
     _Out_bytecapcount_x_(sizeof(U16)) P_ANY to,
     _InVal_     U16 u16)
 {
-    union WRITEVAL_U16_U
+    union
     {
         U16 u16;
         BYTE bytes[sizeof32(U16)];
@@ -380,22 +528,59 @@ writeval_U16(
     PtrPutByteOff(to, 1, u.bytes[1]);
 }
 
+#endif /* writeval_U16_LE */
+
+#ifndef writeval_U16_BE
+
+extern void
+writeval_U16_BE(
+    _Out_bytecapcount_x_(sizeof(U16)) P_ANY to,
+    _InVal_     U16 u16)
+{
+    union
+    {
+        U16 u16;
+        BYTE bytes[sizeof32(U16)];
+    } u;
+
+    u.u16 = u16;
+
+    PtrPutByteOff(to, 0, u.bytes[1]);
+    PtrPutByteOff(to, 1, u.bytes[0]);
+}
+
+#endif /* writeval_U16_BE */
+
+#ifndef writeval_U16
+
+extern void
+writeval_U16(
+    _Out_bytecapcount_x_(sizeof(U16)) P_ANY to,
+    _InVal_     U16 u16)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    writeval_U16_BE(to, u16);
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    writeval_U16_LE(to, u16);
+#endif /* BYTE_ORDER */
+}
+
 #endif /* writeval_U16 */
 
 /******************************************************************************
 *
-* output unsigned 32-bit value
+* output unsigned 32-bit value (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef writeval_U32
+#ifndef writeval_U32_LE
 
 extern void
-writeval_U32(
+writeval_U32_LE(
     _Out_bytecapcount_x_(sizeof(U32)) P_ANY to,
     _InVal_     U32 u32)
 {
-    union WRITEVAL_U32_U
+    union
     {
         U32 u32;
         BYTE bytes[sizeof32(U32)];
@@ -409,22 +594,62 @@ writeval_U32(
     PtrPutByteOff(to, 3, u.bytes[3]);
 }
 
+#endif /* writeval_U32_LE */
+
+#ifndef writeval_U32_BE
+
+extern void
+writeval_U32_BE(
+    _Out_bytecapcount_x_(sizeof(U32)) P_ANY to,
+    _InVal_     U32 u32)
+{
+    union
+    {
+        U32 u32;
+        BYTE bytes[sizeof32(U32)];
+    } u;
+
+    u.u32 = u32;
+
+    PtrPutByteOff(to, 0, u.bytes[3]);
+    PtrPutByteOff(to, 1, u.bytes[2]);
+    PtrPutByteOff(to, 2, u.bytes[1]);
+    PtrPutByteOff(to, 3, u.bytes[0]);
+}
+
+#endif /* writeval_U32_BE */
+
+
+#ifndef writeval_U32
+
+extern void
+writeval_U32(
+    _Out_bytecapcount_x_(sizeof(U32)) P_ANY to,
+    _InVal_     U32 u32)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    writeval_U32_BE(to, u32);
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    writeval_U32_LE(to, u32);
+#endif /* BYTE_ORDER */
+}
+
 #endif /* writeval_U32 */
 
 /******************************************************************************
 *
-* output signed 16-bit value
+* output signed 16-bit value (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef writeval_S16
+#ifndef writeval_S16_LE
 
 extern void
-writeval_S16(
+writeval_S16_LE(
     _Out_bytecapcount_x_(sizeof(S16)) P_ANY to,
     _InVal_     S16 s16)
 {
-    union WRITEVAL_S16_U
+    union
     {
         S16 s16;
         BYTE bytes[sizeof32(S16)];
@@ -436,22 +661,59 @@ writeval_S16(
     PtrPutByteOff(to, 1, u.bytes[1]);
 }
 
+#endif /* writeval_S16_LE */
+
+#ifndef writeval_S16_BE
+
+extern void
+writeval_S16_BE(
+    _Out_bytecapcount_x_(sizeof(S16)) P_ANY to,
+    _InVal_     S16 s16)
+{
+    union
+    {
+        S16 s16;
+        BYTE bytes[sizeof32(S16)];
+    } u;
+
+    u.s16 = s16;
+
+    PtrPutByteOff(to, 0, u.bytes[1]);
+    PtrPutByteOff(to, 1, u.bytes[0]);
+}
+
+#endif /* writeval_S16_BE */
+
+#ifndef writeval_S16
+
+extern void
+writeval_S16(
+    _Out_bytecapcount_x_(sizeof(S16)) P_ANY to,
+    _InVal_     S16 s16)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    writeval_S16_BE(to, s16);
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    writeval_S16_LE(to, s16);
+#endif /* BYTE_ORDER */
+}
+
 #endif /* writeval_S16 */
 
 /******************************************************************************
 *
-* output signed 32-bit value
+* output signed 32-bit value (LE/BE/native)
 *
 ******************************************************************************/
 
-#ifndef writeval_S32
+#ifndef writeval_S32_LE
 
 extern void
-writeval_S32(
+writeval_S32_LE(
     _Out_bytecapcount_x_(sizeof(S32)) P_ANY to,
     _InVal_     S32 s32)
 {
-    union WRITEVAL_S32_U
+    union
     {
         S32 s32;
         BYTE bytes[sizeof32(S32)];
@@ -463,6 +725,45 @@ writeval_S32(
     PtrPutByteOff(to, 1, u.bytes[1]);
     PtrPutByteOff(to, 2, u.bytes[2]);
     PtrPutByteOff(to, 3, u.bytes[3]);
+}
+
+#endif /* writeval_S32_LE */
+
+#ifndef writeval_S32_BE
+
+extern void
+writeval_S32_BE(
+    _Out_bytecapcount_x_(sizeof(S32)) P_ANY to,
+    _InVal_     S32 s32)
+{
+    union
+    {
+        S32 s32;
+        BYTE bytes[sizeof32(S32)];
+    } u;
+
+    u.s32 = s32;
+
+    PtrPutByteOff(to, 0, u.bytes[3]);
+    PtrPutByteOff(to, 1, u.bytes[2]);
+    PtrPutByteOff(to, 2, u.bytes[1]);
+    PtrPutByteOff(to, 3, u.bytes[0]);
+}
+
+#endif /* writeval_S32_BE */
+
+#ifndef writeval_S32
+
+extern void
+writeval_S32(
+    _Out_bytecapcount_x_(sizeof(S32)) P_ANY to,
+    _InVal_     S32 s32)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    writeval_S32_BE(to, s32);
+#elif BYTE_ORDER == LITTLE_ENDIAN
+    writeval_S32_LE(to, s32);
+#endif /* BYTE_ORDER */
 }
 
 #endif /* writeval_S32 */

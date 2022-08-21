@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Library module for string handling */
 
@@ -249,7 +249,7 @@ str_set(
         if((0 != l) && (0 == strncmp(a, b, l)))
         {
             /* terminate at new offset */
-            a[l] = NULLCH;
+            a[l] = CH_NULL;
             return(STATUS_DONE);
         }
 
@@ -259,9 +259,9 @@ str_set(
     if(0 == l)
         return(STATUS_OK);
 
-    if(NULL != (*aa = a = _al_ptr_alloc(l + 1/*NULLCH*/, &status)))
+    if(NULL != (*aa = a = _al_ptr_alloc(l + 1/*CH_NULL*/, &status)))
     {
-        memcpy32(a, b, l + 1/*NULLCH*/);
+        memcpy32(a, b, l + 1/*CH_NULL*/);
 
         status = STATUS_DONE;
     }
@@ -286,16 +286,16 @@ str_set_n(
         return(STATUS_OK);
     }
 
-    if(NULL != (*aa = a = _al_ptr_alloc(n + 1 /*NULLCH*/, &status)))
+    if(NULL != (*aa = a = _al_ptr_alloc(n + 1 /*CH_NULL*/, &status)))
     {
         if(NULL == b)
-        {   /* NULL == b allows client to allocate for a string of n characters (and the NULLCH) */
-            a[0] = NULLCH; /* allows append */
+        {   /* NULL == b allows client to allocate for a string of n characters (and the CH_NULL) */
+            a[0] = CH_NULL; /* allows append */
         }
         else
         {
             memcpy32(a, b, n);
-            a[n] = NULLCH;
+            a[n] = CH_NULL;
             assert(n <= strlen32(a));
         }
         status = STATUS_DONE;
@@ -667,22 +667,22 @@ xtos_ustr_buf(
         *c++ = (char) (digit[i] + (upper_case ? 'A' : 'a'));
     }
 
-    *c = NULLCH;
+    *c = CH_NULL;
     return(PtrDiffBytesU32(c, buffer));
 }
 
 /*
-portable string copy functions that ensure NULLCH termination without buffer overflow
+portable string copy functions that ensure CH_NULL termination without buffer overflow
 
-strcpy(), strncat() etc and even their _s() variants are all a bit 'wonky'
+strcpy(), strncat() etc. and even their _s() variants are all a bit 'wonky'
 
 copying to dst buffer is limited by dst_n characters
 
-dst buffer is always then NULLCH terminated within dst_n characters limit
+dst buffer is always then CH_NULL terminated within dst_n characters limit
 */
 
 /*
-append up characters from src (until NULLCH found) to dst (subject to dst limit)
+append up characters from src (until CH_NULL found) to dst (subject to dst limit)
 */
 
 extern void
@@ -703,14 +703,14 @@ xstrkat(
             assert(dst_idx != dst_n);
             /* keep our promise to terminate if that's possible */
             if(0 != dst_n)
-                dst[dst_n - 1] = NULLCH;
+                dst[dst_n - 1] = CH_NULL;
             return;
         }
 
         ch = dst[dst_idx];
 
         /* append here? */
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
     }
 
@@ -720,10 +720,10 @@ xstrkat(
         ch = *src++;
 
         /* finished source string? */
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
 
-        /* is there room to put both this character *and a NULLCH* to destination buffer? */
+        /* is there room to put both this character *and a CH_NULL* to destination buffer? */
         if(1 >= (dst_n - dst_idx))
             break;
 
@@ -738,11 +738,11 @@ xstrkat(
     }
 
     /* ensure terminated */
-    dst[dst_idx] = NULLCH;
+    dst[dst_idx] = CH_NULL;
 }
 
 /*
-append up to src_n characters from src (or fewer, if NULLCH found) to dst (subject to dst limit)
+append up to src_n characters from src (or fewer, if CH_NULL found) to dst (subject to dst limit)
 */
 
 extern void
@@ -765,14 +765,14 @@ xstrnkat(
             assert(dst_idx != dst_n);
             /* keep our promise to terminate if that's possible */
             if(0 != dst_n)
-                dst[dst_n - 1] = NULLCH;
+                dst[dst_n - 1] = CH_NULL;
             return;
         }
 
         ch = dst[dst_idx];
 
         /* append here? */
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
     }
 
@@ -782,10 +782,10 @@ xstrnkat(
         ch = src[src_idx++];
 
         /* finished source string before reaching source limit? */
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
 
-        /* is there room to put both this character *and a NULLCH* to destination buffer? */
+        /* is there room to put both this character *and a CH_NULL* to destination buffer? */
         if(1 >= (dst_n - dst_idx))
             break;
 
@@ -800,11 +800,11 @@ xstrnkat(
     }
 
     /* ensure terminated */
-    dst[dst_idx] = NULLCH;
+    dst[dst_idx] = CH_NULL;
 }
 
 /*
-copy characters from src (until NULLCH found) to dst (subject to dst limit)
+copy characters from src (until CH_NULL found) to dst (subject to dst limit)
 */
 
 extern void
@@ -822,10 +822,10 @@ xstrkpy(
         ch = *src++;
 
         /* finished source string? */
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
 
-        /* is there room to put both this character *and a NULLCH* to destination buffer? */
+        /* is there room to put both this character *and a CH_NULL* to destination buffer? */
         if(1 >= (dst_n - dst_idx))
             break;
 
@@ -840,11 +840,11 @@ xstrkpy(
     }
 
     /* ensure terminated */
-    dst[dst_idx] = NULLCH;
+    dst[dst_idx] = CH_NULL;
 }
 
 /*
-copy up to src_n characters from src (or fewer, if NULLCH found) to dst (subject to dst limit)
+copy up to src_n characters from src (or fewer, if CH_NULL found) to dst (subject to dst limit)
 */
 
 extern void
@@ -864,10 +864,10 @@ xstrnkpy(
         ch = src[src_idx++];
 
         /* finished source string before reaching source limit? */
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
 
-        /* is there room to put both this character *and a NULLCH* to destination buffer? */
+        /* is there room to put both this character *and a CH_NULL* to destination buffer? */
         if(1 >= (dst_n - dst_idx))
             break;
 
@@ -882,11 +882,11 @@ xstrnkpy(
     }
 
     /* ensure terminated */
-    dst[dst_idx] = NULLCH;
+    dst[dst_idx] = CH_NULL;
 }
 
 /*
-a portable but inexact replacement for snprintf(), which Microsoft CRT doesn't have... also ensures NULLCH termination
+a portable but inexact replacement for snprintf(), which Microsoft CRT doesn't have... also ensures CH_NULL termination
 */
 
 _Check_return_
@@ -913,7 +913,7 @@ xsnprintf(
     if(ret < 0)
     {
         ret = 0;
-        dst[0] = NULLCH; /* ensure terminated */
+        dst[0] = CH_NULL; /* ensure terminated */
     }
     else if((U32) ret >= dst_n) /* limit to what actually was achieved */
     {

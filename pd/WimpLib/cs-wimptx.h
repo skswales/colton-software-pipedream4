@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 #ifndef __cs_wimptx_h
 #define __cs_wimptx_h
@@ -23,9 +23,9 @@
 #endif
 
 #ifdef PARANOID
-#define wimpt_safe(a) wimpt_complain(a)
+#define wimpt_safe(a) consume(_kernel_oserror *, wimpt_complain(a))
 #else
-#define wimpt_safe(a) a
+#define wimpt_safe(a) consume(_kernel_oserror *, a)
 #endif
 
 /*

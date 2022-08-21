@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* String function routines for evaluator */
 
@@ -346,7 +346,7 @@ PROC_EXEC_PROTO(c_join)
     if(0 == len)
         return;
 
-    if(NULL == (p_u8 = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &status)))
+    if(NULL == (p_u8 = al_ptr_alloc_bytes(P_U8, len + 1/*CH_NULL*/, &status)))
     {
         ev_data_set_error(p_ev_data_res, status);
         return;
@@ -363,7 +363,7 @@ PROC_EXEC_PROTO(c_join)
         p_u8 += arglen;
     }
 
-    *p_u8 = NULLCH;
+    *p_u8 = CH_NULL;
 }
 
 /******************************************************************************
@@ -861,7 +861,7 @@ PROC_EXEC_PROTO(c_trim)
     while((e_ptr > s_ptr) && (e_ptr[-1] == ' '))
         --e_ptr;
 
-    *e_ptr = NULLCH;
+    *e_ptr = CH_NULL;
 
     /* crunge multiple spaces */
     for(i_ptr = o_ptr = s_ptr, gap = 0; i_ptr <= e_ptr; ++i_ptr)
@@ -919,7 +919,7 @@ PROC_EXEC_PROTO(c_value)
 
     len = MIN(args[0]->arg.string.size, sizeof32(buffer)-1);
     memcpy32(buffer, args[0]->arg.string.uchars, len);
-    buffer[len] = NULLCH;
+    buffer[len] = CH_NULL;
 
     ev_data_set_real_ti(p_ev_data_res, strtod(buffer, &ptr));
 

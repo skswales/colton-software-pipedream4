@@ -1,7 +1,5 @@
 | !Help for PipeDream
 |
-If "<File$Type_FAF>"="" Then Error No browser found to display HTML help
-|
 Set PipeDream$HelpFile <Obey$Dir>.Resource.HTMLHelp
-IfThere <PipeDream$HelpFile> Then Else Set PipeDream$HelpFile <Obey$Dir>.^.HTMLHelp
-IfThere <PipeDream$HelpFile> Then Filer_Run <PipeDream$HelpFile> Else Error PipeDream HTML help file not found
+If "<File$Type_FAF>"="" Then Set PipeDream$HelpFile <Obey$Dir>.Resource.RISC_OS.TextHelp
+IfThere <PipeDream$HelpFile> Then Filer_Run <PipeDream$HelpFile> Else Error PipeDream help file not found

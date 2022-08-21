@@ -5,7 +5,7 @@
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ; Copyright (C) 1989-1999 Colton Software
-; Copyright (C) 1999-2014 R W Colton
+; Copyright (C) 1999-2015 R W Colton
 
     GBLL    NAMES
     GBLL    PROFILING

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that does lots of backsplash commands */
 
@@ -176,9 +176,9 @@ mark_block_output(
 * mask & bits give the information to change the format
 * some operations set bits, some clear, and some toggle bits
 * this is done by masking out some bits and then exclusive-oring
-* eg to clear  - mask with 0 and eor with 0
-*    to set    - mask with 0 and eor with 1
-*    to toggle - mask with 1 and eor with 1
+* e.g. to clear  - mask with 0 and eor with 0
+*      to set    - mask with 0 and eor with 1
+*      to toggle - mask with 1 and eor with 1
 *
 ******************************************************************************/
 

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Variables pertaining to each PipeDream document (window) */
 
@@ -349,14 +349,14 @@ static DOCU initial_docu_data =
 /* --------------------------- riscos.c ---------------------------------- */
 
     window_NULL,
-    /* HOST_HWND rear_window */
+    /* HOST_WND rear_window */
     /* wimp_w rear__window */
 
     NULL,
     /* void * rear_template (should be wimp_wind *) */
 
     window_NULL,
-    /* HOST_HWND main_window */
+    /* HOST_WND main_window */
     /* wimp_w main__window */
 
     NULL,
@@ -366,7 +366,7 @@ static DOCU initial_docu_data =
     /* GDI_BOX open_box */
 
     window_NULL,
-    /* HOST_HWND colh_window */
+    /* HOST_WND colh_window */
     /* wimp_w colh__window */
 
     NULL,
@@ -704,7 +704,7 @@ docu_array_init_once(void)
 
     docu_array[DOCNO_MAX] = NO_DOCUMENT;
 
-    select_document(NO_DOCUMENT);
+    select_document_none();
 }
 
 extern void
@@ -716,7 +716,7 @@ docu_init_once(void)
     dialog_initialise_once();       /* set default options correctly */
 
     /* ensure we don't mess the initial window data up accidentally */
-    select_document(NO_DOCUMENT);
+    select_document_none();
 }
 
 _Check_return_
@@ -1110,7 +1110,7 @@ destroy_current_document(void)
     /* see if we can get rid of the docu thunk */
     current_document()->ss_instance_data.ss_doc.is_docu_thunk = TRUE;
 
-    select_document(NO_DOCUMENT);
+    select_document_none();
 
     /* finally see if we can get rid of the docu thunk */
     ev_close_sheet(docno); /* will call destroy_docu_thunk() as needed */
@@ -1578,6 +1578,14 @@ select_document(
     }
 
     current_p_docu_global_register_assign(p_docu_new);
+}
+
+extern void
+select_document_none(void)
+{
+    trace_0(TRACE_APP_PD4, TEXT("selecting document NONE"));
+
+    current_p_docu_global_register_assign(NO_DOCUMENT);
 }
 
 #endif /* TRACE_DOC */

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Expression editors - formula line & formula window */
 
@@ -355,7 +355,7 @@ expedit_transfer_line_to_box(
 
         caretpos = formline_cursor_getpos();    /* either actual or last known caret position */
 
-        formwind_buildtitlestring(title, elemof32(title), edtslr_col, edtslr_row);  /* Build string, eg "Formula window: A1" */
+        formwind_buildtitlestring(title, elemof32(title), edtslr_col, edtslr_row);  /* Build string, e.g. "Formula window: A1" */
 
         if((err = formwind_create_fill_open(&editexpression_formwind,
                                             current_docno(),
@@ -615,7 +615,7 @@ start_editor(
         char title[LIN_BUFSIZ];
         S32 err;
 
-        formwind_buildtitlestring(title, elemof32(title), curcol, currow);          /* Build string, eg "Formula window: A1" */
+        formwind_buildtitlestring(title, elemof32(title), curcol, currow);          /* Build string, e.g. "Formula window: A1" */
 
         if((err = formwind_create_fill_open(&editexpression_formwind,
                                             current_docno(),

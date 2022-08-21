@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Internal header file for the gr_chart module */
 
@@ -174,7 +174,7 @@ typedef struct GR_DIAG_DIAGHEADER
 {
     GR_BOX bbox;
 
-    TCHARZ szCreatorName[12 + 4]; /* must fit PDreamCharts and NULLCH */
+    TCHARZ szCreatorName[12 + 4]; /* must fit PDreamCharts and CH_NULL */
 
     /* followed immediately by objects */
 }
@@ -279,7 +279,7 @@ typedef struct GR_DIAG_OBJPICTURE
     GR_DIAG_POSOBJHDR_DEF;
 
     GR_SIZE           size;
-    GR_CACHE_HANDLE   picture;
+    IMAGE_CACHE_HANDLE picture;
     GR_FILLSTYLE      fillstyle;
 }
 GR_DIAG_OBJPICTURE;
@@ -496,7 +496,7 @@ gr_diag_scaled_picture_add(
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_BOX pBox,
-    GR_CACHE_HANDLE picture,
+    IMAGE_CACHE_HANDLE picture,
     _InRef_     PC_GR_FILLSTYLE fillstyle);
 
 _Check_return_
@@ -858,7 +858,7 @@ typedef struct GR_SERIES
         GR_CHART_ITEMNO  n_items_total;
 
         /* actual min/max limits from this series in its given
-         * plotstyle eg. taking error bars, log axes etc. into account
+         * plotstyle e.g. taking error bars, log axes etc. into account
         */
         GR_MINMAX_NUMBER limits_x;
         GR_MINMAX_NUMBER limits_y;
@@ -1210,7 +1210,7 @@ typedef struct GR_CHART
         struct GR_CHART_D3_BITS
         {
             UBF on       : 1; /* 3-D embellishment? applies to whole chart */
-            UBF use      : 1; /* whether 3-D is in use, eg pie & scat turn off */
+            UBF use      : 1; /* whether 3-D is in use, e.g. pie & scat turn off */
 
             UBF reserved : sizeof(U32)*8 - 1;
         }
@@ -1440,7 +1440,7 @@ gr_chart_scaled_picture_add(
     _InRef_     PC_GR_BOX box,
     PC_GR_FILLSTYLE style)
 {
-    status_return(gr_diag_scaled_picture_add(cp->core.p_gr_diag, NULL, id, box, style ? (GR_CACHE_HANDLE) style->pattern : GR_CACHE_HANDLE_NONE, style));
+    status_return(gr_diag_scaled_picture_add(cp->core.p_gr_diag, NULL, id, box, style ? (IMAGE_CACHE_HANDLE) style->pattern : IMAGE_CACHE_HANDLE_NONE, style));
 
     return(STATUS_DONE);
 }
@@ -2140,7 +2140,7 @@ GR_RISCDIAG_PROCESS_T;
 
 typedef struct GR_RISCDIAG_RISCOS_FONTLIST_ENTRY
 {
-    SB_U8Z szHostFontName[64];
+    SBCHARZ szHostFontName[64];
 }
 GR_RISCDIAG_RISCOS_FONTLIST_ENTRY, * P_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY; typedef const GR_RISCDIAG_RISCOS_FONTLIST_ENTRY * PC_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY;
 
@@ -2560,14 +2560,15 @@ gr_riscdiag_diagram_tagged_object_strip(
 _Check_return_
 extern STATUS
 gr_riscdiag_wackytag_save_start(
-    FILE_HANDLE f,
-    /*out*/ filepos_t * pos);
+    FILE_HANDLE file_handle,
+    _OutRef_    P_DRAW_DIAG_OFFSET p_offset);
 
 _Check_return_
 extern STATUS
 gr_riscdiag_wackytag_save_end(
-    FILE_HANDLE f,
-    const filepos_t * pos);
+    FILE_HANDLE file_handle,
+    _InRef_     PC_DRAW_DIAG_OFFSET p_offset);
+
 /*
 RISC OS Draw JPEG objects
 */
@@ -3128,8 +3129,8 @@ gr_numtostr(
     _InRef_     PC_F64 pValue,
     S32 eformat,
     S32 decimals,
-    char decimal_point_ch,  /* NULLCH -> default (.)    */
-    char thousands_sep_ch); /* NULLCH -> default (none) */
+    char decimal_point_ch,  /* CH_NULL -> default (.)    */
+    char thousands_sep_ch); /* CH_NULL -> default (none) */
 
 /*
 template names & important icons therein (keep consistent with &.CModules.*.tem.gr_chart)

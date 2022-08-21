@@ -28,7 +28,7 @@
 <A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/refguide/index.html">PipeDream Reference Guide</A></P>
 
 <P>Addenda and Errata to the printed documentation may be accessed online at
-<A HREF="http://croftnuisk.co.uk/coltsoft/fireworkz/pipedream-reference-guide/pipedream-addenda-and-errata">PipeDream Addenda and Errata</A></P>
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata">PipeDream Addenda and Errata</A></P>
 
 <P>Updated PipeDream packages and example files, including those used in the PipeDream Tutorial, may be
 obtained directly from
@@ -74,10 +74,49 @@ Copyright (C) 1998-2015 R W Colton</P>
 <H2>Release History</H2>
 
 <p>The full release history may be found
-<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A>;
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/release_history">online</A>;
 just the last few revisions of PipeDream are documented here.</p>
 
 <P>&nbsp;</P>
+
+<H4>4.55 (21 May 2016)</H4>
+
+<p>PipeDream chart files are now PRM-conformant Draw files and can be loaded by
+Draw, Vector and Fireworkz when the file type is set to Draw. They can still be
+loaded by previous versions of PipeDream.</p>
+
+<p>Image file loader updated to handle Vector files.</p>
+
+<p>Image file loader updated to handle sprites with mode selectors.</p>
+
+<p>Image file loader updated to better handle JPEGs.</p>
+
+<p>Uses ChangeFSI, if available, to convert a much wider range of image file formats.</p>
+
+<p>On machines where the OS is not shadowed in RAM, you can improve ChangeFSI's performance by first typing '*RMFaster BASIC'.</p>
+
+<p>Scrap files for image conversion are created in the &lt;Wimp$ScrapDir&gt;.PipeDream directory.</p>
+
+<p>Fixed potential error leak in LINEST().</p>
+
+<p>Fixed URLs in notes for new CMS.</p>
+
+<p>Coloured tick and cross for accept / cancel buttons of formula line.</p>
+
+<p>Document file sprites have turned-up bottom right corner.</p>
+
+<p>Fixed long-standing spell check dictionary creation / packing exception.</p>
+
+<p>Dropped support for ancient 'Integrale' format spell check dictionaries which required ODctDefn.</p>
+
+<p>Updated Master dictionary with many new words (from SCOWL).
+The Master dictionary that now ships with PipeDream contains words
+with <I>-ise</I> style endings which are common in written British English.
+A Master dictionary containing words with <I>-ize</I> style endings (<A
+HREF="https://en.wikipedia.org/wiki/Oxford_spelling">Oxford English Dictionary spelling</A>)
+may be obtained from the web site and substituted for that shipped with PipeDream.
+The old PipeDream dictionary containing both <I>-ise</I> and <I>-ize</I> style endings may also be obtained from the web site.</p>
+
 
 <H4>4.54 (22 Nov 2015)</H4>
 
@@ -128,232 +167,6 @@ Take care to click in the right place! The Save-on-close dialogue box now uses t
 <p>Some JPEG/JFIF files (e.g. with thumbnail pictures) were not being automatically detected as such.</p>
 
 <p>ROOL DDE 26 build environment used.</p>
-
-
-<H4>4.53/06 (21 Sep 2015)</H4>
-
-<p>Choices:PipeDream. replaced by &lt;Choices$Write&gt;.PipeDream. in the PipeDream$Path variable. This should allow better resolution of custom function files when they have been opened by Shift-click on the PipeDream icon.</p>
-
-<p>ROOL DDE 25 build environment used (used ROOL DDE 20 for 32-bit builds prior to this release).</p>
-
-<p>Lotus 1-2-3 file converters moved out to separate packaged utilities.</p>
-
-
-<H4>4.53/05 (14 Sep 2015)</H4>
-
-<P>IconSprites !SpritesR5 on RISC OS 5.</P>
-
-<P>Modernised pinboard icon in !SpritesR5 to RISC OS 5 style.</P>
-
-
-<H4>4.53/04 (04 Sep 2015)</H4>
-
-<P>Fixed cell reference detection to no longer allow row zero.</P>
-
-<P>Pressing a key will terminate the splash screen early, as does clicking the window.</P>
-
-
-<P>Modernised pinboard icon in !Sprites22 to RISC OS 4 style.</P>
-
-
-<H4>4.53/03 (06 Aug 2015)</H4>
-
-<P>Converting a number cell containing an undefined custom function reference to text fixed.</P>
-
-<P>Date format extended to accept five 'm' or 'M' characters to yield first character of month name.</P>
-
-
-<H4>4.53/02 (09 Jul 2015)</H4>
-
-<P>Timing-dependent zero-page access during chart loading fixed.</P>
-
-
-<H4>4.53/01 (07 Jul 2015)</H4>
-
-<P>REPT() spreadsheet function now handles repeat count of zero correctly. Since 4.50/40, this gave an error; prior to that it produced one copy of the string.</P>
-
-
-<H4>4.53 (10 Jun 2015)</H4>
-
-<P>CEILING() and FLOOR() spreadsheet functions have been backported from Fireworkz
-(see Addenda and errata).</P>
-
-<P>INT() spreadsheet function now rounds better for non-power-of-two target integer values.</P>
-
-<P>IRR() spreadsheet function now converges faster (poor initial conditioning).</P>
-
-<P>LOG() spreadsheet function now accepts an optional base parameter.</P>
-
-<P>Number formatter used by TEXT() spreadsheet function handles blank cells and PipeDream error numbers.</P>
-
-<P>Reinstated Colton Software copyright in splash screen and made dates consistent with LICENSE files.</P>
-
-<P>When inserting text files (as TAB or Paragraph) cell references in text-@ fields are not updated.
-This allows copying common text fragments directly from an editor or template files without unwanted modification.</P>
-
-
-<H4>4.52/08 (18 Dec 2014)</H4>
-
-<P>Templates adjusted to cater for use of a larger Desktop font for
-readability (used 14pt Homerton.Medium set by Paul Vigay's !MiscSetup).</P>
-
-<P>Replaced PipeDream's flawed date handling code with code backported from Fireworkz.</P>
-
-<P>Formulae may be entered with an optional leading equals sign.</P>
-
-<P>Category names and function categorisation in spreadsheet function menu
-are more consistent with (updated) documentation.</P>
-
-<P>BIN() spreadsheet function has always taken an arbitrary shaped array or
-range of data as its first parameter. Previously only the first column of this
-data would have been binned; now all the supplied data is binned.</P>
-
-<P>BINOM() spreadsheet function removed - this was just a synonym for COMBIN().</P>
-
-<P>BETA(), FACT(), GAMMALN() spreadsheet functions now use the lgamma() function
-provided by the SharedCLibrary (used to be FreeBSD implementation).
-Results may differ around the 15th digit.</P>
-
-
-<H4>4.52/07 (05 Nov 2014)</H4>
-
-<P>!Run ensures ColourPicker module is available on startup - this module is
-used in colour selection in charts, and PipeDream would otherwise fail on
-systems where this was not already loaded, e.g. RISC&nbsp;OS 3.1.</P>
-
-
-<H4>4.52/06 (01 Nov 2014)</H4>
-
-<P>Splash screen now creates a window in which to render objects.</P>
-
-<P>Improve appearance of toolbar on RISC&nbsp;OS 4.39 when 'Apply to sprite
-icons' effect is selected.</P>
-
-<P>Use newer error reporting mechanism on RISC&nbsp;OS 3.5 and later.</P>
-
-<P>Yes / No query dialogue boxes, anagram and browsing, alert and input
-dialogue boxes and the formula editing window no longer have a close icon
-(and thereby possibly unwanted iconise icon) on the title bar.</P>
-
-<P>Multi-line formula editing (and chart text) window now uses Corpus.Medium
-rather than VDU 5 font if possible.</P>
-
-<P>Function menu substitutes non-break space for space when displaying slot
-/ range content to get around Window Manager attempts to right-justify
-certain keywords.</P>
-
-<P>Function menu extended to show dependent slots / ranges / names for text
-and empty slots as well as number slots.</P>
-
-<P>Function menu no longer attempts to show dependent slots / ranges / names
-for slots in custom function sheets as this is meaningless.</P>
-
-<P>Font Selector dialogue box is now closed when another dialogue box is
-opened.</P>
-
-<P>Font Selector dialogue box now acts as a persistent 'standalone' dialogue
-box (like Save) with respect to window / application closing.</P>
-
-<P>Font Selector dialogue box no longer opens when another persistent
-'standalone' dialogue box such as Save is already open.</P>
-
-<P>Automatically generated temporary arrays of strings (e.g.
-REPT(text_cell_reference, {1,2,3})) no longer cause heap corruption (problem
-exposed by changes in 4.50/39).</P>
-
-<P>LISTCOUNT() spreadsheet function has been backported from Fireworkz
-(see Addenda and errata).</P>
-
-<P>SORT() spreadsheet function no longer masks potential memory full errors
-during creation of temporary data array prior to the sort.</P>
-
-<P>Problem with Ctrl-CGS (Goto Slot) and long document names fixed.</P>
-
-
-<H4>4.52/05 (16 Jul 2014)</H4>
-
-<P>Problem with ROUND() spreadsheet function fixed.</P>
-
-<P>Improved text and layout of Save/Discard/Cancel dialogue box on exit with
-modified document(s).</P>
-
-<P>PD4Keys command file is no longer shipped - it was only there to revert
-from PD3Keys.</P>
-
-
-<H4>4.52/04 (04 Jul 2014)</H4>
-
-<P>Issue with PipeDream's font cache mechanism could sometimes lead to
-highlighted text not being rendered in the correct font variant.</P>
-
-<P>Text @-fields containing cell references to other cells containing text
-@-fields containing cell references now render sensibly, allowing
-text to be concatenated. There is a fixed depth limit of nine (rather than
-the old effective limit of one).</P>
-
-<P>Text @-fields containing cell references to other cells containing text
-@-fields containing cell references (and these did't get expanded, by the
-way: see above) could yield incorrect cell references when the target cell
-was deleted. This has been there since the very early days of PipeDream as
-far as I can see! Any text @-field containing a bad cell is displayed with a
-leading percent character, as it would shown for bad cell references in
-formulae.</P>
-
-<P>Text @-fields containing cell references could yield incorrect cell
-references when updated (broken in 4.50/43). Several slightly inconsistent
-instances of cell reference reading/writing code replaced with fast
-consistent routines.</P>
-
-<P>Propagated errors now contain a reference to the cell that generated the
-initial error to help fault-finding.</P>
-
-<P>Unary plus and minus operators and ABS() spreadsheet function no longer
-unnecessarily convert integer arguments to floating point.</P>
-
-<P>If the <I>length</I> parameter is omitted for LEFT() and RIGHT()
-spreadsheet functions, <I>length</I> of 1 is assumed. A <I>length</I> of 0
-is now allowed (consistency with MID()).</P>
-
-<P>AVG() and SUM() spreadsheet functions fixed: operating on extremely large
-ranges of individually small integers could eventually give an undetected
-integer overflow.</P>
-
-<P>LOGEST() spreadsheet function fixed: could have crashed PipeDream when
-given fewer than three parameters.</P>
-
-<P>M_INVERSE() spreadsheet function now yields correct error for non-square
-input matrix.</P>
-
-<P>Calculation of determinants of large matrices would have caused heap
-corruption.</P>
-
-<P>Very large numbers formatted as X# (column name) could have crashed
-PipeDream.</P>
-
-<P>Group box captions use better icon style for patterned background.</P>
-
-<P>Changed writable field height to 60 OS units - the RISC&nbsp;OS Style
-Guide's suggested 68 OS units is way too tall.</P>
-
-
-<H4>4.52/03 (18 Feb 2014)</H4>
-
-<P>tboxlibs' flex module compiled into PipeDream (with patches). Added
-shrink_forbid option (needed for running out of memory when printing problem
-as for 4.50/09). Added flex allocation granularity mechanism to tboxlibs'
-flex module to avoid unnecessary overheads and slot/area thrashing.</P>
-
-<P>Spurious carriage return characters removed from Messages file.</P>
-
-<P>No longer supports squashed Messages file (for source clarity).</P>
-
-
-<H4>4.52/02 (12 Feb 2014)</H4>
-
-<P>PipeDream released under the Mozilla Public License 2.0 (MPL).</P>
-
-<P>The installed Event and Escape handlers are now truly 26/32-bit agnostic:
-they do not modify flags, so do not attempt to restore them.</P>
 
 
 <A ID="Toolbar">
@@ -475,8 +288,40 @@ dialogue cannot reach. Instead, a simple obey file is included called
 <A ID="CopyrightExtra">
 <H2>Additional Copyright Information</H2>
 
-<H4>Portions Copyright (C) 2012-2015 Stuart Swales</H4>
+<H4>Portions Copyright (C) 2012-2016 Stuart Swales</H4>
 <P>Reporter interface code.</P>
+
+<H4>Mixed Copyrights</H4>
+<P>Master dictionary.</P>
+
+<P>The master dictionary is derived from Colton Software and
+SCOWL word lists. The following additional copyrights apply to this dictionary:</P>
+
+<P>Copyright 2000-2014 by Kevin Atkinson</P>
+
+<PRE>
+  Permission to use, copy, modify, distribute and sell these word
+  lists, the associated scripts, the output created from the scripts,
+  and its documentation for any purpose is hereby granted without fee,
+  provided that the above copyright notice appears in all copies and
+  that both that copyright notice and this permission notice appear in
+  supporting documentation. Kevin Atkinson makes no representations
+  about the suitability of this array for any purpose. It is provided
+  "as is" without express or implied warranty.
+</PRE>
+
+<P>Copyright (c) J Ross Beresford 1993-1999. All Rights Reserved.</P>
+
+<PRE>
+  The following restriction is placed on the use of this publication:
+  if The UK Advanced Cryptics Dictionary is used in a software package
+  or redistributed in any form, the copyright notice must be
+  prominently displayed and the text of this document must be included
+  verbatim.
+
+  There are no other restrictions: I would like to see the list
+  distributed as widely as possible.
+</PRE>
 
 <HR/>
 

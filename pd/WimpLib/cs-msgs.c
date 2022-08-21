@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Stuart K. Swales, 06-Jun-90 */
 
@@ -91,7 +91,7 @@ msgs_lookup(/*const*/ char *tag_and_default)
     }
 
     /* copy tag to buffer */
-    *tag_buffer = NULLCH;
+    *tag_buffer = CH_NULL;
     strncat(tag_buffer, tag_and_default, tag_length);
 
     /* if there ain't a message block or it's bad then we can't do lookup */
@@ -162,7 +162,7 @@ __msgs_readfile(
     alloc_length = real_length;
     } /*block*/
 
-    if(NULL == memchr(msgs__block, NULLCH, real_length)) /* 20aug96 allow loading of preprocessed messages */
+    if(NULL == memchr(msgs__block, CH_NULL, real_length)) /* 20aug96 allow loading of preprocessed messages */
     {
         /* loop over loaded messages: end -> real end of messages */
         const char * in = msgs__block;
@@ -172,7 +172,7 @@ __msgs_readfile(
 #endif
         const char * end = in + real_length;
         int ch;
-        int lastch = NULLCH;
+        int lastch = CH_NULL;
 
         do  {
             ch = (in != end) ? *in++ : LF;
@@ -187,31 +187,31 @@ __msgs_readfile(
                 if(in == end)
                     break;
 
-                lastch = NULLCH;
+                lastch = CH_NULL;
             }
 
             if((ch == LF)  ||  (ch == CR))
             {
                 if((ch ^ lastch) == (LF ^ CR))
                 {
-                    tracef0("[msgs_readfile: just got the second of a pair of LF,CR or CR,LF - NULLCH already placed so loop]");
-                    lastch = NULLCH;
+                    tracef0("[msgs_readfile: just got the second of a pair of LF,CR or CR,LF - CH_NULL already placed so loop]");
+                    lastch = CH_NULL;
                     continue;
                 }
                 else
                 {
-                    tracef1("[msgs_readfile: got a line terminator at &%p - place a NULLCH]", in - 1);
+                    tracef1("[msgs_readfile: got a line terminator at &%p - place a CH_NULL]", in - 1);
                     lastch = ch;
-                    ch = NULLCH;
+                    ch = CH_NULL;
                 }
             }
             else
                 lastch = ch;
 
-            /* don't place two NULLCHs together or one at the start (this also means you can have blank lines) */
+            /* don't place two CH_NULLs together or one at the start (this also means you can have blank lines) */
             if(!ch)
             {
-                tracef1("[msgs_readfile: placing NULLCH at &%p]", out);
+                tracef1("[msgs_readfile: placing CH_NULL at &%p]", out);
                 if((out == msgs__block)  ||  !*(out - 1))
                     continue;
 #if TRACE
@@ -225,8 +225,8 @@ __msgs_readfile(
         }
         while(in != end);
 
-        tracef1("[msgs_readfile: placing last NULLCH at &%p]", out);
-        *out++ = NULLCH; /* need this last byte as end marker */
+        tracef1("[msgs_readfile: placing last CH_NULL at &%p]", out);
+        *out++ = CH_NULL; /* need this last byte as end marker */
     }
 }
 

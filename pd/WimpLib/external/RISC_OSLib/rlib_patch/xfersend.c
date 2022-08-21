@@ -442,7 +442,7 @@
 +
 +static BOOL xfersend__wimp_EBUT(dbox d, wimp_eventstr *e)
 +{
-+  tracef1 ("xfersend EBUT &%p\n", e->data.but.m.bbits);
++  tracef1 ("xfersend EBUT &%x\n", e->data.but.m.bbits);
 +
 +  if( (e->data.but.m.bbits == wimp_BDRAGLEFT) &&
 +      (e->data.but.m.i     == xfersend_FIcon) )

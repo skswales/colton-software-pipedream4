@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* A generalised list manager based on a handle type heap system
  * with movable blocks of memory
@@ -1449,7 +1449,7 @@ allocpool(
     /* packlist now never frees the dblkfree+1 entry; not only could
      * it free the entry we had just allocated but thrashing could occur:
      * expand dblk; h_pool allochandle fails; caller calls packlist, freeing dblk;
-     * recalls allocpool which expands dblk etc etc
+     * recalls allocpool which expands dblk etc. etc.
      * MRJC 23.9.91
      */
     h_pool = list_allochandle((S32) size);

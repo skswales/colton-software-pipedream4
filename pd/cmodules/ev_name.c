@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that manages the list of named resources for the evaluator */
 
@@ -566,10 +566,10 @@ PROC_QSORT_PROTO(static, customid_lookcomp, EV_CUSTOM)
 {
     /* NB no current_p_docu global register furtling required */
 
-    if(((P_EV_CUSTOM) arg1)->key == ((P_EV_CUSTOM) arg2)->key)
+    if(((P_EV_CUSTOM) _arg1)->key == ((P_EV_CUSTOM) _arg2)->key)
         return(0);
 
-    return(((P_EV_CUSTOM) arg1)->key > ((P_EV_CUSTOM) arg2)->key ? 1 : -1);
+    return(((P_EV_CUSTOM) _arg1)->key > ((P_EV_CUSTOM) _arg2)->key ? 1 : -1);
 }
 
 /******************************************************************************
@@ -757,10 +757,10 @@ PROC_QSORT_PROTO(static, nameid_lookcomp, EV_NAME)
 {
     /* NB no current_p_docu global register furtling required */
 
-    if(((P_EV_NAME) arg1)->key == ((P_EV_NAME) arg2)->key)
+    if(((P_EV_NAME) _arg1)->key == ((P_EV_NAME) _arg2)->key)
         return(0);
 
-    return(((P_EV_NAME) arg1)->key > ((P_EV_NAME) arg2)->key ? 1 : -1);
+    return(((P_EV_NAME) _arg1)->key > ((P_EV_NAME) _arg2)->key ? 1 : -1);
 }
 
 /******************************************************************************

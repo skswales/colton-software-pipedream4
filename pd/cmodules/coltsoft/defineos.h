@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Some target-specific definitions for the target machine and OS */
 
@@ -60,8 +60,8 @@ check that setup from selectos.h is ok
 
 /* Norcroft compiler, target ARM / RISC OS */
 
-#ifndef _CHAR_UNSIGNED
-#define _CHAR_UNSIGNED 1
+#ifndef __CHAR_UNSIGNED__
+#define __CHAR_UNSIGNED__ 1
 #endif
 
 #if __STDC_VERSION__ >= 199901L

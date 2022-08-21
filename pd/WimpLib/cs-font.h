@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2014 Stuart Swales */
+/* Copyright (C) 2012-2016 Stuart Swales */
 
 #ifndef __cs_font_h
 #define __cs_font_h

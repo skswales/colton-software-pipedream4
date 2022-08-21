@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that drives PipeDream */
 
@@ -122,16 +122,14 @@ profile_setup(void)
 static void
 get_user_info(void)
 {
-    U8 env_value[BUF_MAX_PATHSTRING];
-    U8 var_name[BUF_MAX_PATHSTRING];
+    char var_name[BUF_MAX_PATHSTRING];
+    TCHARZ env_value[256];
 
-    make_var_name(var_name, elemof32(var_name), "$User1");
-    if(NULL == _kernel_getenv(var_name, env_value, elemof32(env_value)))
+    if(NULL == _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$User1"), env_value, elemof32(env_value)))
         if(0 != strcmp(env_value, "NoInfo"))
             xstrkpy(user_name, elemof32(user_name), env_value);
 
-    make_var_name(var_name, elemof32(var_name), "$User2");
-    if(NULL == _kernel_getenv(var_name, env_value, elemof32(env_value)))
+    if(NULL == _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$User2"), env_value, elemof32(env_value)))
         xstrkpy(organ_name, elemof32(organ_name), env_value); /* SKS 13.12.98 */
 }
 
@@ -513,14 +511,17 @@ user_organ_id(void)
     return(organ_name);
 }
 
-extern void
+/*ncr*/
+_Ret_z_
+extern PTSTR
 make_var_name(
-    _Out_writes_z_(elemof_buffer) P_USTR var_name /*filled*/,
+    _Out_writes_z_(elemof_buffer) PTSTR var_name /*filled*/,
     _InVal_     U32 elemof_buffer,
-    _In_z_      PC_USTR p_u8_suffix)
+    _In_z_      PCTSTR suffix)
 {
-    xstrkpy(var_name, elemof_buffer, product_id());
-    xstrkat(var_name, elemof_buffer, p_u8_suffix);
+    tstr_xstrkpy(var_name, elemof_buffer, product_id());
+    tstr_xstrkat(var_name, elemof_buffer, suffix);
+    return(var_name);
 }
 
 /*
@@ -626,8 +627,7 @@ decode_run_options(void)
     char run_options[BUF_MAX_PATHSTRING];
     const char * p_u8 = run_options;
 
-    make_var_name(var_name, elemof32(var_name), "$RunOptions");
-    if(NULL != _kernel_getenv(var_name, run_options, elemof32(run_options)))
+    if(NULL != _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$RunOptions"), run_options, elemof32(run_options)))
         return;
 
     while(NULL != p_u8)

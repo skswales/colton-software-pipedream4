@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Date and time function routines for evaluator */
 
@@ -109,7 +109,7 @@ PROC_EXEC_PROTO(c_datevalue)
 
     len = MIN(args[0]->arg.string.size, elemof32(buffer)-1); /* SKS for 1.30 */
     memcpy32(buffer, args[0]->arg.string.uchars, len);
-    buffer[len] = NULLCH;
+    buffer[len] = CH_NULL;
 
     if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_NULL == p_ev_data_res->arg.ev_date.date))
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_DATE);
@@ -430,7 +430,7 @@ PROC_EXEC_PROTO(c_timevalue)
 
     len = MIN(args[0]->arg.string.size, sizeof32(buffer)-1);
     memcpy32(buffer, args[0]->arg.string.uchars, len);
-    buffer[len] = NULLCH;
+    buffer[len] = CH_NULL;
 
     if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_NULL != p_ev_data_res->arg.ev_date.date))
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BADTIME);

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Undebuggable parts of chart module */
 
@@ -49,7 +49,7 @@ gr_nodbg_chart_save(
     FILE_HANDLE f,
     P_U8 save_filename /*const*/)
 {
-    filepos_t wackytag_pos;
+    DRAW_DIAG_OFFSET wackytag_offset;
 
     if(cp->core.p_gr_diag && cp->core.p_gr_diag->gr_riscdiag.draw_diag.length)
     {
@@ -61,13 +61,13 @@ gr_nodbg_chart_save(
         /* write out a null recognizable header of a RISC OS Draw file */
         P_DRAW_DIAG diag;
 
-        diag = gr_cache_search_empty();
+        diag = image_cache_search_empty();
 
-        status_return(file_write_err(diag->data, diag->length, 1, f));
+        status_return(file_write_bytes(diag->data, diag->length, f));
     }
 
     /* save tag header and object */
-    status_return(gr_riscdiag_wackytag_save_start(f, &wackytag_pos));
+    status_return(gr_riscdiag_wackytag_save_start(f, &wackytag_offset));
 
     /* save user tag components for chart reload - client must note preferred save using NULL handle */
     status_return(gr_chart_save_external(cp->core.ch, f, save_filename,
@@ -78,9 +78,9 @@ gr_nodbg_chart_save(
     /* save tag components for chart reload */
     status_return(gr_chart_save_internal(cp, f, save_filename));
 
-#if 0
-    /* update tag header size field */
-    status_return(gr_riscdiag_wackytag_save_end(f, &wackytag_pos));
+#if 1
+    /* pad file and update tag header size field */
+    status_return(gr_riscdiag_wackytag_save_end(f, &wackytag_offset));
 #endif
 
     return(1);

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Chart editing module part III - the nightname continues */
 
@@ -219,7 +219,7 @@ gr_text_new(
     STATUS status;
 
     if(szText)
-        nBytes = sizeof32(GR_TEXT) + strlen32p1(szText) /*NULLCH*/;
+        nBytes = sizeof32(GR_TEXT) + strlen32p1(szText) /*CH_NULL*/;
     else
         nBytes = sizeof32(GR_TEXT) + sizeof32(GR_DATASOURCE);
 
@@ -617,8 +617,8 @@ mlec_event_proto(static, mlsubmenu_mlec_event_handler)
 
 typedef struct FILLSTYLE_ENTRY
 {
-    GR_CACHE_HANDLE cah;
-    char            leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leafnames (was BUF_MAX_LEAFNAME) */
+    IMAGE_CACHE_HANDLE cah;
+    char leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leafnames (was BUF_MAX_LEAFNAME) */
 }
 FILLSTYLE_ENTRY, * P_FILLSTYLE_ENTRY; typedef const FILLSTYLE_ENTRY * PC_FILLSTYLE_ENTRY;
 
@@ -693,7 +693,7 @@ gr_chartedit_build_fillstyle_list(
     P_GR_CHART       cp;
     GR_FILLSTYLE     fillstyle;
     PC_U8            pict_dir;
-    GR_CACHE_HANDLE  current_cah;
+    IMAGE_CACHE_HANDLE current_cah;
     LIST_ITEMNO      current_key;
     U8               path[BUF_MAX_PATHSTRING];
     U8               fullname[BUF_MAX_PATHSTRING];
@@ -706,13 +706,13 @@ gr_chartedit_build_fillstyle_list(
     assert(cp);
     gr_chart_objid_fillstyle_query(cp, id, &fillstyle);
 
-    current_cah = (GR_CACHE_HANDLE) fillstyle.pattern;
+    current_cah = (IMAGE_CACHE_HANDLE) fillstyle.pattern;
     current_key = -1;
 
     /* throw away any existing fillstyle_list, then (re)build it */
     collect_delete(&fillstyle_list.lbr);
 
-    /* enumerate Markers or Pictures into a list and gr_cache_ensure_entry each of them */
+    /* enumerate Markers or Pictures into a list and image_cache_ensure_entry each of them */
     switch(id.name)
     {
     case GR_CHART_OBJNAME_SERIES:
@@ -760,9 +760,9 @@ gr_chartedit_build_fillstyle_list(
     {
         if(file_objinfo_type(infostrp) == FILE_OBJECT_FILE)
         {
-            U8              leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 cater for long leafnames (was MAX_LEAFNAME) */
-            GR_CACHE_HANDLE new_cah;
-            LIST_ITEMNO     new_key;
+            U8 leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 cater for long leafnames (was MAX_LEAFNAME) */
+            IMAGE_CACHE_HANDLE new_cah;
+            LIST_ITEMNO new_key;
 
             file_objinfo_name(infostrp, leafname, elemof32(leafname));
 
@@ -773,7 +773,7 @@ gr_chartedit_build_fillstyle_list(
 
             trace_1(TRACE_MODULE_GR_CHART, "fullname is '%s'", fullname);
 
-            res = gr_cache_entry_ensure(&new_cah, fullname);   /* Tutu said to ignore errors */
+            res = image_cache_entry_ensure(&new_cah, fullname);   /* Tutu said to ignore errors */
 
             /* create a list entry (add to end), returns a key */
             new_key = -1;
@@ -781,7 +781,7 @@ gr_chartedit_build_fillstyle_list(
             if(NULL != (entryp = collect_add_entry_elem(FILLSTYLE_ENTRY, &fillstyle_list, &new_key, &res)))
             {
                 /* note key if we added current picture to list. doesn't matter
-                 * about matching GR_CACHE_HANDLE_NONE as that's trapped below
+                 * about matching IMAGE_CACHE_HANDLE_NONE as that's trapped below
                 */
                 if(current_cah == new_cah)
                     current_key = new_key;
@@ -795,9 +795,9 @@ gr_chartedit_build_fillstyle_list(
     file_find_close(&enumstrp);     /* Not really needed, done by file_find_next in this case */
 
     /* if the current fillstyle pattern is not already there then insert at front of list */
-    if((current_cah != GR_CACHE_HANDLE_NONE) && (current_key == -1))
+    if((current_cah != IMAGE_CACHE_HANDLE_NONE) && (current_key == -1))
     {
-        gr_cache_name_query(&current_cah, fullname, sizeof(fullname)-1);
+        image_cache_name_query(&current_cah, fullname, sizeof(fullname)-1);
 
         current_key = 0;
 
@@ -813,7 +813,7 @@ gr_chartedit_build_fillstyle_list(
 
 static void
 fillstyle_redraw_core(
-    GR_CACHE_HANDLE cah,
+    IMAGE_CACHE_HANDLE cah,
     const wimp_redrawstr * r,
     wimp_icon * picture)
 {
@@ -854,7 +854,7 @@ fillstyle_redraw_core(
     bbc_gcol(0, 128);   /* clear background to white */
     wimpt_safe(bbc_vdu(bbc_ClearGraph));
 
-    p_draw_diag = gr_cache_loaded_ensure(&cah);
+    p_draw_diag = image_cache_loaded_ensure(&cah);
 
     if(p_draw_diag)
     {
@@ -899,7 +899,7 @@ fillstyle_event_handler(
     case wimp_EREDRAW:
         {
         PC_FILLSTYLE_ENTRY entryp;
-        GR_CACHE_HANDLE   cah;
+        IMAGE_CACHE_HANDLE cah;
         wimp_redrawstr    r;
         wimp_icon         picture;
         BOOL              more;
@@ -1022,7 +1022,7 @@ gr_chartedit_selection_fillstyle_edit(
         for(entryp = collect_first(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &key);
             entryp;
             entryp = collect_next( FILLSTYLE_ENTRY, &fillstyle_list.lbr, &key))
-            if((GR_CACHE_HANDLE) fillstyle.pattern == entryp->cah)
+            if((IMAGE_CACHE_HANDLE) fillstyle.pattern == entryp->cah)
             {
                 fillstyle_key = key;
                 break;
@@ -1831,7 +1831,7 @@ gr_chartedit_text_editor_make(
         GR_TEXT temp;
         U32 nBytes;
 
-        nBytes = mlsubmenu_gettextlen(&mlsubmenu) + 1; /* + 1 for NULLCH */
+        nBytes = mlsubmenu_gettextlen(&mlsubmenu) + 1; /* + 1 for CH_NULL */
 
         /* save current header */
         temp = *t;

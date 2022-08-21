@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Marked block handling */
 
@@ -630,7 +630,7 @@ inblock(
 
 /******************************************************************************
 *
-* set up block ie. make in_block top left cell
+* set up block i.e. make in_block top left cell
 * if no block set to current cell
 *
 ******************************************************************************/
@@ -1294,7 +1294,7 @@ application_singleclick_in_main(
     ROW trow;
 
     BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
-    BOOL extend = shiftpressed || !selectclicked;       /* ie shift-anything or unshifted-adjust */
+    BOOL extend = shiftpressed || !selectclicked;       /* i.e. shift-anything or unshifted-adjust */
 
     BOOL acquire    = FALSE; /* don't want caret on block marking operations */
     BOOL motion     = FALSE;
@@ -1316,7 +1316,7 @@ application_singleclick_in_main(
 
             if(horzvec_entry_valid(coff)  ||  (coff == OFF_RIGHT))
             {
-                /* ie a click on a sheet */
+                /* i.e. a click on a sheet */
                 P_DOCU p_docu = find_document_with_input_focus(); /* examines all sheets, editlines & edit boxes */
 
                 if((NO_DOCUMENT != p_docu)  &&  (p_docu->Xxf_inexpression || p_docu->Xxf_inexpression_box || p_docu->Xxf_inexpression_line))

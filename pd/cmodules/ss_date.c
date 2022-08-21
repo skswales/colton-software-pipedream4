@@ -109,7 +109,7 @@ ss_dateval_to_ymd(
 
     /* NB only do this loop up to three times otherwise we will get caught
      * by the last year in the cycle being a leap year so
-     * 31.12.1600,2000,2400 etc will fail, so we may as well unroll the loop...
+     * 31.12.1600,2000,2400 etc. will fail, so we may as well unroll the loop...
      */
     if(date >= DAYS_IN_100)
     {
@@ -386,7 +386,7 @@ ss_date_normalise(
     _InoutRef_  P_EV_DATE p_ev_date)
 {
     if(EV_DATE_NULL == p_ev_date->date)
-    {   /* allow hours >= 24 etc */
+    {   /* allow hours >= 24 etc. */
         return;
     }
 

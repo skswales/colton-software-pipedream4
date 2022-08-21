@@ -4,7 +4,7 @@
 @rem License, v. 2.0. If a copy of the MPL was not distributed with this
 @rem file, You can obtain one at http://mozilla.org/MPL/2.0/.
 @rem
-@rem Copyright (C) 2013-2014 Stuart Swales
+@rem Copyright (C) 2013-2016 Stuart Swales
 @rem
 Set flexlib_tmp_dir=..\castle\RiscOS\Sources\Toolbox\Libs\flexlib
 Set rlib_tmp_dir=..\castle\RiscOS\Sources\Lib\RISC_OSLib\rlib
@@ -86,23 +86,23 @@ cp -p %rlib_tmp_dir%\s\swi        ..\..\..\swi.s
 @rem
 @echo Patch these files in WimpLib so that it is in the WimpLib state for PipeDream
 @rem
-patch --unified < flex.c       ..\..\..\flex.c
+gnu-paatch --unified < flex.c       ..\..\..\flex.c
 @rem
-patch --unified < bbc.c        ..\..\..\bbc.c
-patch --unified < dbox.c       ..\..\..\dbox.c
-patch --unified < event.c      ..\..\..\event.c
-@rem patch --unified < flex.c       ..\..\..\flex.c
-patch --unified < fontlist.c   ..\..\..\fontlist.c
-patch --unified < fontselect.c ..\..\..\fontselect.c
-patch --unified < menu.c       ..\..\..\menu.c
-patch --unified < res.c        ..\..\..\res.c
-patch --unified < resspr.c     ..\..\..\resspr.c
-patch --unified < win.c        ..\..\..\win.c
-patch --unified < wimp.c       ..\..\..\wimp.c
-patch --unified < wimpt.c      ..\..\..\wimpt.c
-patch --unified < xferrecv.c   ..\..\..\xferrecv.c
-patch --unified < xfersend.c   ..\..\..\xfersend.c
+gnu-paatch --unified < bbc.c        ..\..\..\bbc.c
+gnu-paatch --unified < dbox.c       ..\..\..\dbox.c
+gnu-paatch --unified < event.c      ..\..\..\event.c
+@rem gnu-paatch --unified < flex.c       ..\..\..\flex.c
+gnu-paatch --unified < fontlist.c   ..\..\..\fontlist.c
+gnu-paatch --unified < fontselect.c ..\..\..\fontselect.c
+gnu-paatch --unified < menu.c       ..\..\..\menu.c
+gnu-paatch --unified < res.c        ..\..\..\res.c
+gnu-paatch --unified < resspr.c     ..\..\..\resspr.c
+gnu-paatch --unified < win.c        ..\..\..\win.c
+gnu-paatch --unified < wimp.c       ..\..\..\wimp.c
+gnu-paatch --unified < wimpt.c      ..\..\..\wimpt.c
+gnu-paatch --unified < xferrecv.c   ..\..\..\xferrecv.c
+gnu-paatch --unified < xfersend.c   ..\..\..\xfersend.c
 @rem
-patch --unified < wimp.h       ..\..\..\wimp.h
+gnu-paatch --unified < wimp.h       ..\..\..\wimp.h
 @rem
-patch --unified < swi.s        ..\..\..\swi.s
+gnu-paatch --unified < swi.s        ..\..\..\swi.s

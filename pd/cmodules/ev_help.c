@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Routines for processing various data and types */
 
@@ -14,6 +14,7 @@
 #include "common/gflags.h"
 
 #include "handlist.h"
+#include "typepack.h"
 #include "ev_eval.h"
 
 /* local header file */
@@ -224,8 +225,8 @@ arg_normalise(
 *
 * copy one array into another; the target array is not shrunk, only expanded
 *
-* this task is not as simple as appears at first sight since the array may contain handle based
-* resources eg strings which need copies making
+* this task is not as simple as appears at first sight since the array may
+* contain handle based resources e.g. strings which need copies making
 *
 ******************************************************************************/
 
@@ -295,7 +296,7 @@ array_element_copy(
 * to the given x,y size
 *
 * note that max_x, max_y are sizes not indices;
-* ie to store element 0,2 sizes must be 1,3
+* i.e. to store element 0,2 sizes must be 1,3
 *
 ******************************************************************************/
 
@@ -592,8 +593,8 @@ static U32 x_index_static;
 
 PROC_QSORT_PROTO(static, proc_array_sort, EV_DATA)
 {
-    PC_EV_DATA p_ev_data_row_1 = (PC_EV_DATA) arg1;
-    PC_EV_DATA p_ev_data_row_2 = (PC_EV_DATA) arg2;
+    PC_EV_DATA p_ev_data_row_1 = (PC_EV_DATA) _arg1;
+    PC_EV_DATA p_ev_data_row_2 = (PC_EV_DATA) _arg2;
 
     PC_EV_DATA p_ev_data_1 = p_ev_data_row_1 + x_index_static;
     PC_EV_DATA p_ev_data_2 = p_ev_data_row_2 + x_index_static;
@@ -864,11 +865,9 @@ data_is_array_range(
 
 /******************************************************************************
 *
-* limit the types in a data item
-* to those that are allowed in a result
+* limit the types in a data item to those that are allowed in a result
 *
-* handle based resources must be owned by
-* the structure ie be TMP versions
+* handle based resources must be owned by the structure i.e. be TMP versions
 *
 ******************************************************************************/
 

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RISC OS Draw file creation part II */
 
@@ -508,10 +508,10 @@ gr_riscdiag_sprite_recompute_bbox(
         PC_BYTE p_sprite = PtrAddBytes(PC_BYTE, pObject, sizeof32(DRAW_OBJECT_HEADER));
         PC_SCB p_scb = (PC_SCB) p_sprite;
         S32 x1, y1;
-        SPRITE_TYPE sprite_type;
+        SPRITE_MODE_WORD sprite_mode_word;
         _kernel_swi_regs rs;
 
-        * (P_U32) &sprite_type = (U32) p_scb->mode;
+        sprite_mode_word.u.u32 = (U32) p_scb->mode;
 
         rs.r[0] = 40 + 512;
         rs.r[1] = (int) 0x89ABFEDC; /* kill the OS or any twerp who dares to access this! */
@@ -519,18 +519,25 @@ gr_riscdiag_sprite_recompute_bbox(
 
         (void) _kernel_swi(/*OS_SpriteOp*/ 0x2E, &rs, &rs);
 
-        if(sprite_type.type == 0)
-        {
-            int XEigFactor = bbc_modevar(p_scb->mode, 4/*XEigFactor*/);
-            int YEigFactor = bbc_modevar(p_scb->mode, 5/*YEigFactor*/);
+        if((sprite_mode_word.u.u32 < 256U) || (0 == (sprite_mode_word.u.riscos_3_5.mode_word_bit)))
+        {   /* Mode Number or Mode Specifier */
+            S32 XEigFactor, YEigFactor;
+
+            XEigFactor = bbc_modevar(p_scb->mode, 4/*XEigFactor*/);
+            YEigFactor = bbc_modevar(p_scb->mode, 5/*YEigFactor*/);
 
             x1 = (rs.r[3] << XEigFactor) * GR_RISCDRAW_PER_RISCOS;
             y1 = (rs.r[4] << YEigFactor) * GR_RISCDRAW_PER_RISCOS;
         }
+        else if(SPRITE_TYPE_RO5_WORD == sprite_mode_word.u.riscos_3_5.type)
+        {   /* RISC OS 5 style Mode Word */
+            x1 = (rs.r[3] * GR_RISCDRAW_PER_INCH) / (180 >> sprite_mode_word.u.riscos_5.x_eig);
+            y1 = (rs.r[4] * GR_RISCDRAW_PER_INCH) / (180 >> sprite_mode_word.u.riscos_5.y_eig);
+        }
         else
-        {
-            x1 = (rs.r[3] * GR_RISCDRAW_PER_INCH) / sprite_type.h_dpi;
-            y1 = (rs.r[4] * GR_RISCDRAW_PER_INCH) / sprite_type.v_dpi;
+        {   /* RISC OS 3.5 style Mode Word */
+            x1 = (rs.r[3] * GR_RISCDRAW_PER_INCH) / sprite_mode_word.u.riscos_3_5.h_dpi;
+            y1 = (rs.r[4] * GR_RISCDRAW_PER_INCH) / sprite_mode_word.u.riscos_3_5.v_dpi;
         }
 
         /* assumes bbox.x0, bbox.y0 correct */
@@ -566,7 +573,7 @@ gr_riscdiag_string_new(
     STATUS status;
     DRAW_DIAG_OFFSET rectStart;
 
-    size = strlen32p1(szText); /* includes NULLCH*/
+    size = strlen32p1(szText); /* includes CH_NULL*/
 
     /* round up to output word boundary */
     size = round_up(size, 4);
@@ -672,8 +679,8 @@ gr_riscdiag_jpeg_recompute_bbox(
     {
         S32 x1, y1;
 
-        x1 = muldiv64(pJpegObject->width,  GR_RISCDRAW_PER_INCH, pJpegObject->dpi_x);
-        y1 = muldiv64(pJpegObject->height, GR_RISCDRAW_PER_INCH, pJpegObject->dpi_y);
+        x1 = pJpegObject->width;  //muldiv64(pJpegObject->width,  GR_RISCDRAW_PER_INCH, pJpegObject->dpi_x);
+        y1 = pJpegObject->height; //muldiv64(pJpegObject->height, GR_RISCDRAW_PER_INCH, pJpegObject->dpi_y);
 
         /* assumes bbox.x0, bbox.y0 correct */
         pJpegObject->bbox.x1 = pJpegObject->bbox.x0 + x1;
@@ -1541,14 +1548,20 @@ gr_riscdiag_wackytag_tag_object =
 _Check_return_
 extern STATUS
 gr_riscdiag_wackytag_save_start(
-    FILE_HANDLE f,
-    filepos_t * pos /*out*/)
+    FILE_HANDLE file_handle,
+    _OutRef_    P_DRAW_DIAG_OFFSET p_offset)
 {
-    status_return(file_getpos(f, pos));
+    filepos_t pos;
 
-    status_return(file_write_err(&gr_riscdiag_wackytag_tag_object, sizeof(gr_riscdiag_wackytag_tag_object), 1, f));
+    *p_offset = 0;
 
-    status_return(file_write_err(gr_riscdiag_wackytag_encapsulated_object, sizeof(gr_riscdiag_wackytag_encapsulated_object), 1, f));
+    status_return(file_getpos(file_handle, &pos));
+
+    status_return(file_write_bytes(&gr_riscdiag_wackytag_tag_object, sizeof32(gr_riscdiag_wackytag_tag_object), file_handle));
+
+    status_return(file_write_bytes(gr_riscdiag_wackytag_encapsulated_object, sizeof32(gr_riscdiag_wackytag_encapsulated_object), file_handle));
+
+    *p_offset = pos.lo;
 
     return(1);
 }
@@ -1556,28 +1569,29 @@ gr_riscdiag_wackytag_save_start(
 _Check_return_
 extern STATUS
 gr_riscdiag_wackytag_save_end(
-    FILE_HANDLE       f,
-    const filepos_t * pos)
+    FILE_HANDLE file_handle,
+    _InRef_     PC_DRAW_DIAG_OFFSET p_offset)
 {
     filepos_t curpos;
-    filepos_t oldpos = *pos;
-    filepos_t size;
+    filepos_t pos;
+    U32 size;
 
     /* Draw objects and tag goop must be word-aligned/sized */
-    status_return(file_pad(f, 2  /* == log2(4) */));
+    status_return(file_pad(file_handle, 2 /* == log2(4) */, CH_NULL));
 
-    status_return(file_getpos(f, &curpos));
+    status_return(file_getpos(file_handle, &curpos));
 
-    oldpos.lo += offsetof(DRAW_OBJECT_TAG, size);
+    pos.lo = *p_offset + offsetof(DRAW_OBJECT_TAG, size);
+  /*pos.hi = 0;*/
 
-    /* number of bytes written as tag, object and goop */
-    size.lo = curpos.lo - pos->lo;
+    /* total number of bytes written as tag object, encapsulated object and goop */
+    size = curpos.lo - *p_offset;
 
-    status_return(file_setpos(f, &oldpos));
+    status_return(file_setpos(file_handle, &pos));
 
-    status_return(file_write_err(&size, sizeofmemb(DRAW_OBJECT_TAG, size), 1, f));
+    status_return(file_write_bytes(&size, sizeof32(U32), file_handle));
 
-    status_return(file_setpos(f, &curpos));
+    status_return(file_setpos(file_handle, &curpos));
 
     return(1);
 }

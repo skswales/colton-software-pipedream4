@@ -9,7 +9,7 @@
 
 IfThere $.Temp Then Else %CDir $.Temp
 
-Set pd$Disc $.Temp.PDManuals_20150218
+Set pd$Disc $.Temp.PDManuals_20151122
 | Remember to update RiscPkg.Control too and check it in first!
 
 X %Wipe <pd$Disc> ~cfr~v

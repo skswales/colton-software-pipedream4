@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Some code for RISC OS text cell handling */
 
@@ -540,7 +540,7 @@ windowheight(void)
     ok = (main_window != window_NULL);
 
     if(ok)
-        ok = (NULL == wimpt_safe(wimp_get_wind_state(main__window, &s)));
+        ok = (NULL == wimp_get_wind_state(main__window, &s));
 
     if(ok)
         os_height = (s.o.box.y1 - topslop) - s.o.box.y0;
@@ -569,7 +569,7 @@ windowwidth(void)
     ok = (main_window != window_NULL);
 
     if(ok)
-        ok = (NULL == wimpt_safe(wimp_get_wind_state(main__window, &s)));
+        ok = (NULL == wimp_get_wind_state(main__window, &s));
 
     if(ok)
         width = (s.o.box.x1 - (s.o.box.x0 + leftslop)) / charwidth;
@@ -1827,7 +1827,7 @@ application_open_request(
 
         trace_3(TRACE_APP_PD4, "row %d is my first guess, numrow %d, rows_available %d", toprow, numrow, rows_available);
 
-        /* eg. toprow = 42, numrow = 72, rows_available = 30 triggers fudge of 6 */
+        /* e.g. toprow = 42, numrow = 72, rows_available = 30 triggers fudge of 6 */
 
         if(!nfixes  &&  (toprow >= (numrow - 1) - ((ROW) rows_available - 1))  &&  encpln)
         {
@@ -2492,7 +2492,7 @@ riscprint_page(
 
     left_margin_shift_os = charwidth * left_margin_width();
 
-    /* how big the usable area is in scaling OS units (ie corresponding to printing OS) */
+    /* how big the usable area is in scaling OS units (i.e. corresponding to printing OS) */
     usable_x_os = (S32) muldiv64(((landscape) ? paper_length_mp : paper_width_mp ), 100, scale_pct * MILLIPOINTS_PER_OS);
     usable_y_os = (S32) muldiv64(((landscape) ? paper_width_mp  : paper_length_mp), 100, scale_pct * MILLIPOINTS_PER_OS);
 
@@ -2502,7 +2502,7 @@ riscprint_page(
     /* our object size in OS units (always make top left actually printed 0,0) */
     size_os.x0  = -4 + 0;
     size_os.x1  = +4 + MIN(usable_x_os, charwidth * header_footer_width);
-    /* hmm. SKS 18.10.91 notes however that optimise for top margin would prevent large fonty headers etc */
+    /* hmm. SKS 18.10.91 notes however that optimise for top margin would prevent large fonty headers etc. */
     size_os.y0  = -4 + 0 - usable_y_os;
     size_os.y1  = +4 + 0;
 
@@ -2600,7 +2600,7 @@ riscprint_page(
                 bum = print_complain(bbc_move(  -4*180, +4*180));
                 bum = print_complain(bbc_stringprint("-x+y"));
 
-                /* draw an virtual (ie possibly scaled) inches grid */
+                /* draw an virtual (i.e. possibly scaled) inches grid */
                 for(x = - (4*180); x < + (usable_x_os + 4*180); x += 180)
                 {
                     if(!bum)

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Screen drawing module for PipeDream */
 
@@ -279,7 +279,7 @@ new_window_height(
     /* calculate no. of rows needed: h=25 -> 22 rows if borders off,
      * (and headline present) +1 for terminating row -> nrows=23
     */
-    /* eg h=7, b=2 -> nrows=6 (7+1-2) */
+    /* e.g. h=7, b=2 -> nrows=6 (7+1-2) */
     nrows = (height + 1 /*one for LAST*/);
 
     if(nrows > maximum_rows) /* never consider shrinking! */
@@ -676,7 +676,7 @@ really_draw_picture(
     y = gcoord_y(y1) - p_draw_file_ref->y_size_os - dy; /* <<< do we REALLY want this dy? */
 
     if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->x_factor, p_draw_file_ref->y_factor, &graphics_window)))
-        gr_cache_error_set(&p_draw_file_ref->draw_file_key, create_error(ERR_BADDRAWFILE));
+        image_cache_error_set(&p_draw_file_ref->draw_file_key, create_error(ERR_BADDRAWFILE));
 
     restore_graphics_window();
 

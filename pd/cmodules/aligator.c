@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module to allocate blocks of memory, both handle based and pointer based */
 
@@ -155,7 +155,7 @@ aligator_init(void)
 
     array_root.element_size = sizeof32(ARRAY_BLOCK);
 #else
-    array_root.parms.packed_element_size = (UBF) sizeof32(ARRAY_BLOCK);
+    array_root.parms.packed_element_size = UBF_PACK(sizeof32(ARRAY_BLOCK));
 #endif
     array_root.parms.packed_size_increment = 256;
     trace_1(TRACE_OUT | TRACE_ANY, TEXT("sizeof32(ARRAY_BLOCK) == %d"), sizeof32(ARRAY_BLOCK));
@@ -213,7 +213,7 @@ _al_ptr_alloc(
         return(NULL);
     }
 
-    if(NULL == (p_array_handle = (P_ARRAY_HANDLE) al_array_alloc(&array_handle, BYTE, sizeof32(ARRAY_HANDLE) + n_bytes, &array_init_block_u8, p_status)))
+    if(NULL == (p_array_handle = (P_ARRAY_HANDLE) al_array_alloc_BYTE(&array_handle, sizeof32(ARRAY_HANDLE) + n_bytes, &array_init_block_u8, p_status)))
         return(NULL);
 
     *p_array_handle = array_handle;
@@ -366,7 +366,7 @@ _al_ptr_realloc(
     {   /* grow */
         U32 extend_bytes = n_bytes - cur_n_bytes;
 
-        if(NULL == al_array_extend_by(&array_handle, BYTE, extend_bytes, PC_ARRAY_INIT_BLOCK_NONE, p_status))
+        if(NULL == al_array_extend_by_BYTE(&array_handle, extend_bytes, PC_ARRAY_INIT_BLOCK_NONE, p_status))
             return(NULL);
     }
     else if(cur_n_bytes > n_bytes)
@@ -452,6 +452,7 @@ _al_array_add(
     {
         PC_ARRAY_BLOCK p_array_block = array_blockc_no_checks(p_array_handle);
         const U32 n_bytesof_elem_x_num_elem = n_elements * array_block_element_size(p_array_block);
+        CODE_ANALYSIS_ONLY(IGNOREPARM_InVal_(bytesof_elem_x_num_elem));
         CODE_ANALYSIS_ONLY(assert((n_bytesof_elem_x_num_elem == n_bytesof_elem_x_num_elem) || (0 == bytesof_elem_x_num_elem)));
         memcpy32(p_any, p_data_in, n_bytesof_elem_x_num_elem);
     }
@@ -507,7 +508,7 @@ _al_array_alloc(
     }
 #endif
 
-    { /* clear out cell we found */
+    { /* clear out slot we found */
     P_ARRAY_BLOCK p_array_block = array_block_wr_no_checks(p_array_handle);
     ARRAY_INDEX array_index;
     P_BYTE p_byte;
@@ -521,16 +522,16 @@ _al_array_alloc(
     p_array_block->parms.auto_compact     = 0;
     p_array_block->parms.compact_off      = 0;
     p_array_block->parms.entry_free       = 0;
-    p_array_block->parms.clear_new_block  = (UBF) p_array_init_block->clear_new_block;
+    p_array_block->parms.clear_new_block  = UBF_PACK(p_array_init_block->clear_new_block);
 #if WINDOWS
-    p_array_block->parms.use_alloc        = (UBF) p_array_init_block->use_alloc;
+    p_array_block->parms.use_alloc        = UBF_PACK(p_array_init_block->use_alloc);
 #endif
 #if WINDOWS
-    p_array_block->element_size                 = (0 != p_array_init_block->element_size)   ?       p_array_init_block->element_size   : 1;
+    p_array_block->element_size                 = (0 != p_array_init_block->element_size)   ?          p_array_init_block->element_size    : 1;
 #else
-    p_array_block->parms.packed_element_size    = (0 != p_array_init_block->element_size)   ? (UBF) p_array_init_block->element_size   : 1;
+    p_array_block->parms.packed_element_size    = (0 != p_array_init_block->element_size)   ? UBF_PACK(p_array_init_block->element_size)   : 1;
 #endif
-    p_array_block->parms.packed_size_increment  = (0 != p_array_init_block->size_increment) ? (UBF) p_array_init_block->size_increment : 1;
+    p_array_block->parms.packed_size_increment  = (0 != p_array_init_block->size_increment) ? UBF_PACK(p_array_init_block->size_increment) : 1;
 
     /* now acquire some memory to go with this handle iff non-zero amount requested */
     if(0 == num_elements)
@@ -677,7 +678,8 @@ _al_array_bsearch(
 
     if(0 == array_elements32_no_checks(p_array_handle))
         return(P_DATA_NONE);
-        
+
+    CODE_ANALYSIS_ONLY(IGNOREPARM_InVal_(bytesof_elem));
     CODE_ANALYSIS_ONLY(assert(bytesof_elem == array_element_size32_no_checks(p_array_handle)));
 
     p_data =
@@ -715,8 +717,11 @@ _al_array_lsearch(
     if(0 == array_elements32_no_checks(p_array_handle))
         return(P_DATA_NONE);
 
+    CODE_ANALYSIS_ONLY(IGNOREPARM_InVal_(bytesof_elem));
+    CODE_ANALYSIS_ONLY(assert(bytesof_elem == array_element_size32_no_checks(p_array_handle)));
+
     p_data =
-        _lsearch(key,
+        xlsearch(key,
                  array_basec_no_checks(p_array_handle, void),
                  array_elements32_no_checks(p_array_handle),
                  array_element_size32_no_checks(p_array_handle),
@@ -1510,7 +1515,8 @@ GlobalReAllocAndLock(
 {
     HGLOBAL hGlobal;
 
-    if(0 == *p_hGlobal)
+    PTR_ASSERT(p_hGlobal);
+    if(NULL == *p_hGlobal)
         return(GlobalAllocAndLock(uFlags, dwBytes, p_hGlobal));
 
     hGlobal = GlobalReAlloc(*p_hGlobal, dwBytes, uFlags);
@@ -1868,6 +1874,29 @@ tell_full_event_clients(
     trace_1(TRACE_MODULE_ALLOC, TEXT("******* tell_full_event_clients freed: ") U32_TFMT TEXT(" bytes"), freed);
     return(freed);
 }
+
+/*
+templated exported data & routines
+*/
+
+const ARRAY_INIT_BLOCK
+array_init_block_u8 = aib_init(1, sizeof32(U8), FALSE);
+
+AL_ARRAY_ALLOC_IMPL(extern, U8)
+AL_ARRAY_EXTEND_BY_IMPL(extern, U8)
+AL_ARRAY_INSERT_BEFORE_IMPL(extern, U8)
+
+AL_ARRAY_ALLOC_IMPL(extern, BYTE)
+AL_ARRAY_EXTEND_BY_IMPL(extern, BYTE)
+
+const ARRAY_INIT_BLOCK
+array_init_block_tchar = aib_init(1, sizeof32(TCHAR), FALSE);
+
+AL_ARRAY_ALLOC_IMPL(extern, TCHAR)
+AL_ARRAY_EXTEND_BY_IMPL(extern, TCHAR)
+
+AL_ARRAY_ALLOC_IMPL(extern, ARRAY_HANDLE)
+AL_ARRAY_EXTEND_BY_IMPL(extern, ARRAY_HANDLE)
 
 #if CHECKING
 

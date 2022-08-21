@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Defines the data structures for PipeDream */
 
@@ -238,11 +238,13 @@ main(
     int argc,
     char *argv[]);
 
-extern void
+/*ncr*/
+_Ret_z_
+extern PTSTR
 make_var_name(
-    _Out_writes_z_(elemof_buffer) P_USTR var_name /*filled*/,
+    _Out_writes_z_(elemof_buffer) PTSTR var_name /*filled*/,
     _InVal_     U32 elemof_buffer,
-    _In_z_      PC_USTR p_u8_suffix);
+    _In_z_      PCTSTR suffix);
 
 /******************************************************************************
 * slot.c
@@ -675,7 +677,7 @@ typedef struct LOAD_FILE_OPTIONS
     const char * document_name;
     const char * row_range; /* NULL -> none */
 
-    char filetype_option; /* PD4_CHAR etc */
+    char filetype_option; /* PD4_CHAR etc. */
     BOOLEAN temp_file;
     BOOLEAN inserting;
     BOOLEAN _spare;
@@ -689,7 +691,7 @@ typedef struct SAVE_FILE_OPTIONS
     /* these can be derived from d_save[] options */
     const char * row_condition; /* NULL -> none */
 
-    char filetype_option; /* PD4_CHAR etc */
+    char filetype_option; /* PD4_CHAR etc. */
     char line_sep_option;
     BOOLEAN saving_block;
     BOOLEAN saving_choices_file;
@@ -928,7 +930,8 @@ close_user_dictionaries(
 extern void
 del_spellings(void);
 
-extern S32
+_Check_return_
+extern STATUS
 dict_number(
     const char *name,
     BOOL create);
@@ -1376,7 +1379,7 @@ colh_colour_icons(void);
 #define DEFAULTWIDTH        12
 #endif
 #define DEFAULTWRAPWIDTH    0
-#define DEFAULTCOLFLAGS     0   /* ie column not linked */
+#define DEFAULTCOLFLAGS     0   /* i.e. column not linked */
 
 #define LINKED_COLUMN_LINKRIGHT 1
 #define LINKED_COLUMN_LINKSTOP  2
@@ -2468,7 +2471,7 @@ expedit_close_file(
 extern BOOL
 expedit_owns_window(
     P_DOCU p_docu,
-    HOST_HWND window);
+    HOST_WND window);
 
 /******************************************************************************
 * scdraw.c
@@ -3448,7 +3451,7 @@ extern void
 pdchart_submenu_show(
     BOOL submenurequest);
 
-gr_cache_tagstrip_proto(extern, pdchart_tagstrip);
+image_cache_tagstrip_proto(extern, pdchart_tagstrip);
 
 extern BOOL
 Return_fn_core(void);

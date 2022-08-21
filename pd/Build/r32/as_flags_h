@@ -5,7 +5,7 @@
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ; Copyright (C) 1989-1998 Colton Software Limited
-; Copyright (C) 1998-2014 R W Colton
+; Copyright (C) 1998-2015 R W Colton
 
     GBLL    NAMES
     GBLL    PROFILING
@@ -25,10 +25,10 @@ RELEASED  SETL {TRUE}
  ]
 
 ; "No26bitCode" means don't rely on 26-bit instructions
-; (eg TEQP and LDM ^) - the code will work on 32-bit systems.
+; (e.g. TEQP and LDM ^) - the code will work on 32-bit systems.
 
 ; "No32bitCode" means don't rely on 32-bit instructions
-; (eg MSR and MRS) - the code will work on RISC OS 3.1.
+; (e.g. MSR and MRS) - the code will work on RISC OS 3.1.
 
 ; Setting both to {TRUE} is too much for the macros to cope with -
 ; you will have to use run-time code as shown below.

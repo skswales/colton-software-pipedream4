@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* MultiLine Edit Controls for RISC OS */
 
@@ -104,9 +104,9 @@ BUFF_REGION;
 
 typedef struct CURSOR_POSITION
 {
-    int            lcol;        /* logical col                        */
-    int            pcol;        /* physical col ie MIN(lcol, linelen) */
-    int            row;         /* row number                         */
+    int            lcol;        /* logical col                          */
+    int            pcol;        /* physical col i.e. MIN(lcol, linelen) */
+    int            row;         /* row number                           */
 }
 CURSOR_POSITION;
 
@@ -120,7 +120,7 @@ MARK_POSITION;
 #if SUPPORT_SELECTION || SUPPORT_LOADSAVE || SUPPORT_CUTPASTE || SUPPORT_GETTEXT
 typedef struct
 {
-    MARK_POSITION  markstart;   /* start of marked text ie closest_to_text_home_of(cursor, selectanchor) */
+    MARK_POSITION  markstart;   /* start of marked text i.e. closest_to_text_home_of(cursor, selectanchor) */
     int            marklines;   /* number of line-ends in range (>=0) */
     BUFF_REGION    lower;
     BUFF_REGION    upper;
@@ -147,9 +147,9 @@ typedef struct MLEC_STRUCT
     BUFF_REGION      upper;        /* all characters right of, and rows below the physical cursor position */
     CURSOR_POSITION  cursor;       /* cursor row number and logical & physical column number               */
     int              maxcol;       /* length of longest line (sort of!)                                    */
-    int              linecount;    /* number of line terminators ie 1 less than number of display lines    */
+    int              linecount;    /* number of line terminators i.e. 1 less than number of display lines  */
 
-    int              charwidth;    /* eg 16 } graphics mode specific */
+    int              charwidth;    /* e.g. 16 } graphics mode specific */
     int              termwidth;    /* on screen representation of an EOL char in a selection, typically charwidth/4 */
 
     wimp_w           main;
@@ -629,7 +629,7 @@ mlec__saveselection(
 #define SPACE 32
 #define window_NULL 0
 
-#define TAB_MASK 3      /* ie insert 1..4 spaces */
+#define TAB_MASK 3      /* i.e. insert 1..4 spaces */
 
 _Check_return_
 extern int
@@ -754,7 +754,7 @@ mlec_create(
 #endif
 
             mlec->main        = window_NULL;
-            mlec->pane        = window_NULL;     /* ie not attached */
+            mlec->pane        = window_NULL;     /* i.e. not attached */
 #if FALSE
          /* done by attach */
             mlec->paneposx    =  32;
@@ -880,14 +880,14 @@ mlec_detach(
     win_register_new_event_handler(mlec->pane, NULL, NULL);
 
     mlec->main = window_NULL;
-    mlec->pane = window_NULL;   /* ie not attached */
+    mlec->pane = window_NULL;   /* i.e. not attached */
 }
 
 /******************************************************************************
 *
 * Attach an event handler to an mlec.
 *
-* Events sent to an mlec pane window (open, redraw, mouse_clicks, key presses etc)
+* Events sent to an mlec pane window (open, redraw, mouse_clicks, key presses etc.)
 * are normally processed by mlec__event_handler. This routine allows an alternate
 * handler to be installed to process SOME of these events, or some unknown events.
 *
@@ -1067,7 +1067,7 @@ mlec_SetText(
 * This is attached to the editor display window, which is usually
 * a pane window linked to a normal window or to a dialog box.
 * The event handler processes mouse-clicks, key-presses, messages
-* and redraw requests etc, sent to the pane window.
+* and redraw requests etc., sent to the pane window.
 *
 ******************************************************************************/
 
@@ -1297,8 +1297,8 @@ mlec__mouse_click(
 
     wimp_get_wind_state(mousep->w, &r);
     orgx = r.o.box.x0 - r.o.scx; orgy = r.o.box.y1 - r.o.scy;
-    x = mousep->x - orgx;       /* mouse position relative to */
-    y = mousep->y - orgy;       /* window (ie EditBox) origin */
+    x = mousep->x - orgx;       /* mouse position relative to   */
+    y = mousep->y - orgy;       /* window (i.e. EditBox) origin */
 
     trace_2(TRACE_MODULE_MLEC, "(%d,%d)",x,y);
 
@@ -1799,7 +1799,7 @@ static void mlec__cursor_linehome(MLEC_HANDLE mlec)
 *
 * Move the cursor left to the previous tab position
 *
-* ie move 1..(TAB_MASK+1) places
+* i.e. move 1..(TAB_MASK+1) places
 *
 ******************************************************************************/
 
@@ -2001,7 +2001,7 @@ int mlec__insert_newline(MLEC_HANDLE mlec)
 *
 * Insert spaces upto the next tab position
 *
-* ie insert 1..(TAB_MASK+1) spaces
+* i.e. insert 1..(TAB_MASK+1) spaces
 *
 ******************************************************************************/
 
@@ -2503,7 +2503,7 @@ build_caretstr(
     wimp_caretstr *carrotp)
 {
     int caretXoffset = mlec->cursor.pcol * mlec->charwidth;
-    int caretheight  = mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];        /*>>> or should this be charHeight ie 32 */
+    int caretheight  = mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];        /*>>> or should this be charHeight i.e. 32 */
     int caretYoffset = mlec->cursor.row * mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] + 32; /*>>>what magic number is this?*/
 
     carrotp->w = mlec->pane;
@@ -2752,7 +2752,7 @@ render_line(
         }
         else
         {
-            bbc_move(x, y-wimpt_dy());
+            wimpt_safe(bbc_move(x, y-wimpt_dy()));
 
             /* SKS after PD 4.12 27mar92 - convert CtrlChar on fly */
             while(showcnt--)
@@ -3443,8 +3443,8 @@ show_selection(
             {
                 /* NB lineBB is (L,B,R,T) edges which are (inc,inc,exc,exc), bbc_RectangleFill takes (inc,inc,inc,inc) */
 
-                bbc_move(lineBB.x0, lineBB.y0);
-                os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1);
+                wimpt_safe(bbc_move(lineBB.x0, lineBB.y0));
+                wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1));
             }
         }
 
@@ -3463,7 +3463,7 @@ show_selection(
 
     lineCol = 0; lineRow = mlec->cursor.row;
 
-    lineBB.x0 = lineBB.x1 = cursor.x0;      /* NB x0 & x1 the same ie no CR width */
+    lineBB.x0 = lineBB.x1 = cursor.x0;      /* NB x0 & x1 the same i.e. no CR width */
     lineBB.y1 = cursor.y1;
     lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
@@ -3505,8 +3505,8 @@ show_selection(
             {
                 /* NB lineBB is (L,B,R,T) edges which are (inc,inc,exc,exc), bbc_RectangleFill takes (inc,inc,inc,inc) */
 
-                bbc_move(lineBB.x0, lineBB.y0);
-                os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1);
+                wimpt_safe(bbc_move(lineBB.x0, lineBB.y0));
+                wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1));
             }
         }
 
@@ -3655,7 +3655,7 @@ file_write_putblock(
     char *dataptr,
     int datasize)
 {
-    return(file_write_err(dataptr, datasize, 1, xferhandlep->f));
+    return(file_write_bytes(dataptr, datasize, xferhandlep->f));
 }
 
 static int

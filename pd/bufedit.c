@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that edits the line buffer & simple movements */
 
@@ -1236,7 +1236,7 @@ AutoWidth_fn(void)
                             *ptr = NULLCH;
 
                     /* SKS after 4.11 29jan92 - twiddle in this side for finer
-                     * tuning in fonts considering 1/2 chars etc
+                     * tuning in fonts considering 1/2 chars etc.
                     */
                     iwidth  = font_width(array);
                     iwidth += (charwidth * MILLIPOINTS_PER_OS * 3) / 2;

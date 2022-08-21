@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RISC OS Draw file creation */
 
@@ -263,10 +263,10 @@ gr_riscdiag_diagram_init(
     for(i = 0; i < sizeofmemb32(DRAW_FILE_HEADER, creator_id); ++i)
     {
         U8 ch = *szCreatorName++;
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
         {
-            ch = ' '; /* NB program identification string must NOT be NULLCH-terminated */
-            szCreatorName--; /* retract back to NULLCH */
+            ch = ' '; /* NB program identification string must NOT be CH_NULL-terminated */
+            szCreatorName--; /* retract back to CH_NULL */
         }
         pDrawFileHdr->creator_id[i] = ch;
     }
@@ -385,7 +385,7 @@ gr_riscdiag_diagram_save_into(
 {
     PC_BYTE pDiagHdr = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, 0);
 
-    return(file_write_err(pDiagHdr, 1, p_gr_riscdiag->draw_diag.length, file_handle));
+    return(file_write_bytes(pDiagHdr, p_gr_riscdiag->draw_diag.length, file_handle));
 }
 
 /******************************************************************************
@@ -487,7 +487,7 @@ _gr_riscdiag_ensure(
 typedef struct DRAW_FONTLISTELEM
 {
     U8 fontref8;
-    char name[32]; /* String, NULLCH terminated (size only for compiler and debugger - do not use sizeof()) */
+    char name[32]; /* String, CH_NULL terminated (size only for compiler and debugger - do not use sizeof()) */
 }
 DRAW_FONTLISTELEM;
 
@@ -537,7 +537,7 @@ gr_riscdiag_fontlist_lookup(
             break;
         }
 
-        thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
+        thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for CH_NULL */
 
         thisOffset += thislen;
 
@@ -601,7 +601,7 @@ gr_riscdiag_fontlist_name(
             break;
         }
 
-        thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
+        thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for CH_NULL */
 
         thisOffset += thislen;
 
@@ -635,7 +635,7 @@ gr_riscdiag_fontlistR_new(
     for(i = 0; i < array_elements(p_array_handle); ++i)
     {
         P_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY p = array_ptr(p_array_handle, GR_RISCDIAG_RISCOS_FONTLIST_ENTRY, i);
-        const DRAW_DIAG_OFFSET lenp1 = strlen32p1(p->szHostFontName); /* for NULLCH */
+        const DRAW_DIAG_OFFSET lenp1 = strlen32p1(p->szHostFontName); /* for CH_NULL */
         const DRAW_DIAG_OFFSET thislen = offsetof32(DRAW_FONTLIST_ELEM, szHostFontName) + lenp1;
 
         extraBytes += thislen;
@@ -667,7 +667,7 @@ gr_riscdiag_fontlistR_new(
     for(i = 0; i < array_elements(p_array_handle); ++i)
     {
         P_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY p = array_ptr(p_array_handle, GR_RISCDIAG_RISCOS_FONTLIST_ENTRY, i);
-        const DRAW_DIAG_OFFSET lenp1 = strlen32p1(p->szHostFontName); /* for NULLCH */
+        const DRAW_DIAG_OFFSET lenp1 = strlen32p1(p->szHostFontName); /* for CH_NULL */
         const DRAW_DIAG_OFFSET thislen = offsetof32(DRAW_FONTLIST_ELEM, szHostFontName) + lenp1;
         P_DRAW_FONTLIST_ELEM pFontListElem = gr_riscdiag_getoffptr(DRAW_FONTLIST_ELEM, p_gr_riscdiag, fontListPos);
 
@@ -681,7 +681,7 @@ gr_riscdiag_fontlistR_new(
     { /* pad up to 3 bytes with 0 */
     P_BYTE pObject = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, fontListPos);
     while((uintptr_t) pObject & (4-1))
-        *pObject++ = NULLCH;
+        *pObject++ = CH_NULL;
     } /*block*/
     } /*block*/
 
@@ -768,7 +768,7 @@ gr_riscdiag_group_new(
     trace_3(TRACE_MODULE_GR_CHART, "gr_riscdiag_group_new(&%p) offset %d, name %s",
             report_ptr_cast(p_gr_riscdiag), pGroupStart ? *pGroupStart : 0, report_sbstr(pGroupName));
 
-    /* fill name, padding at end with spaces (mustn't be NULLCH terminated) */
+    /* fill name, padding at end with spaces (mustn't be CH_NULL terminated) */
     src = pGroupName;
     dst = PtrAddBytes(P_U8, pObject.p_byte, offsetof32(DRAW_OBJECT_GROUP, name));
 
@@ -780,7 +780,7 @@ gr_riscdiag_group_new(
         {
             ch = *src;
 
-            if(ch == NULLCH)
+            if(ch == CH_NULL)
                 ch = CH_SPACE;
             else
                 ++src;

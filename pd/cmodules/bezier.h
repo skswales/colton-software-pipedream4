@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 #ifndef __bezier_h
 #define __bezier_h
@@ -36,7 +36,7 @@ extern void
 bezier_arc_circle(
     _InRef_     PC_DRAW_POINT centre,
     _InVal_     DRAW_COORD radius,
-    _Out_/*capcount_c_(13)*/ P_DRAW_POINT p /*[13]*/);
+    _Out_cap_c_(13) P_DRAW_POINT p /*[13]*/);
 
 extern U32
 bezier_arc_segment(

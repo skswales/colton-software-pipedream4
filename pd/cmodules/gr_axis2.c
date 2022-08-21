@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Chart axis handling */
 
@@ -480,7 +480,7 @@ gr_lin_major_test(
     return(FALSE);
 }
 
-/* eg.
+/* e.g.
  *   99 -> 1, .9956 -> 10 so leave 10
  *   49 -> 1, .6902 -> 10 but make 5
  *   19 -> 1, .2788 -> 10 but make 2

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Cell to text conversion module */
 
@@ -816,12 +816,12 @@ bitstr(
                (len = readfxy('G', &from, &to, &name, &x, &y)) != 0)
             {
                 char namebuf[BUF_MAX_PATHSTRING];
-                GR_CACHE_HANDLE cah;
+                IMAGE_CACHE_HANDLE cah;
 
                 xstrnkpy(namebuf, elemof32(namebuf), name, len);
 
-                if(gr_cache_entry_query(&cah, namebuf))
-                    err = gr_cache_error_query(&cah);
+                if(image_cache_entry_query(&cah, namebuf))
+                    err = image_cache_error_query(&cah);
                 else
                     err = create_error(ERR_NOTFOUND);
 

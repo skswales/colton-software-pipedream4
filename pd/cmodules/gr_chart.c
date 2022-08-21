@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Charting module interface */
 
@@ -134,7 +134,7 @@ gr_chart_add(
 * add a datasource as the labels datasource
 * even with multiple axes there is only one
 * if punter tries to add more then let him
-* but its really ignored by us (eg add range)
+* but its really ignored by us (e.g. add range)
 *
 ******************************************************************************/
 
@@ -710,7 +710,7 @@ gr_chart_new(
     {
     char filename[BUF_MAX_GENLEAFNAME];
 
-    *filename = NULLCH;
+    *filename = CH_NULL;
 
     if(new_untitled)
         (void) xsnprintf(filename, elemof32(filename),
@@ -1875,8 +1875,8 @@ gr_travel_dsh_label(
                     &pValue->data.number,
                     eformat,
                     decimals,
-                    NULLCH /* dp_ch */,
-                    ','    /* ths_ch */);
+                    CH_NULL /* dp_ch */,
+                    ','     /* ths_ch */);
         }
         break;
 
@@ -2912,7 +2912,7 @@ gr_chart_object_name_from_id(
     case GR_CHART_OBJNAME_ANON:
         assert(elemof_buffer);
         if(elemof_buffer)
-            *out = NULLCH;
+            *out = CH_NULL;
         break;
 
     case GR_CHART_OBJNAME_CHART:
@@ -3278,7 +3278,7 @@ gr_chart_clone(
     assert(status_done(res));
 
     /* if anything failed blow the new copied non-core contents away */
-    /* but only when we have reached a consistent state with no stolen list_blkrefs etc */
+    /* but only when we have reached a consistent state with no stolen list_blkrefs etc. */
     if(status_fail(res))
         gr_chart_dispose_noncore(dst_cp);
 

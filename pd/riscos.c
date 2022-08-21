@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RISC OS specifics for PipeDream */
 
@@ -58,6 +58,8 @@
 #ifndef __cs_xferrecv_h
 #include "cs-xferrecv.h"
 #endif
+
+#include "cmodules/typepack.h"
 
 #include "cmodules/riscos/wlalloc.h"
 
@@ -165,7 +167,7 @@ scraptransfer_file(
         break;
 
     default:
-        if(gr_cache_can_import(filetype))
+        if(image_cache_can_import(filetype))
             /* fault these as we can't store them anywhere safe */
             reperr_null(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED));
         else
@@ -781,7 +783,7 @@ riscos_sendslotcontents(
                 d_options_DF      = t_opt_DF;
                 d_options_TH      = t_opt_TH;
 
-                /* remove highlights & funny spaces etc from plain non-fonty string */
+                /* remove highlights & funny spaces etc. from plain non-fonty string */
                 ptr = buffer;
                 to  = buffer;
                 do  {
@@ -1056,9 +1058,9 @@ iconbar_message_DATALOAD_others(
     {
         front_document_using_docno(docno);
     }
-    else if(gr_cache_can_import(filetype))
+    else if(image_cache_can_import(filetype))
     {
-        trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible");
+        trace_0(TRACE_APP_PD4, "ignore image file as we can't do anything sensible");
     }
     else
     {   /* loading other file as new file */
@@ -1154,18 +1156,16 @@ iconbar_SAVEDESK(
     BOOL processed = TRUE;
     int os_file_handle = m->data.savedesk.filehandle;
     os_error * e = NULL;
-    U8 var_name[BUF_MAX_PATHSTRING];
-    U8 main_dir[BUF_MAX_PATHSTRING];
-    U8 user_path[BUF_MAX_PATHSTRING];
+    char var_name[BUF_MAX_PATHSTRING];
+    TCHARZ main_dir[BUF_MAX_PATHSTRING];
+    TCHARZ user_path[BUF_MAX_PATHSTRING];
     P_U8 p_main_app = main_dir;
 
     main_dir[0] = NULLCH;
-    make_var_name(var_name, elemof32(var_name), "$Dir");
-    (void) _kernel_getenv(var_name, main_dir, elemof32(main_dir));
+    (void) _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$Dir"), main_dir, elemof32(main_dir));
 
     user_path[0] = NULLCH;
-    make_var_name(var_name, elemof32(var_name), "$UserPath");
-    (void) _kernel_getenv(var_name, user_path, elemof32(user_path));
+    (void) _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$UserPath"), user_path, elemof32(user_path));
     /* Ignore PRM guideline about caching at startup; final seen one is most relevant */
 
     /* write out commands to desktop save file that will restart app */
@@ -1445,7 +1445,7 @@ iconbar_PD_DDE(
         /* don't ack this message: other people may want to see it too */
 
         /* look for any instances of this DrawFile; update windows with refs */
-        gr_cache_recache(drawfilename);
+        image_cache_recache(drawfilename);
         }
         break;
 
@@ -1771,7 +1771,7 @@ rear_close_request(
 
     if(!justopening)
     {
-        /* deal with modified files etc before opening any filer windows */
+        /* deal with modified files etc. before opening any Filer windows */
         wanttoclose = riscdialog_warning();
 
         (void) mergebuf_nocheck();
@@ -1873,7 +1873,7 @@ main_key_pressed(
         /* Watch out for useful CtrlChars not produced by Ctrl-letter */
 
         /* SKS after 4.11 10jan92 - if already in Alt-sequence then these go in as Alt-letters
-         * without considering Ctrl-state (allows ^BM, ^PHB etc from !Chars but not ^M, ^H still)
+         * without considering Ctrl-state (allows ^BM, ^PHB etc. from !Chars but not ^M, ^H still)
         */
         if( ((ch == CTRL_H)  ||  (ch == CTRL_M))  &&
             (alt_array[0] == NULLCH)  &&
@@ -2030,7 +2030,7 @@ main_DATALOAD_others(
 {
     STATUS filetype_option;
 
-    if(gr_cache_can_import(filetype))
+    if(image_cache_can_import(filetype))
     {
         draw_insert_filename(filename);
         return;

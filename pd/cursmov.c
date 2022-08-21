@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Relative cursor movement handling */
 
@@ -1709,7 +1709,7 @@ FixColumns_fn(void)
 /*
  * fill column table horzvec; forces column headings to be redrawn
  *
- * scrbrc: if all columns fit, scrbrc is offset of end marker ie 1+last col
+ * scrbrc: if all columns fit, scrbrc is offset of end marker i.e. 1+last col
  * if last column doesn't fit, scrbrc is offset of truncated column
 */
 
@@ -2390,8 +2390,8 @@ update_variables(void)
 
 /******************************************************************************
 *
-* get size of string accounting for highlights etc
-* ie. length of string when drawn on screen by draw_slot()
+* get size of string accounting for highlights etc.
+* i.e. length of string when drawn on screen by draw_slot()
 *
 ******************************************************************************/
 

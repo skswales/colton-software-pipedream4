@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Charting module interface */
 
@@ -464,7 +464,7 @@ gr_chart_riscos_broadcast_changed(
     wimp_msgstr msg;
     size_t      nBytes;
 
-    nBytes = strlen(filename) + 1; /* for NULLCH */
+    nBytes = strlen(filename) + 1; /* for CH_NULL */
 
     nBytes = round_up(nBytes, 4);
 
@@ -483,7 +483,7 @@ gr_chart_riscos_broadcast_changed(
 
 /******************************************************************************
 *
-* maintain a translation list between cache handles and stored fillstyles
+* maintain a translation list between image cache handles and stored fillstyles
 *
 ******************************************************************************/
 
@@ -498,8 +498,8 @@ gr_fillstyle_create_pict_for_load(
     /*const*/ P_U8 picture_name)
 {
     U8                picture_namebuf[BUF_MAX_PATHSTRING];
-    GR_CACHE_HANDLE   cah;
-    P_GR_CACHE_HANDLE cahp;
+    IMAGE_CACHE_HANDLE image_cache_handle;
+    P_IMAGE_CACHE_HANDLE p_image_cache_handle;
     LIST_ITEMNO       key;
     S32               res;
 
@@ -512,7 +512,7 @@ gr_fillstyle_create_pict_for_load(
     if(res <= 0)
         return(res ? res : create_error(FILE_ERR_NOTFOUND));
 
-    res = gr_cache_entry_ensure(&cah, picture_namebuf);
+    res = image_cache_entry_ensure(&image_cache_handle, picture_namebuf);
 
     if(res <= 0)
         return(res ? res : status_nomem());
@@ -520,11 +520,11 @@ gr_fillstyle_create_pict_for_load(
     /* use external handle as key into list */
     key = ekey;
 
-    if(NULL == (cahp = collect_add_entry_elem(GR_CACHE_HANDLE, &fillstyle_translation_table, &key, &res)))
+    if(NULL == (p_image_cache_handle = collect_add_entry_elem(IMAGE_CACHE_HANDLE, &fillstyle_translation_table, &key, &res)))
         return(res);
 
-    /* stick cache handle on the list */
-    *cahp = cah;
+    /* stick image cache handle on the list */
+    *p_image_cache_handle = image_cache_handle;
 
     return(1);
 }
@@ -534,8 +534,8 @@ static BOOL
 gr_fillstyle_translate_pict_for_load(
     P_GR_FILLSTYLE fillstyle /*inout*/)
 {
-    LIST_ITEMNO       key;
-    P_GR_CACHE_HANDLE cahp;
+    LIST_ITEMNO key;
+    P_IMAGE_CACHE_HANDLE p_image_cache_handle;
 
     if(!fillstyle)
         return(0);
@@ -544,11 +544,11 @@ gr_fillstyle_translate_pict_for_load(
     key = (LIST_ITEMNO) fillstyle->pattern; /* small non-zero integer here! */
 
     if(key)
-        cahp = collect_goto_item(GR_CACHE_HANDLE, &fillstyle_translation_table.lbr, key);
+        p_image_cache_handle = collect_goto_item(IMAGE_CACHE_HANDLE, &fillstyle_translation_table.lbr, key);
     else
-        cahp = NULL;
+        p_image_cache_handle = NULL;
 
-    if(!cahp)
+    if(NULL == p_image_cache_handle)
     {
         fillstyle->pattern       = 0;
 
@@ -558,7 +558,7 @@ gr_fillstyle_translate_pict_for_load(
         return(0);
     }
 
-    fillstyle->pattern      = (GR_FILL_PATTERN_HANDLE) *cahp;
+    fillstyle->pattern      = (GR_FILL_PATTERN_HANDLE) *p_image_cache_handle;
 
     fillstyle->bits.pattern = 1;
 
@@ -709,6 +709,8 @@ enum GR_CONSTRUCT_ARG_TYPE
     GR_ARG_TEXTPOS,
     GR_ARG_TEXTCONTENTS,
 
+    GR_ARG_PAD,
+
     GR_ARG_N_TYPES
 };
 
@@ -826,6 +828,8 @@ typedef enum GR_CONSTRUCT_TABLE_OFFSET
     GR_CON_OBJID_N,
     GR_CON_OBJID_NN,
 
+    GR_CON_END,
+
     /*
     start of direct injection
     */
@@ -930,6 +934,8 @@ gr_construct_table[GR_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
     gr_contab_entry("OBJ,G,", GR_ARG_OBJID,    GR_STR_NONE, 0, GR_CON_OBJID),
     gr_contab_entry("OBK,G,", GR_ARG_OBJID_N,  GR_STR_NONE, 0, GR_CON_OBJID_N),
     gr_contab_entry("OBL,G,", GR_ARG_OBJID_NN, GR_STR_NONE, 0, GR_CON_OBJID_NN),
+
+    gr_contab_entry("END,G,", GR_ARG_PAD,      GR_STR_NONE, 0, GR_CON_END),
 
     /*
     gr_chart
@@ -1496,7 +1502,7 @@ gr_construct_save(
         status_return(file_puts(args, f));
 
         out = args;
-        *out = NULLCH;
+        *out = CH_NULL;
 
         va_start(extra_args, contab_ix);
 
@@ -1505,6 +1511,40 @@ gr_construct_save(
         va_end(extra_args);
         }
         break;
+
+    case GR_ARG_PAD:
+        {
+        S32 alignment, alignmask, res32;
+
+        alignment = 4;
+        alignmask = alignment - 1;
+
+        /* check flush id change */
+        if(gr_load_save_id_out_pending)
+            status_return(gr_save_id_now(cp, f));
+
+        /* flush construct so far */
+        status_return(file_puts(args, f));
+
+        if((res32 = file_tell(f)) < 0) /* validates file */
+            return((S32) res32);
+
+        out = args;
+
+        res32 += 1; /* we will terminate with LF after padding */
+
+        if(res32 & alignmask)
+        {
+            alignment = alignment - (res32 & alignmask);
+            do  {
+                trace_0(TRACE_MODULE_FILE, "GR_ARG_PAD outputting CH_SPACE");
+                *out++ = CH_SPACE;
+            }
+            while(--alignment);
+        }
+
+        *out = CH_NULL;
+        }
     }
 
     /* construct cancelled; don't output to file */
@@ -1589,13 +1629,13 @@ gr_fillstyle_table_save(
         {
             if(ekey == *p_u32)
             {
-                GR_CACHE_HANDLE cah;
-                U8              namebuffer[BUF_MAX_PATHSTRING];
-                P_U8            picture_name;
+                IMAGE_CACHE_HANDLE image_cache_handle;
+                U8 namebuffer[BUF_MAX_PATHSTRING];
+                P_U8 picture_name;
 
-                cah = (GR_CACHE_HANDLE) key;
+                image_cache_handle = (IMAGE_CACHE_HANDLE) key;
 
-                gr_cache_name_query(&cah, namebuffer, sizeof(namebuffer)-1);
+                image_cache_name_query(&image_cache_handle, namebuffer, sizeof(namebuffer)-1);
 
                 picture_name = namebuffer;
 
@@ -2243,6 +2283,8 @@ gr_chart_save_internal(
 
     status_return(gr_chart_save_texts(cp, f));
 
+    status_return(gr_construct_save(cp, f, GR_CON_END, "with padding"));
+
     collect_delete(&fillstyle_translation_table.lbr);
 
     return(1);
@@ -2291,7 +2333,7 @@ gr_chart_construct_save_frag_txt(
                 memcpy32(out, curptr, nbytes);
                 curptr += nbytes;
                 out += nbytes;
-                *out = NULLCH;
+                *out = CH_NULL;
 
                 /* skip character in input stream */
                 curptr += 1;
@@ -2353,7 +2395,7 @@ gr_chart_construct_decode_frag_txt(
     }
     while(cvt_ptr);
 
-    /* move tail fragment down INCLUDING NULLCH TERMINATOR */
+    /* move tail fragment down INCLUDING CH_NULL TERMINATOR */
     if(out != curptr)
         memmove32(out, curptr, strlen32p1(curptr));
 }
@@ -2566,7 +2608,7 @@ gr_construct_load_this(
                &style.pattern,
                &style.bits));
 
-        gr_fillstyle_translate_pict_for_load(&style); /* translation from PTE to cah */
+        gr_fillstyle_translate_pict_for_load(&style); /* translation from PTE to image_cache_handle */
 
         res = gr_chart_objid_fillstyle_set(cp, *p_id, &style);
         break;
@@ -2763,7 +2805,7 @@ gr_construct_load(
 _Check_return_
 static S32
 gr_chart_construct_getc(
-    P_GR_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
 {
     GR_DIAG_OFFSET offset;
     P_U8 p;
@@ -2785,7 +2827,7 @@ gr_chart_construct_getc(
 
 static void
 gr_chart_construct_ungetc(
-    P_GR_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
 {
     ++p_info->r.goopSize;
 
@@ -2795,14 +2837,14 @@ gr_chart_construct_ungetc(
 _Check_return_
 static S32
 gr_chart_construct_gets(
-    P_GR_CACHE_TAGSTRIP_INFO p_info,
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_info,
     P_U8 buffer,
     U32 bufsize)
 {
     U32 count = 0;
     S32 res, newres;
 
-    *buffer = NULLCH;
+    *buffer = CH_NULL;
 
     if(!bufsize)
         return(0);
@@ -2836,7 +2878,7 @@ gr_chart_construct_gets(
         }
 
         buffer[count++] = res;
-        buffer[count  ] = NULLCH; /* keep terminated */
+        buffer[count  ] = CH_NULL; /* keep terminated */
     }
     while(count < bufsize);
 
@@ -2847,7 +2889,7 @@ _Check_return_
 extern STATUS
 gr_chart_construct_tagstrip_process(
     P_GR_CHART_HANDLE chp,
-    P_GR_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
 {
     U8  args[BUF_MAX_LOADSAVELINE];
     S32 res;

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that does printing from PipeDream */
 
@@ -1212,8 +1212,8 @@ topejc(void)
 *
 * end of page string
 *
-* if the string doesn't contain a formfeed, only output if do_something
-* is set, ie at the real end of page, not a trial one
+* if the string doesn't contain a formfeed, only output if do_something is set
+* i.e. at the real end of page, not a trial one
 *
 * return TRUE if anything output
 *
@@ -2531,7 +2531,7 @@ off_highlights(void)
 /******************************************************************************
 *
 * cancel print:
-* switch off printer, close spool file etc
+* switch off printer, close spool file etc.
 *
 ******************************************************************************/
 

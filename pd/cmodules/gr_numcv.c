@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Numeric conversion */
 
@@ -133,8 +133,8 @@ gr_numtostr(
     _InRef_     PC_F64 pValue,
     S32 eformat,
     S32 decimals,
-    char decimal_point_ch /* NULLCH -> default (.)    */,
-    char thousands_sep_ch /* NULLCH -> default (none) */)
+    char decimal_point_ch /* CH_NULL -> default (.)    */,
+    char thousands_sep_ch /* CH_NULL -> default (none) */)
 {
     F64 value = *pValue;
     P_U8 nextprint, numptr;
@@ -189,7 +189,7 @@ gr_numtostr(
             inc = ((beforedot - 1) % 3) + 1;
             nextprint += inc;
 
-            memmove32(nextprint + 1, nextprint, strlen32p1(nextprint) /*for NULLCH*/);
+            memmove32(nextprint + 1, nextprint, strlen32p1(nextprint) /*for CH_NULL*/);
             *nextprint++ = thousands_sep_ch;
 
             /* keep dot ptr updated */
@@ -227,7 +227,7 @@ gr_numtostr(
         if(*++eptr == '+')
         {
             --nextprint;
-            memmove32(eptr, eptr+1, strlen32p1(eptr+1) /*for NULLCH*/);
+            memmove32(eptr, eptr+1, strlen32p1(eptr+1) /*for CH_NULL*/);
         }
         else if(*eptr == '-')
             eptr++;
@@ -241,7 +241,7 @@ gr_numtostr(
         if(eptr != tptr)
         {
             nextprint -= tptr - eptr;
-            memmove32(eptr, tptr, strlen32p1(tptr) /*for NULLCH*/);
+            memmove32(eptr, tptr, strlen32p1(tptr) /*for CH_NULL*/);
         }
     }
 }

@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-#TEXTUAL_VERSION_NUMBER=4.54.01
-TEXTUAL_VERSION_NUMBER=4.54
+TEXTUAL_VERSION_NUMBER=4.55
+#TEXTUAL_VERSION_NUMBER=4.55.01
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -126,6 +126,8 @@ o.modules.file \
 o.modules.fileutil \
 o.modules.funclist \
 o.modules.handlist \
+o.modules.im_cache \
+o.modules.im_convert \
 o.modules.mlec
 #
 AOFM2=\
@@ -183,7 +185,6 @@ o.modules.gr_axis2 \
 o.modules.gr_axisp \
 o.modules.gr_barch \
 o.modules.gr_blgal \
-o.modules.gr_cache \
 o.modules.gr_chart \
 o.modules.gr_chtIO \
 o.modules.gr_coord \
@@ -395,8 +396,6 @@ o.Modules.gr_barch:   $(CMODULES).c.gr_barch
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_barch
 o.Modules.gr_blgal:   $(CMODULES).c.gr_blgal
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_blgal
-o.Modules.gr_cache:   $(CMODULES).c.gr_cache
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_cache
 o.Modules.gr_chart:   $(CMODULES).c.gr_chart
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_chart
 o.Modules.gr_chtIO:   $(CMODULES).c.gr_chtIO
@@ -427,6 +426,10 @@ o.Modules.gr_style:    $(CMODULES).c.gr_style
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_style
 o.Modules.handlist:   $(CMODULES).c.handlist
         $(CC) -o $@ $(CCflags) $(CMODULES).c.handlist
+o.Modules.im_cache:   $(CMODULES).c.im_cache
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.im_cache
+o.Modules.im_convert: $(CMODULES).c.im_convert
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.im_convert
 o.Modules.list:       $(CMODULES).c.list
         $(CC) -o $@ $(CCflags) $(CMODULES).c.list
 o.Modules.mathxtra:   $(CMODULES).c.mathxtra
@@ -536,7 +539,6 @@ o.Modules.funclist :   $(CMODULES).h.funclist
 o.Modules.gr_axisp :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_barch :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_blgal :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
-o.Modules.gr_cache :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_chart :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_chtIO :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_coord :   $(CMODULES).h.gr_coord
@@ -552,6 +554,7 @@ o.Modules.gr_rdia2 :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_scatc :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_style :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.handlist :   $(CMODULES).h.handlist
+o.Modules.im_cache :   $(CMODULES).h.im_cache
 o.Modules.list :       $(CMODULES).h.list
 o.Modules.mathxtra :   $(CMODULES).h.mathxtra
 o.Modules.mathxtr2 :   $(CMODULES).h.mathxtr2
@@ -748,7 +751,6 @@ utils.GB.s22_mrg:   \
        -SDelete small_dde
        -SDelete file_d21
        -SDelete small_d21
-       -SDelete file_dfe
         SMerge  $(PD).utils.GB.spr_pd22
         SMerge  $(PD).utils.GB.spr_pd
         SMerge  $(PD).utils.GB.spr_ch22
@@ -777,7 +779,6 @@ utils.GB.s24_mrg:   \
        -SDelete small_dde
        -SDelete file_d21
        -SDelete small_d21
-       -SDelete file_dfe
         SMerge  $(PD).utils.GB.spr_pd24
         SMerge  $(PD).utils.GB.spr_pd
         SMerge  $(PD).utils.GB.spr_ch24

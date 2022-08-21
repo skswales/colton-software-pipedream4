@@ -14,111 +14,130 @@
 #ifndef __spell_h
 #define __spell_h
 
+typedef S32 DICT_NUMBER;
+
 /*
 exported functions
 */
 
-extern S32
+_Check_return_
+extern STATUS
 spell_addword(
-    S32 dict,
-    char *word);
+    _InVal_     DICT_NUMBER dict_number,
+    _In_z_      const char *word);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_checkword(
-    S32 dict,
-    char *word);
+    _InVal_     DICT_NUMBER dict_number,
+    _In_z_      const char *word);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_close(
-    S32 dict);
+    _InVal_     DICT_NUMBER dict_number);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_createdict(
-    char *name,
-    char *def_name);
+    _In_z_      PCTSTR name,
+    _In_z_      PCTSTR def_name);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_deleteword(
-    S32 dict,
-    char *word);
+    _InVal_     DICT_NUMBER dict_number,
+    _In_z_      const char *word);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_flush(
-    S32 dict);
+    _InVal_     DICT_NUMBER dict_number);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_iswordc(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict_number,
     S32 ch);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_load(
-    S32 dict);
+    _InVal_     DICT_NUMBER dict_number);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_nextword(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict_number,
     char *wordout,
-    char *wordin,
-    char *mask,
-    P_S32 brkflg);
+    _In_z_      const char *wordin,
+    _In_opt_z_  const char *mask,
+    _InoutRef_  P_S32 brkflg);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_opendict(
-    P_U8 name,
-    P_U8 def_name,
-    char **copy_right);
+    _In_z_      PCTSTR name,
+    _Out_opt_   char **copy_right);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_pack(
-    S32 olddict,
-    S32 newdict);
+    _InVal_     DICT_NUMBER old_dict_number,
+    _InVal_     DICT_NUMBER new_dict_number);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_prevword(
-    S32 dict,
-    char *wordin,
+    _InVal_     DICT_NUMBER dict_number,
     char *wordout,
-    char *mask,
-    P_S32 brkflg);
+    _In_z_      const char *wordin,
+    _In_opt_z_  const char *mask,
+    _InoutRef_  P_S32 brkflg);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_setoptions(
-    S32 dict,
-    S32 optionset,
-    S32 optionmask);
+    _InVal_     DICT_NUMBER dict_number,
+    _InVal_     U32 optionset,
+    _InVal_     U32 optionmask);
 
 extern void
 spell_stats(
-    P_S32 cblocks,
-    P_S32 largest,
-    P_S32 totalmem);
+    _OutRef_    P_S32 cblocks,
+    _OutRef_    P_S32 largest,
+    _OutRef_    P_S32 totalmem);
 
+_Check_return_
 extern S32
 spell_strnicmp(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict_number,
     PC_U8 word1,
     PC_U8 word2,
-    S32 len);
+    _InVal_     U32 len);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_tolower(
-    S32 dict,
-    S32 ch);
+    _InVal_     DICT_NUMBER dict_number,
+    _InVal_     S32 ch);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_toupper(
-    S32 dict,
-    S32 ch);
+    _InVal_     DICT_NUMBER dict_number,
+    _InVal_     S32 ch);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_unlock(
-    S32 dict);
+    _InVal_     DICT_NUMBER dict_number);
 
-extern S32
+_Check_return_
+extern STATUS
 spell_valid_1(
-    S32 dict,
-    S32 ch);
+    _InVal_     DICT_NUMBER dict_number,
+    _InVal_     S32 ch);
 
 /*
 wildcard characters

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Definition of standard types and source rules */
 
@@ -60,7 +60,7 @@ typedef void * HGLOBAL;
 #define   PCTCH      PC_U8
 #define P_PCTCH    P_PC_U8
 
-/* NULLCH-terminated variants */
+/* CH_NULL-terminated variants */
 
 #define     TCHARZ      U8Z
 #define    PTSTR      P_U8Z
@@ -90,18 +90,22 @@ Structures are defined thus:
     }
     FRED;
 
-and the 'struct' word should never appear outside a structure definition
+and the 'struct' word should only rarely appear outside a typedef
 
 Pointer types are derived by prefixing P_ to base type:
 
     typedef FRED * P_FRED;
+
+or where it is a pointer to const data, PC_:
+
+    typedef const FRED * PC_FRED;
 
 Where possible, instances of a type should be lower case versions of the type name:
 
     P_FRED p_fred;
 
 When you define a constant for the size of a buffer in bytes
-eg STRING_MAX, always define two constants, the second being
+e.g. STRING_MAX, always define two constants, the second being
 larger by 1 and prefixed with BUF_:
 
 #define STRING_MAX 10
@@ -167,17 +171,17 @@ typedef BYTE * P_BYTE, ** P_P_BYTE; typedef const BYTE * PC_BYTE;
 U8 char
 */
 
-#ifdef _CHAR_UNSIGNED
-typedef          char    U8;
-#else
-#error _CHAR_UNSIGNED is not defined
+#if !defined(__CHAR_UNSIGNED__)
+#error       __CHAR_UNSIGNED__ is not defined
 typedef unsigned char    U8;
+#else
+typedef          char    U8;
 #endif
 typedef U8 * P_U8, ** P_P_U8; typedef const U8 * PC_U8; typedef PC_U8 * P_PC_U8;
 
 #define P_U8_NONE _P_DATA_NONE(P_U8)
 
-/* Z suffix signifying these to be known to be NULLCH-terminated */
+/* Z suffix signifying these to be known to be CH_NULL-terminated */
 
 #if 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
 typedef      U8      U8Z;
@@ -197,7 +201,7 @@ typedef P_PC_U8 P_PC_U8Z;
 
 #define empty_string ""
 
-#define U8_is_ascii7(u8) ( \
+#define u8_is_ascii7(u8) ( \
     (u8) < 0x80)
 
 typedef signed char S8; typedef S8 * P_S8, ** P_P_S8; typedef const S8 * PC_S8;
@@ -223,7 +227,7 @@ typedef uintptr_t CLIENT_HANDLE; typedef CLIENT_HANDLE * P_CLIENT_HANDLE;
 #if !WINDOWS
 typedef U16 WCHAR; typedef U16 * PWCH; typedef const U16 * PCWCH;
 
-/* NULLCH-terminated character strings */
+/* CH_NULL-terminated character strings */
 typedef U16 * PWSTR; typedef const U16 * PCWSTR;
 #endif
 
@@ -233,6 +237,16 @@ a UCS-4 32-bit character (ISO 10646-1)
 typedef          U32      UCS4;
 typedef         UCS4 *  P_UCS4;
 typedef   const UCS4 * PC_UCS4;
+
+#if defined(__CC_NORCROFT) /* these are better done as macros on Norcroft */
+
+#define ucs4_is_ascii7(ucs4) ( \
+    /*(UCS4)*/ (ucs4) < (UCS4) 0x00000080U )
+
+#define ucs4_is_sbchar(ucs4) (\
+    /*(UCS4)*/ (ucs4) < (UCS4) 0x00000100U )
+
+#else /* COMPILER */
 
 _Check_return_
 static inline BOOL
@@ -250,8 +264,18 @@ ucs4_is_sbchar(
     return((ucs4) < 0x00000100U);
 }
 
+#endif /* COMPILER */
+
+_Check_return_
+static inline BOOL
+ucs4_is_C1(
+    _InVal_     UCS4 ucs4)
+{
+    return(((ucs4) >= 0x00000080U) && ((ucs4) < 0x0000009FU));
+}
+
 /*
-an ASCII 7-bit character (subset of Latin-1 where top bit is zero)
+A7CHAR: an ASCII 7-bit character (subset of SBCHAR where top bit is zero)
 Useful for things that we know are limited e.g. spreadsheet TYPE()
 and key names that go in files for mapping
 */
@@ -275,29 +299,32 @@ typedef P_PC_U8Z P_PC_A7STR;
 #endif
 
 /*
-a Latin-N 8-bit Single Byte character (ISO 8859-N) (may have top-bit-set)
+SBCHAR: a Latin-N 8-bit Single Byte character (may have top-bit-set)
+ISO 8859-N / Acorn Extended Latin-N / Windows-<AnsiCodePage>
 */
 
 #if 1
-typedef      U8       SB_U8;
+typedef      U8       SBCHAR;
 typedef    P_U8     P_SBCHARS;
 typedef  P_P_U8   P_P_SBCHARS;
 typedef   PC_U8    PC_SBCHARS;
 typedef P_PC_U8  P_PC_SBCHARS;
+#else
+#define      SBCHAR       U8
+#define    P_SBCHARS    P_U8
+#define  P_P_SBCHARS  P_P_U8
+#define   PC_SBCHARS   PC_U8
+#define P_PC_SBCHARS P_PC_U8
+#endif
 
-typedef      U8Z      SB_U8Z;
+#if 1
+typedef      U8Z      SBCHARZ;
 typedef    P_U8Z    P_SBSTR; /*_NullTerminated_*/
 typedef  P_P_U8Z  P_P_SBSTR;
 typedef   PC_U8Z   PC_SBSTR; /*_NullTerminated_*/
 typedef P_PC_U8Z P_PC_SBSTR;
 #else
-#define      SB_U8        U8
-#define    P_SBCHARS    P_U8
-#define  P_P_SBCHARS  P_P_U8
-#define   PC_SBCHARS   PC_U8
-#define P_PC_SBCHARS P_PC_U8
-
-#define      SB_U8Z       U8Z
+#define      SBCHARZ      U8Z
 #define    P_SBSTR      P_U8Z /*_NullTerminated_*/
 #define  P_P_SBSTR    P_P_U8Z
 #define   PC_SBSTR     PC_U8Z /*_NullTerminated_*/
@@ -376,8 +403,8 @@ printf format strings
 #define ENUM_XTFMT      U32_XTFMT
 
 #if defined(_WIN64)
-#define UINT3264_TFMT   TEXT("%I64u") /* NB %llu doesn't work on Windows 2000 runtime */
-#define UINT3264_XTFMT  TEXT("0x%I64x")
+#define UINT3264_TFMT   TEXT("%llu")
+#define UINT3264_XTFMT  TEXT("0x%llx")
 #else
 #define UINT3264_TFMT   U32_TFMT
 #define UINT3264_XTFMT  U32_XTFMT
@@ -414,7 +441,7 @@ buffer sizes for printf conversions
 #define BUF_MAX_U16_FMT (1+ 5)  /* 65535*/
 #define BUF_MAX_S32_FMT (1+ 11) /*-2147483648*/
 #define BUF_MAX_U32_FMT (1+ 10) /* 4294967296*/
-#define BUF_MAX_F64_FMT (1+ 1 + 1 + 1 + 15 + 1 + 3 + 4) /*approx eg -1.2345678901234566e-128, 4 for good luck */
+#define BUF_MAX_F64_FMT (1+ 1 + 1 + 1 + 15 + 1 + 3 + 4) /*approx e.g. -1.2345678901234566e-128, 4 for good luck */
 
 /* get byte from pointer (plus offset) / put byte at pointer (plus offset) */
 
@@ -473,12 +500,6 @@ buffer sizes for printf conversions
 #define PtrDiffElem(ptr, base) /*num*/ \
     ((size_t) ((ptr) - (base)))
 
-/* skip spaces on byte-oriented string (either U8 or UTF-8) */
-
-#define PtrSkipSpaces(__ptr_type, ptr) /*void*/ \
-    while(CH_SPACE == PtrGetByte(ptr)) \
-        PtrIncByte(__ptr_type, ptr)
-
 /*
 remove const from pointer
 */
@@ -493,13 +514,19 @@ remove const from pointer
 bit field qualifiers
 */
 
-#define UBF unsigned int
-#define SBF   signed int
+#define UBF  unsigned int
+#define SBF    signed int
 
 #define UBF_PACK(value) \
     ((UBF) (value))
 
 #define UBF_UNPACK(__unpacked_type, packed_value) \
+    ((__unpacked_type) (packed_value))
+
+#define SBF_PACK(value) \
+    ((SBF) (value))
+
+#define SBF_UNPACK(__unpacked_type, packed_value) \
     ((__unpacked_type) (packed_value))
 
 /*
@@ -541,7 +568,7 @@ _e_s int __cdecl _proc_bsearch( \
 #define BSEARCH_DATUM_VAR_DECL(__datum_ptr_type, __var_name) \
     __datum_ptr_type __var_name = BSEARCH_DATUM(__datum_ptr_type)
 
-/* for NULLCH-terminated string lookup */
+/* for CH_NULL-terminated string lookup */
 /* Removing z_ avoids the C6510 'Invalid annotation: 'NullTerminated'' warning */
 #define PROC_BSEARCH_PROTO_Z(_e_s, _proc_bsearch, __key_base_type, __datum_base_type) \
 _Check_return_ \
@@ -554,13 +581,13 @@ qsort()
 */
 
 typedef int (__cdecl * P_PROC_QSORT) (
-    const void * arg1,
-    const void * arg2);
+    const void * _arg1,
+    const void * _arg2);
 
 #define PROC_QSORT_PROTO(_e_s, _proc_qsort, __arg_base_type) \
 _e_s int  __cdecl _proc_qsort( \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void * arg1, \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void * arg2)
+    _In_bytecount_c_(sizeof(__arg_base_type)) const void * _arg1, \
+    _In_bytecount_c_(sizeof(__arg_base_type)) const void * _arg2)
 
 /*
 qsort_s()
@@ -568,23 +595,28 @@ qsort_s()
 
 typedef int (__cdecl * P_PROC_QSORT_S) (
     _In_        void *context,
-    _In_        const void *arg1,
-    _In_        const void *arg2);
+    _In_        const void * _arg1,
+    _In_        const void * _arg2);
 
 /*    _In_bytecount_c_(sizeof(__ctx_base_type)) void *context, \ */
 
 #define PROC_QSORT_S_PROTO(_e_s_, _proc_qsort_s, __ctx_base_type, __arg_base_type) \
 _e_s_ int __cdecl _proc_qsort_s( \
     _In_        void * context, \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void *arg1, \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void *arg2)
+    _In_bytecount_c_(sizeof(__arg_base_type)) const void * _arg1, \
+    _In_bytecount_c_(sizeof(__arg_base_type)) const void  *_arg2)
 
 #if RISCOS
-#define HOST_HWND int   /* really wimp_w but don't tell everyone */
+typedef int HOST_WND; /* really wimp_w but don't tell everyone */
+#define HOST_WND_XTFMT U32_XTFMT
 #define HOST_WND_NONE ((HOST_WND) 0)
 
 #define HOST_FONT int   /* font */
 #define HOST_FONT_NONE ((HOST_FONT) 0)
+#elif WINDOWS
+#define HOST_WND HWND
+#define HOST_WND_XTFMT PTR_XTFMT
+#define HOST_WND_NONE ((HOST_WND) NULL)
 #endif
 
 /*
@@ -607,6 +639,13 @@ typedef struct GDI_POINT
 }
 GDI_POINT, * P_GDI_POINT; typedef const GDI_POINT * PC_GDI_POINT;
 
+#define GDI_POINT_TFMT \
+    TEXT("x = ") GDI_COORD_TFMT TEXT(", y = ") GDI_COORD_TFMT
+
+#define GDI_POINT_ARGS(gdi_point__ref) \
+    (gdi_point__ref).x, \
+    (gdi_point__ref).y
+
 typedef struct GDI_SIZE
 {
     GDI_COORD cx, cy;
@@ -627,6 +666,12 @@ GDI_BOX, * P_GDI_BOX; typedef const GDI_BOX * PC_GDI_BOX;
     TEXT("x0 = ") GDI_COORD_TFMT TEXT(", y0 = ") GDI_COORD_TFMT TEXT("; ") \
     TEXT("x1 = ") GDI_COORD_TFMT TEXT(", y1 = ") GDI_COORD_TFMT
 
+#define GDI_BOX_ARGS(gdi_box__ref) \
+    (gdi_box__ref).x0, \
+    (gdi_box__ref).y0, \
+    (gdi_box__ref).x1, \
+    (gdi_box__ref).y1
+
 /*
 ordered rectangles
 */
@@ -640,6 +685,12 @@ GDI_RECT, * P_GDI_RECT; typedef const GDI_RECT * PC_GDI_RECT;
 #define GDI_RECT_TFMT \
     TEXT("tl = ") GDI_COORD_TFMT TEXT(",") GDI_COORD_TFMT TEXT("; ") \
     TEXT("br = ") GDI_COORD_TFMT TEXT(",") GDI_COORD_TFMT
+
+#define GDI_RECT_ARGS(gdi_rect__ref) \
+    (gdi_rect__ref).tl.x, \
+    (gdi_rect__ref).tl.y, \
+    (gdi_rect__ref).br.x, \
+    (gdi_rect__ref).br.y
 
 /* NB suppressing C4127: conditional expression is constant */
 #define while_constant(c) \
@@ -742,6 +793,24 @@ memset32(
 
 #endif /* INTRINSIC_MEMSET */
 
+#if RISCOS
+
+static inline void
+SecureZeroMemory(
+    _Out_writes_bytes_all_(n_bytes) P_ANY ptr,
+    U32 n_bytes)
+{
+    volatile char * vptr = (volatile char *) ptr;
+
+    while(0 != n_bytes)
+    {
+        *vptr++ = 0;
+        n_bytes--;
+    }
+}
+
+#endif /* OS */
+
 #define zero_array(_array) \
     (void) memset(_array, 0, sizeof(_array))
 
@@ -769,7 +838,7 @@ helper macros are given:
 
 BOOL    status_fail(STATUS)         TRUE if status is not OK
 BOOL    status_ok(STATUS)           TRUE if status is OK
-BOOL    status_done(STATUS)         TRUE if action taken: ie +ve
+BOOL    status_done(STATUS)         TRUE if action taken: i.e. +ve
 void    status_break(STATUS)        breaks on error condition
 void    status_consume(STATUS)      executes expression, discards result
 void    status_return(STATUS)       returns from current function with STATUS error code
@@ -797,15 +866,15 @@ typedef STATUS * P_STATUS;
 #define STATUS_CANCEL       ((STATUS) (-4))
 #define STATUS_CHECK        ((STATUS) (-5))
 
-/* TRUE if status is not OK, ie -ve */
+/* TRUE if status is not OK, i.e. -ve */
 #define status_fail(status) ( \
     (status)  < STATUS_OK )
 
-/* TRUE if status is OK, ie +ve or zero */
+/* TRUE if status is OK, i.e. +ve or zero */
 #define status_ok(status) ( \
     (status) >= STATUS_OK )
 
-/* TRUE if action taken: ie +ve, non-zero */
+/* TRUE if action taken: i.e. +ve, non-zero */
 #define status_done(status) ( \
     (status)  > STATUS_OK )
 
@@ -888,11 +957,10 @@ UCS-4 character definitions
 */
 
 /*
- 0000..001F C0 Controls
+0000..001F C0 Controls
 */
 
 #define CH_NULL                     0x00
-#define CH_INLINE                   0x07    /* Fireworkz inline identifier code */
 #define CH_TAB                      0x09
 #define CH_ESCAPE                   0x1B
 
@@ -941,20 +1009,14 @@ UCS-4 character definitions
 #define CH_TILDE                    0x7E    /* ~ */
 #define CH_DELETE                   0x7F
 
-/*
-0080..009F C1 Controls
-*/
+#include "cmodules/unicode/u0080.h" /* 0080..00FF Latin-1 Supplement */
 
 /*
-00A0..00FF Latin-1 Supplement
-*/
-
-#define CH_NO_BREAK_SPACE           0xA0U
-#define CH_SOFT_HYPHEN              0xADU
-#define CH_INVERTED_QUESTION_MARK   0xBFU
-
-/*
-D800..DBFF High, Low Surrogates (these are used to obtain characters >= U+10000 under UTF-16 - requires Windows 2000 or later)
+D800..DB7F High Surrogates
+DB80..DBFF High Private Use Surrogates
+DC00..DFFF Low Surrogates
+These are used to obtain characters >= U+10000 under UTF-16
+This requires Windows 2000 or later as WCHAR was simply UCS-2 on NT 4.0
 */
 
 #define UCH_SURROGATE_HIGH          0xD800U
@@ -977,15 +1039,22 @@ UCS-4 Specials
 #define UCH_NONCHARACTER_XXFFFE     0xFFFEU
 #define UCH_NONCHARACTER_XXFFFF     0xFFFFU
 
-#define UCH_UNICODE_END             0x10FFFFU /* only UCS-4 values <= this character value are valid */
+#define UCH_UCS2_END                0xFFFFU     /* only UCS-2 values <= this code point are valid */
+#define UCH_UCS2_INVALID            0x10000U    /* only UCS-2 values <  this code point are valid (easier on the ARM) */
+
+#define UCH_UNICODE_END             0x10FFFFU   /* only UCS-4 values <= this code point are valid */
+#define UCH_UNICODE_INVALID         0x110000U   /* only UCS-4 values <  this code point are valid (easier on the ARM) */
 
 /* type for worst case alignment */
 #if RISCOS
-typedef int  align_t;
+typedef int align_t;
 #define SIZEOF_ALIGN_T 4
-#elif WINDOWS
+#elif WINDOWS && 0 /* only really intended to pack so hard for low-memory DOS systems */
 typedef char align_t;
 #define SIZEOF_ALIGN_T 1
+#else
+typedef int align_t;
+#define SIZEOF_ALIGN_T 4
 #endif
 
 /* useful max/min macros (NB watch out for multiple-evaluation side-effects) */
@@ -1000,13 +1069,13 @@ typedef char align_t;
 /* useful division a/b macros to round result to +/- infinity rather than towards zero (NB watch out for multiple-evaluation side-effects) */
 
 #define div_round_ceil_u(a, b) ( \
-    ((a) + (b) - 1) / (b)) /* for unsigned a */
+    ((a) + (b) - 1) / (b) ) /* for unsigned a */
 
 #define div_round_ceil(a, b) ( \
-    (((a) >  0) ? ((a) + (b) - 1) : (a)) / (b))
+    (((a) >  0) ? ((a) + (b) - 1) : (a)) / (b) )
 
 #define div_round_floor(a, b) ( \
-    (((a) >= 0) ? (a) : ((a) - (b) + 1)) / (b))
+    (((a) >= 0) ? (a) : ((a) - (b) + 1)) / (b) )
 
 /* functions for where it can't be avoided */
 
@@ -1039,14 +1108,14 @@ div_round_floor_fn(
 
 #define consume(__base_type, expr) \
     do { \
-    __base_type v = (expr); IGNOREVAR(v); \
+    __base_type __v = (expr); IGNOREVAR(__v); \
     } while_constant(0)
 
 #define consume_ptr(expr) consume(PC_ANY, expr)
 
 #define consume_bool(expr) consume(BOOL, expr)
 
-#define consume_int(expr) consume(int, expr) /* quite useful for printf() etc */
+#define consume_int(expr) consume(int, expr) /* quite useful for printf() etc. */
 
 /*
 a pointer that will hopefully give a trap when dereferenced even when not CHECKING

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1988-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Browse through spell dictionary etc. */
 
@@ -43,7 +43,7 @@
 typedef struct
 {
     dbox d;
-    S32 dict;
+    DICT_NUMBER dict;
 
     S32 res;
     S32 sofar;
@@ -62,7 +62,7 @@ internal functions
 
 static S32
 close_dict_always(
-    S32 dict);
+    _InVal_     DICT_NUMBER dict);
 
 static BOOL
 err_open_master_dict(void);
@@ -75,13 +75,13 @@ get_and_display_words(
     char *wild_string,
     char *template,
     char *wild_str,
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     dbox d,
     BOOL *was_spell_errp);
 
 static P_U8
 get_word_from_line(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     P_U8 array /*out*/,
     S32 stt_offset,
     P_S32 found_offsetp);
@@ -107,7 +107,7 @@ static merge_dump_strukt mergedict_mds  = MDS_INIT;
 
 static S32
 browse_valid_1(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     char ch)
 {
     return(spell_valid_1(dict, ch)  ||  isalpha(ch));
@@ -121,7 +121,7 @@ browse_valid_1(
 
 static S32
 browse_iswordc(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     char ch)
 {
     return(spell_iswordc(dict, ch)  ||  isalpha(ch));
@@ -135,7 +135,7 @@ browse_iswordc(
 
 static BOOL
 worth_trying_again(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     P_U8 array /*inout*/)
 {
     P_U8 ptr;
@@ -215,7 +215,7 @@ check_word(void)
 
 static S32
 close_dict(
-    S32 dict)
+    _InVal_     DICT_NUMBER dict)
 {
     return( ((dict == dumpdict_mds.dict)   ||
              (dict == mergedict_mds.dict)  ||
@@ -225,11 +225,12 @@ close_dict(
           );
 }
 
-static S32
+_Check_return_
+static STATUS
 close_dict_always(
-    S32 dict)
+    _InVal_     DICT_NUMBER dict)
 {
-    S32 res;
+    STATUS res;
 
 #if 1
     /* SKS after 4.12 26mar92 - treat master dictionary like user dictionaries */
@@ -263,9 +264,9 @@ close_user_dictionaries(
 
         while((lptr = first_in_list(&first_user_dict)) != NULL)
         {
-            S32 res = close_dict_always((S32) lptr->key);
+            STATUS res = close_dict_always((S32) lptr->key);
 
-            if(res < 0)
+            if(status_fail(res))
             {
                 reperr_module(create_error(ERR_SPELL), res);
                 been_error = FALSE;
@@ -291,9 +292,9 @@ flush_user_dictionaries(void)
         lptr;
         lptr = next_in_list(&first_user_dict))
     {
-        S32 res = spell_flush((S32) lptr->key);
+        STATUS res = spell_flush((S32) lptr->key);
 
-        if(res < 0)
+        if(status_fail(res))
         {
             reperr_module(create_error(ERR_SPELL), res);
             been_error = FALSE;
@@ -310,7 +311,7 @@ flush_user_dictionaries(void)
 
 static S32
 compile_wild_string(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     char *to,
     const char *from)
 {
@@ -377,16 +378,17 @@ del_spellings(void)
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 dict_number(
     const char * name,
     BOOL create)
 {
     PC_LIST lptr;
-    S32 dict, res;
+    DICT_NUMBER dict;
+    S32 res;
     char *leaf;
     char fulldictname[BUF_MAX_PATHSTRING];
-    char olddictdefn[BUF_MAX_PATHSTRING];
 
     trace_1(TRACE_APP_PD4, "dict_number(%s)", trace_string(name));
 
@@ -412,17 +414,16 @@ dict_number(
     dict = create_error(SPELL_ERR_CANTOPEN);
     if(create)
         if(add_path_or_relative_using_dir(fulldictname, elemof32(fulldictname), name, TRUE, DICTS_SUBDIR_STR))
-            if(file_find_on_path(olddictdefn, elemof32(olddictdefn), OLD_DICTDEFN_FILE_STR))
-                if((dict = spell_opendict(fulldictname, olddictdefn, NULL)) >= 0)
+            if((dict = spell_opendict(fulldictname, NULL)) >= 0)
+            {
+                if(status_fail(res = add_to_list(&first_user_dict, dict, fulldictname)))
                 {
-                    if(status_fail(res = add_to_list(&first_user_dict, dict, fulldictname)))
-                    {
-                        (void) spell_close(dict);
-                        dict = (S32) res;
-                    }
-                    else
-                        return(most_recent = dict);
+                    status_consume(spell_close(dict));
+                    dict = (S32) res;
                 }
+                else
+                    return(most_recent = dict);
+            }
 
     most_recent = -1;
     return(dict);
@@ -437,8 +438,9 @@ dict_number(
 
 static P_U8
 get_word_from_line(
-    S32 dict,
-    P_U8 array /*out*/, S32 stt_offset,
+    _InVal_     DICT_NUMBER dict,
+    P_U8 array /*out*/,
+    S32 stt_offset,
     P_S32 found_offsetp)
 {
     P_U8 to = array;
@@ -506,7 +508,8 @@ insert_most_recent(
     return(mystr_set(field, USERDICT_STR));
 }
 
-static S32
+_Check_return_
+static STATUS
 open_appropriate_dict(
     const DIALOG *dptr)
 {
@@ -533,7 +536,8 @@ err_open_master_dict(void)
     return(FALSE);
 }
 
-static S32
+_Check_return_
+static STATUS
 open_master_dict(void)
 {
     PC_U8 name;
@@ -819,7 +823,7 @@ FlushUserDict_fn(void)
 extern void
 InsertWordInDict_fn(void)
 {
-    S32 res;
+    STATUS res;
     char array[LIN_BUFSIZ];
 
     if(!dialog_box_start())
@@ -1072,7 +1076,7 @@ get_and_display_words(
     char *wild_string,
     char *template,
     char *wild_str,
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     dbox d,
     BOOL *was_spell_errp)
 {
@@ -1205,7 +1209,7 @@ browse_process(void)
     dbox d = mdsp->d;
     dbox_field f;
     BOOL adjustclicked;
-    S32 dict = mdsp->dict;
+    const DICT_NUMBER dict = mdsp->dict;
     char (*words)[MAX_WORD+1] = mdsp->words;
     S32 i;
     S32 which = -1;        /* which word was clicked on */
@@ -1436,7 +1440,7 @@ browse_process(void)
 
 static S32
 browse(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     char *wild_str)
 {
     char template[LIN_BUFSIZ];
@@ -2093,7 +2097,7 @@ next_word_on_line(void)
 {
     S32 len;
     PC_U8 ptr;
-    S32 dict;
+    DICT_NUMBER dict;
 
     len = strlen(linbuf);
 
@@ -2321,21 +2325,19 @@ CheckDocument_fn(void)
             /* add to user dictionary? */
             if(d_check[C_ADD].option == 'Y')
             {
-                S32 dict = dict_number(d_check[C_ADD].textfield, TRUE);
+                res = dict_number(d_check[C_ADD].textfield, TRUE);
 
-                if(dict >= 0)
+                if(status_ok(res))
                 {
-                    if((res = spell_addword(dict,
+                    if((res = spell_addword((DICT_NUMBER) res,
                                             d_check[C_CHANGE].textfield))
-                                            < 0)
-                        dict = res;
-                    else if(res > 0)
+                                            > 0)
                         ++words_added;
                 }
 
-                if(dict < 0)
+                if(res < 0)
                 {
-                    reperr_module(create_error(ERR_SPELL), dict);
+                    reperr_module(create_error(ERR_SPELL), res);
                     break;
                 }
             }
@@ -2468,7 +2470,7 @@ CheckDocument_fn(void)
 
 static BOOL
 get_word_from_file(
-    S32 dict,
+    _InVal_     DICT_NUMBER dict,
     FILE_HANDLE in,
     char *array /*out*/)
 {
@@ -3016,7 +3018,7 @@ DumpDictionary_fn(void)
 extern void
 LockDictionary_fn(void)
 {
-    S32 dict, res;
+    STATUS status;
 
     if(!init_dialog_box(D_USER_LOCK))
         return;
@@ -3029,18 +3031,19 @@ LockDictionary_fn(void)
 
     while(dialog_box(D_USER_LOCK))
     {
-        res = dict = open_appropriate_dict(&d_user_lock[0]);
+        status = open_appropriate_dict(&d_user_lock[0]);
 
-        if(res >= 0)
+        if(status_ok(status))
         {
-            res = spell_load(dict);
-            if(res < 0)
-                spell_unlock(dict);
+            const DICT_NUMBER dict = (DICT_NUMBER) status;
+
+            if(status_fail(status = spell_load(dict)))
+                status_consume(spell_unlock(dict));
         }
 
-        if(res < 0)
+        if(status_fail(status))
         {
-            reperr_module(create_error(ERR_SPELL), res);
+            reperr_module(create_error(ERR_SPELL), status);
             if(!dialog_box_can_retry())
                 break;
             continue;

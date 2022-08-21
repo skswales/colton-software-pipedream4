@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Chart editing module */
 
@@ -1557,7 +1557,7 @@ gr_chartedit_riscos_button_click(
         /* display section background */
         {
         /* use adjust clicked state to enter deeper into structure than clicked */
-        /* ie allow selection of point rather than looping back to enclosing series */
+        /* i.e. allow selection of point rather than looping back to enclosing series */
         GR_CHART_OBJID id;
         GR_DIAG_OFFSET hitObject[64];
         unsigned int hitIndex;
@@ -1804,7 +1804,7 @@ gr_chartedit_riscos_message(
             break;
 
         default:
-            if(gr_cache_can_import(filetype))
+            if(image_cache_can_import(filetype) || image_convert_can_convert(filetype))
                 message_output(string_lookup(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED)));
             break;
         }
@@ -1839,12 +1839,12 @@ gr_chartedit_riscos_message(
             break;
 
         default:
-            if(gr_cache_can_import(filetype))
+            if(image_cache_can_import(filetype))
             {
-                GR_CHART_OBJID  id;
-                P_GR_CHART       cp;
-                GR_CACHE_HANDLE cah;
-                S32             res;
+                GR_CHART_OBJID id;
+                P_GR_CHART cp;
+                IMAGE_CACHE_HANDLE cah;
+                S32 res;
 
                 cep = gr_chartedit_cep_from_ceh(ceh);
                 assert(cep);
@@ -1899,7 +1899,7 @@ gr_chartedit_riscos_message(
 
                 /* load the file, disallowing recolouring */
 
-                res = gr_cache_entry_ensure(&cah, filename);
+                res = image_cache_entry_ensure(&cah, filename);
 
                 if(status_done(res))
                 {

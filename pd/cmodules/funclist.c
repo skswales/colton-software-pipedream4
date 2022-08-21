@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module to handle lists of functions */
 
@@ -47,7 +47,7 @@ FUNCLIST_HANDLER, * P_FUNCLIST_HANDLER;
 * add a procedure to a function list. caller gets back the proc,handle,tag
 * on a first/next enumeration. priority determines the insertion order, where
 * zero priority uses a default value. identical priority additions add the
-* new procedure to the end of that block ie. still before any lower priority
+* new procedure to the end of that block i.e. still before any lower priority
 * entries. caller can ask for store to be allocated with the proc,handle to
 * be read from/written to by funclist_readdata_ip/writedata_ip later.
 * currently can't change priority with this call, use remove/add again.

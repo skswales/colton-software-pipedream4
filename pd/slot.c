@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that travels around the PipeDream data structures */
 
@@ -310,7 +310,7 @@ createhole(
 *
 * in the case of a number cell for the new evaluator, NUMBEROVH includes
 * all of PD's overhead, so size must be the space required by the
-* evaluator: ie the number returned by ev_len()
+* evaluator: i.e. the number returned by ev_len()
 *
 ******************************************************************************/
 
@@ -391,7 +391,7 @@ default_col_entries(
     list_init(&cp->lb, MAXITEMSIZE, MAXPOOLSIZE);
     cp->colwidth  = DEFAULTWIDTH;
     cp->wrapwidth = DEFAULTWRAPWIDTH;
-    cp->colflags  = DEFAULTCOLFLAGS;    /* probably 0, ie not a linked column */
+    cp->colflags  = DEFAULTCOLFLAGS;    /* probably 0, i.e. not a linked column */
 }
 
 /******************************************************************************

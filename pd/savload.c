@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that saves and loads PipeDream (and other format) files */
 
@@ -2398,7 +2398,7 @@ filetype_from_data(
         filetype = FILETYPE_DRAW;
     else if(0 == memcmp32(buffer, buffer_acorn_sprite, sizeof32(buffer_acorn_sprite)))
         filetype = FILETYPE_SPRITE;
-    else if( (0 == memcmp32(&buffer[6], buffer_jfif_0, sizeof32(buffer_jfif_0))) &&
+    else if( (0 == memcmp32(&buffer[0], buffer_jfif_0, sizeof32(buffer_jfif_0))) &&
              (0 == memcmp32(&buffer[6], buffer_jfif_6, sizeof32(buffer_jfif_6))) )
         filetype = FILETYPE_JPEG;
     else if(0 == memcmp32(buffer, buffer_tiff_LE, sizeof32(buffer_tiff_LE)))
@@ -2499,7 +2499,7 @@ find_filetype_option(
     array[size] = '\0';
 
     /* is it a chart file? search early or may get confused with just normal Draw file */
-    res = gr_cache_fileheader_is_chart(array, size);
+    res = image_cache_fileheader_is_chart(array, size);
     if(res != 0)
     {
         filetype_option = PD4_CHART_CHAR;
@@ -2960,7 +2960,7 @@ loadfile_core(
                 break;
 
             default:
-                /* turn off wrap in plain text documents eg ASCII, CSV, VIEWSHEET(!) */
+                /* turn off wrap in plain text documents e.g. ASCII, CSV, VIEWSHEET(!) */
                 d_options_WR = 'N';
                 break;
             }
@@ -3192,7 +3192,7 @@ loadfile_core(
                         switch(p_load_file_options->filetype_option)
                         {
                         default:
-                            if(field_separator  &&  (c == field_separator)) /* allows TAB etc through */
+                            if(field_separator  &&  (c == field_separator)) /* allows TAB etc. through */
                                 break;
 
                             ctrl_chars = TRUE;

@@ -4,19 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2014 Stuart Swales */
+/* Copyright (C) 2012-2016 Stuart Swales */
 
 /* SKS 2012 */
 
 #ifndef __target_riscos_host_gccsdk_h
 #define __target_riscos_host_gccsdk_h
 
-#ifndef __CHAR_UNSIGNED__
-#if 1
-#define _CHAR_UNSIGNED 1
-#else
-#error  _CHAR_UNSIGNED must be set (use -funsigned-char switch)
-#endif
+#if !defined(__CHAR_UNSIGNED__)
+#error       __CHAR_UNSIGNED__ must be set (use -funsigned-char switch)
 #endif
 
 #ifndef _In_reads_
@@ -35,7 +31,7 @@
 #define INTRINSIC_MEMCMP 1
 #define INTRINSIC_MEMCPY 1
 #define INTRINSIC_MEMSET 1
-#endif
+#endif /* CODE_ANALYSIS */
 #endif /* __clang__ */
 
 #endif /* __target_riscos_host_gccsdk_h */

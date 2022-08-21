@@ -5,7 +5,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Copyright (C) 2013-2015 Stuart Swales
+Copyright (C) 2013-2016 Stuart Swales
 
 Prerequisites
 -------------
@@ -64,8 +64,7 @@ Execute the Obey file r32.MakeRiscPkg.
 This will copy only those files needed for distribution to PipeDream_4_xx_yy
 in $.Temp and create the corresponding distributable ZIP package file.
 
-Rename that directory as PipeDream_4_<xx>_<yy> where <xx> is the actual
-major version number and <yy> the minor version number (usually 00) and
-the corresponding distributable ZIP package file contained in that
-directory as PipeDream_4_<xx>_<yy>/zip.
-
+Rename the PipeDream_4_xx_yy directory in $.Temp as PipeDream_4_<xx>_<yy> where
+  <xx> is the actual major version number,
+  <yy> the minor version number (usually 00)
+and also rename the corresponding distributable ZIP package file in $.Temp as PipeDream_4_<xx>_<yy>/zip.

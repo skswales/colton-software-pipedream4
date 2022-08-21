@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module to allocate one-shot blocks of memory, disposed of en masse when owning DOCU is freed */
 
@@ -151,7 +151,7 @@ alloc_block_ustr_set(
     {
         assert0();
         /* "<<al_ustr_realloc - CONTAINS INLINES>>" */
-        l = 1 /*NULLCH*/ + ustr_inline_strlen32(b);
+        l = 1 /*CH_NULL*/ + ustr_inline_strlen32(b);
     }
 #endif
 

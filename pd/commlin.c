@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that edits and calls commands */
 
@@ -431,7 +431,7 @@ do_execfile(
                 cbuff[1] = '\0';
                 keyidx = cbuff;
 
-                /* reset keyidx if it's a command, eg CR, TAB */
+                /* reset keyidx if it's a command, e.g. CR, TAB */
                 schkvl(*ptr++);
 
                 if(keyidx)
@@ -1363,7 +1363,7 @@ ChangeMenus_fn(void)
 
 /*
 *
-* process a command for internal use eg. reusing a command body for part of another function
+* process a command for internal use e.g. reusing a command body for part of another function
 *
 */
 
@@ -1469,7 +1469,7 @@ output_formula_to_macro_file(
 
 /******************************************************************************
 *
-* alt_letter takes a 16-bit character (eg from rdch()) and if it is
+* alt_letter takes a 16-bit character (e.g. from rdch()) and if it is
 * an Alt-letter returns the upper case letter. Otherwise returns 0
 *
 ******************************************************************************/

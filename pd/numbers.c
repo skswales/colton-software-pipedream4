@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module that handles spreadsheet bits and draw file management */
 
@@ -607,7 +607,7 @@ compile_expression(
 
 static S32
 draw_add_file_ref(
-    GR_CACHE_HANDLE draw_file_key,
+    IMAGE_CACHE_HANDLE draw_file_key,
     _InRef_opt_ PC_F64 xp,
     _InRef_opt_ PC_F64 yp,
     COL col,
@@ -647,7 +647,7 @@ draw_add_file_ref(
         p_draw_file_ref->col = col;
         p_draw_file_ref->row = row;
 
-        gr_cache_ref(&draw_file_key, 1); /* add a ref */
+        image_cache_ref(&draw_file_key, 1); /* add a ref */
 
         trace_1(TRACE_MODULE_UREF, "draw_add_file_ref adding draw file ref: " PTR_XTFMT, report_ptr_cast(draw_file_key));
     }
@@ -663,7 +663,7 @@ draw_add_file_ref(
     else
         p_draw_file_ref->y_factor = *yp / 100.0;
 
-    p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
+    p_draw_diag = image_cache_search(&p_draw_file_ref->draw_file_key);
 
     draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
 
@@ -803,7 +803,7 @@ draw_redraw_all_pictures(void)
         p_draw_file_ref;
         p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
     {
-        P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
+        P_DRAW_DIAG p_draw_diag = image_cache_search(&p_draw_file_ref->draw_file_key);
 
         draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
     }
@@ -815,7 +815,7 @@ draw_redraw_all_pictures(void)
 *
 ******************************************************************************/
 
-gr_cache_recache_proto(static, draw_file_recached)
+image_cache_recache_proto(static, draw_file_recached)
 {
     /* search draw file ref list and reload scale info, cause redraw etc. */
     LIST_ITEMNO key;
@@ -830,10 +830,10 @@ gr_cache_recache_proto(static, draw_file_recached)
     {
         if(p_draw_file_ref->draw_file_key == cah)
         {
-            P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
+            P_DRAW_DIAG p_draw_diag = image_cache_search(&p_draw_file_ref->draw_file_key);
 
             if(NULL == p_draw_diag)
-                p_draw_diag = gr_cache_search_empty(); /* paranoia in case of reload failure */
+                p_draw_diag = image_cache_search_empty(); /* paranoia in case of reload failure */
 
             draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
         }
@@ -860,7 +860,7 @@ draw_cache_file(
     S32 load_as_preferred,
     S32 explicit_load)
 {
-    GR_CACHE_HANDLE draw_file_key;
+    IMAGE_CACHE_HANDLE draw_file_key;
     U32 wacky_tag = GR_RISCDIAG_WACKYTAG;
     struct PDCHART_TAGSTRIP_INFO info;
     U8  namebuf[BUF_MAX_PATHSTRING];
@@ -889,36 +889,36 @@ draw_cache_file(
         return(pdchart_show_editor_using_handle(ext_handle));
     }
 
-    (void) gr_cache_entry_query(&draw_file_key, namebuf);
+    (void) image_cache_entry_query(&draw_file_key, namebuf);
 
     if(!draw_file_key)
     {
-        if((res = gr_cache_entry_ensure(&draw_file_key, namebuf)) < 0)
+        if((res = image_cache_entry_ensure(&draw_file_key, namebuf)) < 0)
             return(res);
 
         /* add recache proc for next time it gets loaded */
-        gr_cache_recache_inform(&draw_file_key, draw_file_recached, NULL);
+        image_cache_recache_inform(&draw_file_key, draw_file_recached, NULL);
 
         /* add tag stripper iff chart not already loaded */
         if(!chart_exists)
         {
-            status_assert(gr_cache_tagstripper_add(pdchart_tagstrip, &info, wacky_tag));
+            status_assert(image_cache_tagstripper_add(pdchart_tagstrip, &info, wacky_tag));
 
             added_stripper = TRUE;
         }
     }
 
-    (void) gr_cache_loaded_ensure(&draw_file_key);
+    (void) image_cache_loaded_ensure(&draw_file_key);
 
     if(added_stripper)
-        gr_cache_tagstripper_remove(pdchart_tagstrip, &info);
+        image_cache_tagstripper_remove(pdchart_tagstrip, &info);
 
     /* if we loaded a live Chart file we'll now want to ensure its dependent docs are loaded too */
 
     if(info.pdchartdatakey)
     {
         /* when all refs to this chart go to zero then kill the cache entry */
-        gr_cache_entry_set_autokill(&draw_file_key);
+        image_cache_entry_set_autokill(&draw_file_key);
 
         if((res = pdchart_load_dependents(info.pdchartdatakey, namebuf)) < 0)
         {
@@ -940,7 +940,7 @@ draw_cache_file(
         }
     }
 
-    if(gr_cache_error_query(&draw_file_key) >= 0)
+    if(image_cache_error_query(&draw_file_key) >= 0)
     {
         if(is_current_document())
         {
@@ -1009,7 +1009,7 @@ draw_find_file(
             ((col == -1) || (col == p_draw_file_ref->col))  &&
             (row == p_draw_file_ref->row))
         {
-            P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
+            P_DRAW_DIAG p_draw_diag = image_cache_search(&p_draw_file_ref->draw_file_key);
 
             if(p_draw_diag  &&  p_draw_diag->data)
             {
@@ -1049,7 +1049,7 @@ draw_remove_ref(
         trace_1(TRACE_MODULE_UREF,
                 "draw_remove_ref removing draw file ref: " PTR_XTFMT,
                 report_ptr_cast(p_draw_file_ref->draw_file_key));
-        gr_cache_ref(&p_draw_file_ref->draw_file_key, 0); /* remove a ref */
+        image_cache_ref(&p_draw_file_ref->draw_file_key, 0); /* remove a ref */
 
         collect_subtract_entry(&draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han);
     }
@@ -1806,8 +1806,8 @@ merexp_reterr(
 
     filealtered(TRUE);
 
-    /* do replace before compile otherwise we delete
-     * references that compile establishes (names, funcs etc)
+    /* do replace before compile
+     * otherwise we delete references that compile establishes (names, funcs etc.)
      */
     tcell = travel(newcol, newrow);
     if(send_replace)
@@ -2227,7 +2227,7 @@ pdeval_initialise(void)
 }
 
 /*
-decompile cell, dealing with compiled cell references, text-at fields etc
+decompile cell, dealing with compiled cell references, text-at fields etc.
 decompile from ptr (text field in cell) to linbuf
 
 compiled cell references are stored as SLR leadin bytes, DOCNO docno, COL colno, ROW rowno.

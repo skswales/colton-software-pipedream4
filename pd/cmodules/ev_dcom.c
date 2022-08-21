@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RPN to infix decompiler */
 
@@ -354,12 +354,12 @@ dec_pushstr(
     }
 
     /* allocate space for argument */
-    if(NULL == (newp = al_ptr_alloc_bytes(P_U8Z, len + 1/*NULLCH*/, &status)))
+    if(NULL == (newp = al_ptr_alloc_bytes(P_U8Z, len + 1/*CH_NULL*/, &status)))
         return(status);
 
     /* copy argument into block */
     memcpy32(newp, arg, len);
-    newp[len] = NULLCH;
+    newp[len] = CH_NULL;
 
     dc->arg_stk[dc->arg_sp++] = newp;
 

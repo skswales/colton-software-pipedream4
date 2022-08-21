@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /******************************************************************************
 *
@@ -139,7 +139,7 @@ quick_block_extend_by(
 
         p_output += p_quick_block->static_buffer_used;
 
-        p_quick_block->static_buffer_used = p_quick_block->static_buffer_size; /* indicate static buffer full for fast add etc */
+        p_quick_block->static_buffer_used = p_quick_block->static_buffer_size; /* indicate static buffer full for fast add etc. */
 
         /* trash buffer once copied when CHECKING_QUICK_BLOCK */
         _do_aqb_fill(p_quick_block->p_static_buffer, p_quick_block->static_buffer_size);

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Style database routines for graphics modules */
 
@@ -400,7 +400,7 @@ common_list_fillstyle_reref(
         pt = collect_next( GR_FILLSTYLE, p_p_list_block, &key))
     {
         /* add/lose ref to particular picture. DOES NOT destroy stored pattern handle */
-        gr_cache_ref((PC_GR_CACHE_HANDLE) &pt->pattern, add);
+        image_cache_ref((PC_IMAGE_CACHE_HANDLE) &pt->pattern, add);
     }
 }
 
@@ -1493,8 +1493,8 @@ gr_fillstyle_pict_change(
     /*inout*/ P_GR_FILLSTYLE style,
     const GR_FILL_PATTERN_HANDLE * newpict)
 {
-    gr_cache_reref(( P_GR_CACHE_HANDLE) &style->pattern,
-                   (PC_GR_CACHE_HANDLE) newpict);
+    image_cache_reref(( P_IMAGE_CACHE_HANDLE) &style->pattern,
+                      (PC_IMAGE_CACHE_HANDLE) newpict);
 }
 
 extern void
@@ -1514,14 +1514,14 @@ extern void
 gr_fillstyle_ref_add(
     PC_GR_FILLSTYLE style)
 {
-    gr_cache_ref((PC_GR_CACHE_HANDLE) &style->pattern, 1);
+    image_cache_ref((PC_IMAGE_CACHE_HANDLE) &style->pattern, 1);
 }
 
 extern void
 gr_fillstyle_ref_lose(
     PC_GR_FILLSTYLE style)
 {
-    gr_cache_ref((PC_GR_CACHE_HANDLE) &style->pattern, 0);
+    image_cache_ref((PC_IMAGE_CACHE_HANDLE) &style->pattern, 0);
 }
 
 #define gr_point_list_get_p_p_list_block(serp, cbp) \

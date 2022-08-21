@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1988-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Infix to RPN compiler */
 
@@ -1074,7 +1074,7 @@ proc_func_custom(
     /* store custom name (first arg to function()) in rpn */
     out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
 
-    /* now loop over arguments, commas etc storing
+    /* now loop over arguments, commas etc. storing
      * the results in the custom definition structure
      * as well as sending them to the rpn for decompilation
      * closing bracket will stop argument scanning
@@ -1437,7 +1437,7 @@ recog_dt(
 
     while(' ' == *pos++)
     { /*EMPTY*/ }
-    if(NULLCH == *--pos)
+    if(CH_NULL == *--pos)
         return(0);
 
     scan_val = (S32) strtol(pos, &epos, 10);
@@ -1512,7 +1512,7 @@ recog_extref(
     S32 buf_siz = elemof_buffer - 1;
     PC_U8 pos = in_str;
 
-    doc_name[0] = NULLCH;
+    doc_name[0] = CH_NULL;
 
     if(*pos == '[')
     {
@@ -1536,7 +1536,7 @@ recog_extref(
             name_end = len;
             if(keep_brackets)
                 doc_name[len++] = ']';
-            doc_name[len] = NULLCH;
+            doc_name[len] = CH_NULL;
 
             /* check there's something worthwhile in the brackets */
             for(i = name_start; i < name_end; ++i)
@@ -1801,7 +1801,7 @@ ss_recog_number(
 
 static S32
 recog_slr(
-    _InoutRef_  P_EV_SLR slrp,
+    _OutRef_    P_EV_SLR p_slr,
     PC_U8 in_str)
 {
     PC_U8 pos = in_str;
@@ -1809,16 +1809,15 @@ recog_slr(
     U32 row_temp;
     P_U8 epos;
 
-    /* clear slr flags */
-    slrp->flags = 0;
+    zero_struct_ptr(p_slr);
 
     if(*pos == '$')
     {
         ++pos;
-        slrp->flags |= SLR_ABS_COL;
+        p_slr->flags |= SLR_ABS_COL;
     }
 
-    if((res = ev_stox(pos, &slrp->col)) == 0)
+    if((res = ev_stox(pos, &p_slr->col)) == 0)
         return(res);
 
     pos += res;
@@ -1826,7 +1825,7 @@ recog_slr(
     if(*pos == '$')
     {
         ++pos;
-        slrp->flags |= SLR_ABS_ROW;
+        p_slr->flags |= SLR_ABS_ROW;
     }
 
     /* stop things like + and - being munged
@@ -1844,7 +1843,7 @@ recog_slr(
     if(row_temp > (U32) EV_MAX_ROW)
         return(0);
 
-    slrp->row = (EV_ROW) row_temp;
+    p_slr->row = (EV_ROW) row_temp;
 
     return(epos - in_str);
 }
@@ -1969,7 +1968,7 @@ recog_string(
         }
 
         /* allocate memory for string */
-        if(NULL != (stringp = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &res)))
+        if(NULL != (stringp = al_ptr_alloc_bytes(P_U8, len + 1/*CH_NULL*/, &res)))
         {
             ci = in_str + 1;
             co = stringp;
@@ -1987,7 +1986,7 @@ recog_string(
                 ci += 1;
             }
 
-            *co = NULLCH;
+            *co = CH_NULL;
 
             p_ev_data->arg.string.uchars = stringp;
             p_ev_data->arg.string.size = len;

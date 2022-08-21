@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Formats data in an ev_data structure */
 
@@ -805,7 +805,7 @@ eE   - exponent (followed by +, - or nothing)
 %    - % char and *100
 gG   - Engineering notation (afpnum.kMGTPE)
 rR   - Roman numerals (if < 4999)
-xX   - Spreadsheet (ie  1 -> A  etc.)
+xX   - Spreadsheet (i.e. 1 -> A  etc.)
 hH   - hours
 nN   - minutes
 sS   - seconds
@@ -1610,7 +1610,7 @@ numform_output_date_fields(
 
                 if(arg <= 0)
                 {
-                    arg = 1 - arg; /* NB. year 0000 -> 1BC, -0001 -> 2BC etc */
+                    arg = 1 - arg; /* NB. year 0000 -> 1BC, -0001 -> 2BC etc. */
                     bc_date = TRUE;
                     count = 4;
                 }
@@ -1623,7 +1623,7 @@ numform_output_date_fields(
 
                 if(arg <= 0)
                 {
-                    arg = 1 - arg; /* NB. year 0000 -> 1BCE, -0001 -> 2BCE etc */
+                    arg = 1 - arg; /* NB. year 0000 -> 1BCE, -0001 -> 2BCE etc. */
                     bce_date = TRUE;
                     count = 4;
                 }
@@ -1671,7 +1671,7 @@ numform_output_number_fields(
                 if(!p_numform_info->decimal_section_has_zero && !p_numform_info->decimal_section_spaces)
                     ch_out = CH_NULL;
 
-        /* ie a format such as .### will display just the fractional part of a number */
+        /* i.e. a format such as .### will display just the fractional part of a number */
         p_numform_info->integer_places_actual = 0;
 
         if(ch_out)

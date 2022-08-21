@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* RPN driven evaluator */
 
@@ -95,7 +95,7 @@ stack_grow(
 * index elements on the stack
 *
 * 0=bottom element
-* 1=next element up etc
+* 1=next element up etc.
 *
 ******************************************************************************/
 
@@ -642,7 +642,7 @@ eval_rpn(
 
     oldfpe = signal(SIGFPE, eval_jmp);
 
-    /* catch FP errors etc */
+    /* catch FP errors etc. */
     if((jmpval = setjmp(safepoint)) != 0)
         return(eval_backtrack_error(jmpval, stack_at, oldfpe));
 
@@ -1567,8 +1567,8 @@ process_control(
         break;
 
     case CONTROL_REPEAT:
-        /* start repeat by resetting stack, then
-         * pushing current position etc
+        /* start repeat by resetting stack,
+         * then pushing current position etc.
          */
         stack_set(eval_stack_base);
 

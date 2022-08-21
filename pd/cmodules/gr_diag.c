@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Representation building */
 
@@ -107,7 +107,7 @@ gr_diag_quadrilateral_hit(
 
 /* diagrams are built as a pair of representations:
  * i) the mostly-system independent diagram
- * ii) a system-specific representation eg. RISC OS Draw file, WINDOWS metafile
+ * ii) a system-specific representation e.g. RISC OS Draw file, WINDOWS metafile
  * there being stored in (i) offsets to the corresponding objects in (ii)
  * to enable correlations, clipping etc.
 */
@@ -403,10 +403,10 @@ gr_diag_create_riscdiag_between(
 
         case GR_DIAG_OBJTYPE_PICTURE:
             {
-            GR_BOX    box;
-            DRAW_BOX        draw_box;
-            GR_CACHE_HANDLE picture;
-            GR_FILLSTYLE    fillstyle;
+            GR_BOX box;
+            DRAW_BOX draw_box;
+            IMAGE_CACHE_HANDLE picture;
+            GR_FILLSTYLE fillstyle;
             P_ANY diag;
 
             /* a representation of 'nothing' */
@@ -420,7 +420,7 @@ gr_diag_create_riscdiag_between(
 
             fillstyle = pObject.pict->fillstyle;
 
-            diag = gr_cache_loaded_ensure(&picture);
+            diag = image_cache_loaded_ensure(&picture);
 
             draw_box.x0 = gr_riscDraw_from_pixit(box.x0);
             draw_box.y0 = gr_riscDraw_from_pixit(box.y0);
@@ -513,7 +513,7 @@ gr_diag_ensure_riscdiag_font_tableR_entries_for_PICTURE(
         /* actual end of RISC OS font list object data may not be word aligned */
         while((nextObject - thisOffset) >= 4)
         {
-            const DRAW_DIAG_OFFSET thislen = offsetof32(DRAW_FONTLIST_ELEM, szHostFontName) + strlen32p1(pFontListElem->szHostFontName); /* for NULLCH */
+            const DRAW_DIAG_OFFSET thislen = offsetof32(DRAW_FONTLIST_ELEM, szHostFontName) + strlen32p1(pFontListElem->szHostFontName); /* for CH_NULL */
             GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
             zero_struct(f);
@@ -562,14 +562,14 @@ gr_diag_create_riscdiag_font_tables_between(
             case GR_DIAG_OBJTYPE_PICTURE:
                 {
                 GR_DIAG_OBJPICTURE pict;
-                GR_CACHE_HANDLE picture;
+                IMAGE_CACHE_HANDLE picture;
                 P_DRAW_DIAG diag;
 
                 memcpy32(&pict, pObject.pict, sizeof32(pict));
 
                 picture = pict.picture;
 
-                diag = gr_cache_loaded_ensure(&picture);
+                diag = image_cache_loaded_ensure(&picture);
 
                 if(diag)
                     status = gr_diag_ensure_riscdiag_font_tableR_entries_for_PICTURE(diag, p_array_handleR);
@@ -1675,7 +1675,7 @@ gr_diag_scaled_picture_add(
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_BOX pBox,
-    GR_CACHE_HANDLE picture,
+    IMAGE_CACHE_HANDLE picture,
     _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
@@ -1714,7 +1714,7 @@ gr_diag_text_new(
     U32 size;
     P_GR_DIAG_OBJECT pObject;
 
-    size = strlen32p1(szText); /* includes NULLCH */
+    size = strlen32p1(szText); /* includes CH_NULL */
 
     /* round up to output word boundary */
     size = round_up(size, 4);

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Tree management routines for evaluator */
 
@@ -860,8 +860,8 @@ ev_tree_close(
 
 PROC_QSORT_PROTO(static, custom_comp, CUSTOM_USE)
 {
-    const P_CUSTOM_USE c1 = (P_CUSTOM_USE) arg1;
-    const P_CUSTOM_USE c2 = (P_CUSTOM_USE) arg2;
+    const P_CUSTOM_USE c1 = (P_CUSTOM_USE) _arg1;
+    const P_CUSTOM_USE c2 = (P_CUSTOM_USE) _arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -881,8 +881,8 @@ PROC_QSORT_PROTO(static, custom_comp, CUSTOM_USE)
 
 PROC_QSORT_PROTO(extern, namcomp, NAME_USE)
 {
-    const P_NAME_USE name1 = (P_NAME_USE) arg1;
-    const P_NAME_USE name2 = (P_NAME_USE) arg2;
+    const P_NAME_USE name1 = (P_NAME_USE) _arg1;
+    const P_NAME_USE name2 = (P_NAME_USE) _arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -902,8 +902,8 @@ PROC_QSORT_PROTO(extern, namcomp, NAME_USE)
 
 PROC_QSORT_PROTO(static, rngcomp, RANGE_USE)
 {
-    const P_RANGE_USE rng1 = (P_RANGE_USE) arg1;
-    const P_RANGE_USE rng2 = (P_RANGE_USE) arg2;
+    const P_RANGE_USE rng1 = (P_RANGE_USE) _arg1;
+    const P_RANGE_USE rng2 = (P_RANGE_USE) _arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1123,8 +1123,8 @@ search_for_slrdependent(
 
 PROC_QSORT_PROTO(static, slrcomp, SLR_USE)
 {
-    const P_SLR_USE slr1 = (P_SLR_USE) arg1;
-    const P_SLR_USE slr2 = (P_SLR_USE) arg2;
+    const P_SLR_USE slr1 = (P_SLR_USE) _arg1;
+    const P_SLR_USE slr2 = (P_SLR_USE) _arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1419,8 +1419,8 @@ todo_add_slr(
 
 PROC_QSORT_PROTO(static, todocomp, TODO_ENTRY)
 {
-    P_TODO_ENTRY slr1 = (P_TODO_ENTRY) arg1;
-    P_TODO_ENTRY slr2 = (P_TODO_ENTRY) arg2;
+    P_TODO_ENTRY slr1 = (P_TODO_ENTRY) _arg1;
+    P_TODO_ENTRY slr2 = (P_TODO_ENTRY) _arg2;
 
     /* NB no current_p_docu global register furtling required */
 

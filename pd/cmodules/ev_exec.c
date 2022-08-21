@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Semantic routines for evaluator */
 
@@ -89,7 +89,7 @@ PROC_EXEC_PROTO(c_mul)
 {
     exec_func_ignore_parms();
 
-    two_nums_multiply_try(p_ev_data_res, args[0], args[1]);
+    consume_bool(two_nums_multiply_try(p_ev_data_res, args[0], args[1]));
 }
 
 /******************************************************************************
@@ -269,7 +269,7 @@ PROC_EXEC_PROTO(c_div)
 {
     exec_func_ignore_parms();
 
-    two_nums_divide_try(p_ev_data_res, args[0], args[1]);
+    consume_bool(two_nums_divide_try(p_ev_data_res, args[0], args[1]));
 }
 
 /******************************************************************************

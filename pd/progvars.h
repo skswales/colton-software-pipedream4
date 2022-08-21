@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Global variables used in PipeDream */
 
@@ -186,7 +186,7 @@ extern COL def_numcol;
 
 /* ----------------------------- riscos.c -------------------------------- */
 
-extern HOST_HWND caret_window;
+extern HOST_WND caret_window;
 
 extern DOCNO slotcount_docno;
 

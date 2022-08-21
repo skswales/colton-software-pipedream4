@@ -5,11 +5,12 @@
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
 | Copyright (C) 1991-1998 Colton Software Limited
-| Copyright (C) 1998-2014 R W Colton
+| Copyright (C) 1998-2015 R W Colton
 
 IfThere $.Temp Then Else %CDir $.Temp
 
-Set pd$Release 4_54_yy
+Set pd$Release 4_55
+|Set pd$Release 4_55_yy
 
 Set pd$Disc $.Temp.PipeDream_<pd$Release>
 Set pd$Zip  $.Temp.PipeDream_<pd$Release>/zip
@@ -20,7 +21,9 @@ X %Wipe <pd$Disc>.* ~cfr~v
 
 Set ap$Country GB
 
-Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
+Set pd$Resource$Dir <Obey$Dir>.!PipeDream.Resource
+
+Set ap$Resource$Dir <Obey$Dir>.^.^.Utils.<ap$Country>
 
 %CDir                                           <pd$Disc>.Z
 
@@ -40,73 +43,69 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 
 %CDir                                           <pd$Disc>.Z.Resource
 |
-%Copy <ap$Resource$Dir>.ODctDefn                <pd$Disc>.Z.Resource.* ~rf~cln~v
-|
 %CDir                                           <pd$Disc>.Z.Resource.RISC_OS
-%Copy <ap$Resource$Dir>.RISC_OS.!Sprite         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-|%Copy <ap$Resource$Dir>.RISC_OS.BorderUtil      <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.ImageSlot       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.Loader          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.Messages        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.Sprites         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.Sprites22       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.RISC_OS.!Sprite         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+|%Copy <pd$Resource$Dir>.RISC_OS.BorderUtil      <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.RISC_OS.ImageSlot       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.RISC_OS.Loader          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.RISC_OS.Messages        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.RISC_OS.Sprites         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.RISC_OS.Sprites22       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
 | Templates in the same order that we load them in (used to save seeking)
-%Copy <ap$Resource$Dir>.RISC_OS.tem_risc        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_main        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_cht         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_bc          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_el          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_f           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_p           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.tem_s           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-|%Copy <ap$Resource$Dir>.RISC_OS.u_ltp           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-|%Copy <ap$Resource$Dir>.RISC_OS.u_ptl           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_risc                <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_main                <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_cht                 <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_bc                  <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_el                  <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_f                   <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_p                   <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.tem_s                   <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
 
 %CDir                                           <pd$Disc>.Z.Resource.CmdFiles
-%Copy <ap$Resource$Dir>.CmdFiles.CopyDelete     <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.CmdFiles.Indent5        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.CmdFiles.CopyDelete     <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.CmdFiles.Indent5        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
 
 %CDir                                           <pd$Disc>.Z.Resource.DictDefn
-%Copy <ap$Resource$Dir>.DictDefn.English        <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.DictDefn.Latin1         <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.DictDefn.English        <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.DictDefn.Latin1         <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
 %Access                                         <pd$Disc>.Z.Resource.DictDefn.* r/r
 
 %CDir                                           <pd$Disc>.Z.Resource.Dicts
-%Copy <ap$Resource$Dir>.Dicts.Master            <pd$Disc>.Z.Resource.Dicts.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Dicts.Master-s          <pd$Disc>.Z.Resource.Dicts.Master ~rf~cln~v
 
 %CDir                                           <pd$Disc>.Z.Resource.Markers
-%Copy <ap$Resource$Dir>.Markers.S1              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Markers.S2              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Markers.S3              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Markers.S4              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Markers.S5              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Markers.S6              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Markers.S1              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Markers.S2              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Markers.S3              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Markers.S4              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Markers.S5              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Markers.S6              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
 %Access                                         <pd$Disc>.Z.Resource.Markers.* r/r
 
 %CDir                                           <pd$Disc>.Z.Resource.PDrivers
-%Copy <ap$Resource$Dir>.PDrivers.BJ10           <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.PDrivers.DaisyWheel     <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.PDrivers.Default        <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.PDrivers.DotMatrix      <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.PDrivers.HPJet          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.PDrivers.JP150          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.PDrivers.BJ10           <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.PDrivers.DaisyWheel     <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.PDrivers.Default        <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.PDrivers.DotMatrix      <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.PDrivers.HPJet          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.PDrivers.JP150          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
 %Access                                         <pd$Disc>.Z.Resource.PDrivers.* r/r
 
 %CDir                                           <pd$Disc>.Z.Resource.Pictures
-%Copy <ap$Resource$Dir>.Pictures.S1             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Pictures.S2             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Pictures.S1             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Pictures.S2             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
 %Access                                         <pd$Disc>.Z.Resource.Pictures.* r/r
 
 %CDir                                           <pd$Disc>.Z.Resource.Templates
-%Copy <ap$Resource$Dir>.Templates.Numbers       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Templates.Records       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Templates.Text          <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Templates.Text_Plain    <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Templates.Numbers       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Templates.Records       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Templates.Text          <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Templates.Text_Plain    <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
 %Access                                         <pd$Disc>.Z.Resource.Templates.* r/r
 
 | These used to be at top level - R-Comp can extract from here for PlingStore
-%Copy <ap$Resource$Dir>.HTMLHelp                <pd$Disc>.Z.Resource.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Relnotes                <pd$Disc>.Z.Resource.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.HTMLHelp                <pd$Disc>.Z.Resource.* ~rf~cln~v
+%Copy <pd$Resource$Dir>.Relnotes                <pd$Disc>.Z.Resource.* ~rf~cln~v
 
 %Access                                         <pd$Disc>.Z.Resource.* r/r
 %Access                                         <pd$Disc>.Z.Resource r/r

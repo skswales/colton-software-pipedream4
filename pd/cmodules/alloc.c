@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Allocation in an extensible flex block for RISC OS */
 
@@ -428,7 +428,7 @@ alloc_main_heap_desc =
     alloc_validate_heap_before_alloc |
     alloc_validate_heap_before_free |
     alloc_validate_heap_on_size |
-  /*alloc_validate_block_before_realloc |**/
+  /*alloc_validate_block_before_realloc |*/
   /*alloc_validate_block_before_free |*/
   /*alloc_validate_block_on_size |*/
     alloc_validate_heap_blocks |
@@ -816,7 +816,7 @@ alloc_init(void)
 
     for(;;) /* loop for structure */
     {
-        /*reportf("g_dynamic_area_limit: %d", g_dynamic_area_limit);*/
+        /*reportf(TEXT("g_dynamic_area_limit: %d"), g_dynamic_area_limit);*/
         if((alloc_dynamic_area_handle = flex_init(de_const_cast(char *, g_dynamic_area_name), 0, g_dynamic_area_limit)) < 0)
             break;
 

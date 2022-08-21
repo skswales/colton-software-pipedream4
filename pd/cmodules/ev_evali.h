@@ -38,7 +38,7 @@ user defined custom functions
 typedef struct EV_CUSTOM_ARGS
 {
     S32 n;                      /* number of arguments for custom */
-    SB_U8Z id[EV_MAX_ARGS][BUF_EV_INTNAMLEN];
+    SBCHARZ id[EV_MAX_ARGS][BUF_EV_INTNAMLEN];
     EV_TYPE types[EV_MAX_ARGS];
 }
 EV_CUSTOM_ARGS, * P_EV_CUSTOM_ARGS;

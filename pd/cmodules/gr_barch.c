@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module to handle bar and line charts */
 
@@ -289,7 +289,7 @@ gr_actualise_series_error1(
 }
 
 /* determine relative width of bars from number of series as bars being plotted on ALL axes
- * this allows charts like Cars to be plotted sensibly, ie. 2 bars on one axes set and
+ * this allows charts like Cars to be plotted sensibly, i.e. 2 bars on one axes set and
  * another differently scaled bar on another axes set. obviously it is only sensible
  * to perform percentage bars on each axes set individually!
 */
@@ -400,8 +400,8 @@ gr_barline_label_point(
                 value,
                 eformat,
                 decimals,
-                NULLCH /* dp_ch */,
-                ','    /* ths_ch */);
+                CH_NULL /* dp_ch */,
+                ','     /* ths_ch */);
 
     swidth_mp = gr_font_stringwidth(f, cv.data.text);
 

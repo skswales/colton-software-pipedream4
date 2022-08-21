@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Standard includes */
 
@@ -27,7 +27,7 @@
 #endif
 #endif
 
-#include <stdint.h> /* C99 header */
+#include <inttypes.h> /* C99 header */
 
 #ifdef __stdint_ll_hack_defined
 #undef __stdint_ll_hack_defined

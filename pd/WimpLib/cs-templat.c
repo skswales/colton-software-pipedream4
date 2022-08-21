@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* SKS 03-Aug-90 */
 
@@ -355,7 +355,7 @@ template_copy_dispose(
 
 
 /*
-NB. includes terminator (MUST be forced to NULLCH)
+NB. includes terminator (MUST be forced to CH_NULL)
 */
 
 static size_t
@@ -373,8 +373,8 @@ template__datalen(
         ch = *ptr++;
     while(ch >= 32);
 
-    /* always make NULLCH terminated */
-    *(ptr - 1) = NULLCH;
+    /* always make CH_NULL terminated */
+    *(ptr - 1) = CH_NULL;
 
     tracef2("'%s', length %u]", str, ptr - str);
     return(ptr - str);
@@ -436,7 +436,7 @@ template__nameeq(
         c12 = *s12++;
         b12 = (c12 < 32); /* s12 finished? */
 
-        if(c == NULLCH)
+        if(c == CH_NULL)
             return(b12); /* finished together? */
 
         if(b12  ||  (c != c12))
@@ -444,7 +444,7 @@ template__nameeq(
     }
     while(s - d < 12);
 
-    return(*s == NULLCH); /* s12 full 12 chars, has s finished? */
+    return(*s == CH_NULL); /* s12 full 12 chars, has s finished? */
 }
 
 
@@ -592,7 +592,7 @@ template__resolve_icon(
                 if(indValidOffset > 0)
                 {
                     char * indValid = (char *) w + indValidOffset;
-                    int validLen = template__datalen(indValid); /* forces terminator to NULLCH so string fns work */
+                    int validLen = template__datalen(indValid); /* forces terminator to CH_NULL so string fns work */
                     char * p;
                     int skip = 0;
 
@@ -631,8 +631,8 @@ template__resolve_icon(
 #endif
                                 break;
 
-                            case '5': /* action button (eg Cancel) */
-                            case '6': /* default action button (eg OK) */
+                            case '5': /* action button (e.g. Cancel) */
+                            case '6': /* default action button (e.g. OK) */
                                 {
                                 if(*p++ == ',')
                                 {
@@ -652,7 +652,7 @@ template__resolve_icon(
                                             writeval_S32(&p_icon->box.y1, iy1);
                                         }
                                         p[-3] = '1'; /* mutate into R1 */
-                                        p[-2] = NULLCH; /* remove the depressing effect */
+                                        p[-2] = CH_NULL; /* remove the depressing effect */
                                         /*iconflags &= ~wimp_IESGMASK;*/
                                         /*iconflags |= (0x01U * wimp_IESG);*/
                                         /* ^^^ OK,Cancel should be this ESG anyway */
@@ -682,13 +682,13 @@ template__resolve_icon(
                     if('S' == indValid[0])
                     {
                         /* we have sprite validation section. Nobble standard buttons */
-                        if(     0 == strncmp(indValid, "Soptoff,", sizeof("Soptoff,")-1/*NULLCH*/))
+                        if(     0 == strncmp(indValid, "Soptoff,", sizeof("Soptoff,")-1/*CH_NULL*/))
                             nobble_border = TRUE;
-                        else if(0 == strncmp(indValid, "Sradiooff,", sizeof("Sradiooff,")-1/*NULLCH*/))
+                        else if(0 == strncmp(indValid, "Sradiooff,", sizeof("Sradiooff,")-1/*CH_NULL*/))
                             nobble_border = TRUE;
-                        else if(0 == strncmp(indValid, "Sup,", sizeof("Sup,")-1/*NULLCH*/))
+                        else if(0 == strncmp(indValid, "Sup,", sizeof("Sup,")-1/**/))
                             nobble_border = TRUE;
-                        else if(0 == strncmp(indValid, "Sdown,", sizeof("Sdown,")-1/*NULLCH*/))
+                        else if(0 == strncmp(indValid, "Sdown,", sizeof("Sdown,")-1/*CH_NULL*/))
                             nobble_border = TRUE;
                         else
                             /* otherwise leave well alone - border really required */
@@ -767,7 +767,7 @@ template__resolve(
                     char *p = ip->name + sizeof(ip->name);
                     do
                         if(*--p < 32)
-                            *p = NULLCH;
+                            *p = CH_NULL;
                     while(p > ip->name);
                 }
 #endif
@@ -844,7 +844,7 @@ template__resolve(
                 }
             }
             else
-                *ip->name = NULLCH; /* kill identifiers of unknown object types */
+                *ip->name = CH_NULL; /* kill identifiers of unknown object types */
 
         if(pass == 1)
         {
@@ -941,7 +941,7 @@ template_settitle(
     if((int) ptr < w_size)
         ptr += (int) w;
 
-    *ptr = NULLCH;
+    *ptr = CH_NULL;
     strncat(ptr, title, readval_U16(&w->title.indirecttext.bufflen));
 
     tracef6("[template_settitle(%u) w &%p, size %u -> buffer &%p %s, length]",

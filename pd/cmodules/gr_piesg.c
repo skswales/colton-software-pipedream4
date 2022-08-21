@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Module to handle pie charts */
 
@@ -250,8 +250,8 @@ gr_pie_addin(
                                 &value,
                                 eformat,
                                 decimals,
-                                NULLCH /* dp_ch */,
-                                ','    /* ths_ch */);
+                                CH_NULL /* dp_ch */,
+                                ','     /* ths_ch */);
 
                     if(NULL != t_trailer)
                         xstrkat(cv.data.text, elemof32(cv.data.text), t_trailer);

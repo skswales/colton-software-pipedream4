@@ -706,13 +706,13 @@ ss_string_make_uchars(
     /*if(0 != uchars_n)*/
     {
         STATUS status;
-        if(NULL == (p_ev_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*NULLCH*/, &status)))
+        if(NULL == (p_ev_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*CH_NULL*/, &status)))
             return(ev_data_set_error(p_ev_data, status));
         if(NULL == uchars)
             PtrPutByte(p_ev_data->arg.string_wr.uchars, CH_NULL); /* allows append (like ustr_set_n()) */
         else
             memcpy32(p_ev_data->arg.string_wr.uchars, uchars, uchars_n);
-        p_ev_data->arg.string_wr.uchars[uchars_n] = NULLCH;
+        p_ev_data->arg.string_wr.uchars[uchars_n] = CH_NULL;
         p_ev_data->did_num = RPN_TMP_STRING; /* copy is now owned by the caller */
     }
 #if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */

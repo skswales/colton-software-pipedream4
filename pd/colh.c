@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Column heading and contents line code for PD4 */
 
@@ -62,7 +62,7 @@ colh_draw_mark_state_indicator(
 
 extern void
 colh_draw_slot_count(
-    char *text);
+    _In_opt_z_      char *text);
 
 extern void
 colh_draw_slot_count_in_document(
@@ -292,12 +292,9 @@ set_icon_text_and_flags(
 
 /******************************************************************************
 *
-* Called by riscos_createmainwindow (c.riscos)
-* and cachemodevariables(c.riscdraw) to tweek the
-* positions/colours/flags etc of some of the icons
-* in the colh_window. Some of the state is taken
-* from the template file, some is calculated and
-* set by this routine.
+* Called by riscos_createmainwindow (c.riscos) and cachemodevariables(c.riscdraw)
+* to tweak the * positions/colours/flags etc. of some of the icons in the colh_window.
+* Some of the state is taken from the template file, some is calculated and set by this routine.
 *
 ******************************************************************************/
 
@@ -476,7 +473,7 @@ colh_really_draw_column_headings(void)
     number.box.y0 = border.box.y0 + dy;
     number.box.y1 = border.box.y1 - dy;
 
-    wind_width = (wind.o.box.x1 - wind.o.box.x0) + charwidth;   /* ie comfortably wider than window */
+    wind_width = (wind.o.box.x1 - wind.o.box.x0) + charwidth;   /* i.e. comfortably wider than window */
 
     coff = 0;
 
@@ -865,7 +862,7 @@ colh_event_handler(
             trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position");
 
             /* Someone is stealing the caret from the contents/formula-line, stash position away so it can be restored    */
-            /* when pipedream reclaims the caret. Also means we can paste formula etc into formula line at correct place. */
+            /* when PipeDream reclaims the caret. Also means we can paste formula etc. into formula line at correct place. */
             formline_stashedcaret = e->data.c.index;
         }
         processed = FALSE;
@@ -1247,7 +1244,7 @@ application_singleclick_in_colh(
     if(0 != funcnum)
         application_process_command(funcnum);
 
-    /* reselect document eg N_PRINTERFONT screws us up */
+    /* reselect document e.g. N_PRINTERFONT screws us up */
     select_document_using_docno(docno);
 
     if(acquire)

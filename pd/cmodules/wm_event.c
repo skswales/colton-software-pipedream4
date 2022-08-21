@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1990-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Centralised event acquisition and processing */
 
@@ -80,7 +80,7 @@ wm_events_get(
         #if RISCOS
         /* enable null events to ourselves if needed here */
 
-        /* note that other parts of RISC_OSLib etc may be trying
+        /* note that other parts of RISC_OSLib etc. may be trying
          * to enable nulls independently using event/win so take care
          * as it stands wimpt is using win_idle_event_claimer() to
          * reenable nulls too for win_idle clients

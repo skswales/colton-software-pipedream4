@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2013-2014 Stuart Swales */
+/* Copyright (C) 2013-2016 Stuart Swales */
 
 /* SKS February 2013 */
 
@@ -117,7 +117,7 @@ vreportf(
         {
             if(report_buffer[report_buffer_offset - 1] == '|') /* may have been truncated - if so, just output */
             {
-                report_buffer[--report_buffer_offset] = NULLCH; /* otherwise retract back over the terminal continuation char */
+                report_buffer[--report_buffer_offset] = CH_NULL; /* otherwise retract back over the terminal continuation char */
                 return;
             }
         }
@@ -207,7 +207,7 @@ report_output(
 
     ptr = buffer;
 
-    while((ch = *ptr++) != NULLCH)
+    while((ch = *ptr++) != CH_NULL)
         switch(ch)
         {
         case 0x07: /* BEL */
@@ -503,7 +503,7 @@ report_wimp_event(
     case wimp_EMENU:
 
     default:
-        *tempbuffer = NULLCH;
+        *tempbuffer = CH_NULL;
         break;
     }
 
@@ -636,7 +636,7 @@ report_wimp_message(
     case wimp_MPrinterChange:
 
     default:
-        *tempbuffer = NULLCH;
+        *tempbuffer = CH_NULL;
         break;
     }
 

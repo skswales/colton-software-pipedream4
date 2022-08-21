@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 #ifndef __include_h
 #define __include_h
@@ -39,13 +39,12 @@ typedef U8 DOCNO; typedef DOCNO * P_DOCNO; /* NB now exactly the same as EV_DOCN
 #include "cmodules/handlist.h"
 #include "cmodules/ev_eval.h"
 #include "cmodules/file.h"
-#include "cmodules/gr_cache.h"
+#include "cmodules/im_cache.h"
 #include "cmodules/gr_coord.h"
 #include "cmodules/gr_chart.h"
 #include "cmodules/monotime.h"
 #include "cmodules/muldiv.h"
 #include "cmodules/report.h"
-#include "cmodules/typepack.h"
 #include "cmodules/xstring.h"
 
 #if defined(SB_GLOBAL_REGISTER)

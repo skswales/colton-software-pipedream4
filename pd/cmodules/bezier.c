@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Portions of original code provided to Colton Software by Acorn */
 
@@ -108,7 +108,7 @@ bezier_arc_90(
  Function    : bezier_arc_90_aligned
  Purpose     : draw a centred 90 degrees arc, axis aligned
  Description : this is used to draw a 90 degree arc, centred on the positive
-               y-axis, with the arc centre at (0,0). Its main use is in drawing
+               y axis, with the arc centre at (0,0). Its main use is in drawing
                circles. The method is essentially that of bezier_arc_90, but
                with some calculations taken out. The start angle is taken as
                45 degrees, so it has a cos of 1/SQR(2) and a sine of 1/SQR(2).
@@ -180,7 +180,7 @@ extern void
 bezier_arc_circle(
     _InRef_     PC_DRAW_POINT centre,
     _InVal_     DRAW_COORD radius,
-    _Out_/*capcount_c_(13)*/ P_DRAW_POINT p /*[13]*/)
+    _Out_cap_c_(13) P_DRAW_POINT p /*[13]*/)
 {
     DRAW_POINT start, end, control1, control2;
 
@@ -343,7 +343,12 @@ bezier_arc_segment(
     DRAW_POINT start_dummy;
 
     if(segment >= bezier_arc_.segments)
+    {
+        end->x = 0;         end->y = 0;
+        control1->x = 0;    control1->y = 0;
+        control2->x = 0;    control2->y = 0;
         return(0);
+    }
 
     /* Calculate arc */
     bezier_arc_90(&bezier_arc_.centre,
