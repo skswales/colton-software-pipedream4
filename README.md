@@ -1,3 +1,15 @@
+PipeDream 4 Releases
+--------------------
+
+As a number of the earlier versions did not have git tags corresponding to the svn tags, I've had to add them by hand.
+
+Unfortunately this means that the earlier versions have risen to the top of the Release pages!
+
+The current version is 4.60/02, you can find it by digging...
+
+
+
+
 ReadMe for PipeDream 4 Build
 ----------------------------
 
