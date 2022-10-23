@@ -5,9 +5,6 @@ As a number of the earlier versions did not have git tags corresponding to the s
 
 Unfortunately this means that the earlier versions have risen to the top of the Release pages!
 
-The current version is 4.60/02, you can find it by digging...
-
-
 
 
 ReadMe for PipeDream 4 Build
@@ -17,19 +14,23 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-Copyright (C) 2013-2022 Stuart Swales
+Copyright © 2013-2022 Stuart Swales
 
 Prerequisites
 -------------
 
-Acorn C/C++ Release 25 or later (!Amu, C compiler, headers, libraries, linker).
+ROOL DDE Release 30c or later (C compiler, headers, libraries, linker, !Amu).
 
-InfoZip (install with PackMan) for creating a zip of the final build.
+Curl (install with PackMan) to obtain external build tools.
 
 A RISC OS git client (install Simplegit-Libgit2 with PackMan) to download a copy of RISC_OSLib.
 
-patch (install with PackMan) to patch that copy of RISC_OSLib for use with
+Patch (install with PackMan) to patch that copy of RISC_OSLib for use with
 PipeDream.
+
+Unzip (install with PackMan) to extract external build tools.
+
+Zip (install with PackMan) for creating a zip of the final build.
 
 
 First-time configuration and build
