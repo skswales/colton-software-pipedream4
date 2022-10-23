@@ -1,0 +1,8 @@
+| > GetTokenize
+echo Getting Tokenize
+echo Do not change directory until this is complete!
+Dir <Obey$Dir>
+curl -s https://www.stevefryatt.org.uk/risc-os/tokenize/tokenize100ro.zip --output tokenize100ro.zip
+unzip tokenize100ro tokenize
+Back
+echo Tokenize retrieved
