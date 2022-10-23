@@ -19,11 +19,12 @@
  * &.extrautils.PlingStore.MakeStore
  */
 
-#define HexVersion   0x46002
-#define Version      "4.60.02"
-#define CurrentDate  "18-Aug-2022"
+#define HexVersion   0x46003
+#define Version      "4.60.03"
+#define CurrentDate  "23-Oct-2022"
 
 /*
+* 23-Oct-2022 - 4.60.03
 * 18-Aug-2022 - 4.60.02
 * 04-Aug-2022 - 4.60.01
 * 22 Jul 2022 - 4.60

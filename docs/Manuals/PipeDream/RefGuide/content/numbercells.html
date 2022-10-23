@@ -1,29 +1,30 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
-    <title>Number Cells</title>
-    <link href="guide.css" rel="stylesheet" type="text/css" />
-</head>
-<body>
+    <meta charset="UTF-8">
+
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
        - License, v. 2.0. If a copy of the MPL was not distributed with this
        - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-    <!-- Copyright (C) 1991-1998 Colton Software Limited
-       - Copyright (C) 1998-2015 R W Colton -->
-    <div class="navheader">
-        <table id="navheader" summary="Navigation header">
+    <!-- Copyright © 1991-1998 Colton Software Limited
+       - Copyright © 1998-2015 R W Colton -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Cells</title>
+    <link href="guide.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <nav class="navheader">
+        <table>
             <tr>
-                <td class="navheader_PCN_L"><a accesskey="p" href="numberformats.html">Prev</a> </td>
-                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td class="navheader_PCN_R"> <a accesskey="n" href="options.html">Next</a></td>
+                <td><a accesskey="p" href="numberformats.html">Prev</a> </td>
+                <td><a href="../index.html">Contents</a> </td>
+                <th>PipeDream Reference Guide</th>
+                <td> <a href="fullindex.html">Index</a></td>
+                <td> <a accesskey="n" href="options.html">Next</a></td>
             </tr>
         </table>
-    </div>
+    </nav>
 
     <h1 id="Number">Number Cells</h1>
     <p>
@@ -61,11 +62,11 @@
     <p>Giving the <span class="csg-command">Edit Formula</span> command has the same effects:</p>
     <table class="csg-command-table">
         <colgroup>
-            <col />
-            <col />
-            <col />
-            <col />
-            <col />
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
         </colgroup>
         <tbody>
             <tr>
@@ -91,8 +92,8 @@
     <p>You can use the following keys to edit the number in the formula line or formula window:</p>
     <table border="0">
         <colgroup>
-            <col />
-            <col />
+            <col>
+            <col>
         </colgroup>
         <tbody>
             <tr>
@@ -185,15 +186,15 @@
     <p>Formulae may be composed of the following elements, defined below:</p>
     <table border="0">
         <colgroup>
-            <col />
-            <col />
+            <col>
+            <col>
         </colgroup>
         <tbody>
             <tr>
                 <td><strong>Element</strong></td>
                 <td>
                     <strong>
-                        Example<br />
+                        Example<br>
                     </strong>
                 </td>
             </tr>
@@ -201,7 +202,7 @@
                 <td>Arrays</td>
                 <td>
                     <code>
-                        {1,2,3}<br />
+                        {1,2,3}<br>
                     </code>
                 </td>
             </tr>
@@ -209,8 +210,8 @@
                 <td>Dates</td>
                 <td>
                     <code>
-                        5.9.1987<br />
-                        6.10.1066<br />
+                        5.9.1987<br>
+                        6.10.1066<br>
                     </code>
                 </td>
             </tr>
@@ -218,7 +219,7 @@
                 <td>Functions</td>
                 <td>
                     <code>
-                        SIN(3/2)<br />
+                        SIN(3/2)<br>
                     </code>
                 </td>
             </tr>
@@ -226,8 +227,8 @@
                 <td>Lists</td>
                 <td>
                     <code>
-                        1,4,6,9<br />
-                        1,2,3,{4,5,6},A1A10<br />
+                        1,4,6,9<br>
+                        1,2,3,{4,5,6},A1A10<br>
                     </code>
                 </td>
             </tr>
@@ -235,8 +236,8 @@
                 <td>Names</td>
                 <td>
                     <code>
-                        Fred<br />
-                        Arg_1<br />
+                        Fred<br>
+                        Arg_1<br>
                     </code>
                 </td>
             </tr>
@@ -244,7 +245,7 @@
                 <td>Numbers</td>
                 <td>
                     <code>
-                        2<br />
+                        2<br>
                     </code>
                 </td>
             </tr>
@@ -252,7 +253,7 @@
                 <td>Operators</td>
                 <td>
                     <code>
-                        +<br />
+                        +<br>
                     </code>
                 </td>
             </tr>
@@ -260,11 +261,11 @@
                 <td>Cell references&nbsp;&nbsp;</td>
                 <td>
                     <code>
-                        A23<br />
-                        [Fred]E17<br />
-                        [ADFS:$.Addresses.Schools]F12<br />
-                        [MyData:Database]B4<br />
-                        <br />
+                        A23<br>
+                        [Fred]E17<br>
+                        [ADFS:$.Addresses.Schools]F12<br>
+                        [MyData:Database]B4<br>
+                        <br>
                     </code>
                 </td>
             </tr>
@@ -272,8 +273,8 @@
                 <td>Ranges</td>
                 <td>
                     <code>
-                        A1W70<br />
-                        [Totals]A1E100<br />
+                        A1W70<br>
+                        [Totals]A1E100<br>
                     </code>
                 </td>
             </tr>
@@ -281,7 +282,7 @@
                 <td>Strings</td>
                 <td>
                     <code>
-                        "January"<br />
+                        "January"<br>
                     </code>
                 </td>
             </tr>
@@ -289,7 +290,7 @@
                 <td>Times</td>
                 <td>
                     <code>
-                        19:30<br />
+                        19:30<br>
                         18:56:04
                     </code>
                 </td>
@@ -437,23 +438,23 @@
     <p>The order of precedence for the operators mentioned above is:</p>
     <table border="0">
         <colgroup>
-            <col />
-            <col />
-            <col />
+            <col>
+            <col>
+            <col>
         </colgroup>
         <tbody>
             <tr style="vertical-align: top;">
                 <td>Group 1</td>
                 <td style="padding-bottom: 4px;">
                     <code>
-                        -<br />
-                        ()<br />
-                        !<br />
+                        -<br>
+                        ()<br>
+                        !<br>
                     </code>
                 </td>
                 <td>
-                    Unary minus<br />
-                    Brackets<br />
+                    Unary minus<br>
+                    Brackets<br>
                     Unary NOT
                 </td>
             </tr>
@@ -461,7 +462,7 @@
                 <td>Group 2</td>
                 <td style="padding-bottom: 4px;">
                     <code>
-                        ^<br />
+                        ^<br>
                     </code>
                 </td>
                 <td>Raise to power</td>
@@ -470,12 +471,12 @@
                 <td>Group 3</td>
                 <td style="padding-bottom: 4px;">
                     <code>
-                        *<br />
-                        /<br />
+                        *<br>
+                        /<br>
                     </code>
                 </td>
                 <td>
-                    Multiply<br />
+                    Multiply<br>
                     Divide
                 </td>
             </tr>
@@ -483,12 +484,12 @@
                 <td>Group 4</td>
                 <td style="padding-bottom: 4px;">
                     <code>
-                        +<br />
-                        -<br />
+                        +<br>
+                        -<br>
                     </code>
                 </td>
                 <td>
-                    Plus<br />
+                    Plus<br>
                     Minus
                 </td>
             </tr>
@@ -496,20 +497,20 @@
                 <td>Group 5&nbsp;&nbsp;</td>
                 <td style="padding-bottom: 4px;">
                     <code>
-                        =<br />
-                        &lt;&gt;<br />
-                        &lt;<br />
-                        &gt;<br />
-                        &lt;=<br />
-                        &gt;=&nbsp;&nbsp;<br />
+                        =<br>
+                        &lt;&gt;<br>
+                        &lt;<br>
+                        &gt;<br>
+                        &lt;=<br>
+                        &gt;=&nbsp;&nbsp;<br>
                     </code>
                 </td>
                 <td>
-                    Equals<br />
-                    Not equal to<br />
-                    Less than<br />
-                    Greater than<br />
-                    Not greater than<br />
+                    Equals<br>
+                    Not equal to<br>
+                    Less than<br>
+                    Greater than<br>
+                    Not greater than<br>
                     Not less than
                 </td>
             </tr>
@@ -517,7 +518,7 @@
                 <td>Group 6</td>
                 <td style="padding-bottom: 4px;">
                     <code>
-                        &amp;<br />
+                        &amp;<br>
                     </code>
                 </td>
                 <td>AND</td>
@@ -601,19 +602,19 @@
     <p class="csg-sample-indent"><code>"He said,""Hello!"""</code></p>
     <p>Note that a cell reference to a text cell returns a string.</p>
 
-    <div class="navfooter">
-        <table id="navfooter" summary="Navigation footer">
+    <nav class="navfooter">
+        <table>
             <tr>
-                <td class="navfooter_PUN_L">Number Formats </td>
-                <td class="navfooter_PUN_C"></td>
-                <td class="navfooter_PUN_R"> Options</td>
+                <td>Number Formats </td>
+                <td></td>
+                <td> Options</td>
             </tr>
             <tr>
-                <td class="navfooter_PUN_L"><a accesskey="p" href="numberformats.html">Prev</a> </td>
-                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td class="navfooter_PUN_R"> <a accesskey="n" href="options.html">Next</a></td>
+                <td><a accesskey="p" href="numberformats.html">Prev</a> </td>
+                <td><a accesskey="h" href="../index.html">Home</a></td>
+                <td> <a accesskey="n" href="options.html">Next</a></td>
             </tr>
         </table>
-    </div>
+    </nav>
 </body>
 </html>

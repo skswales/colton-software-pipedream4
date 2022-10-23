@@ -1616,12 +1616,13 @@ get_menu_item(
     strcpy(out, *mptr->title);
     out += strlen(out);
 
-#if FALSE /* padding hasn't been needed for a VERY long time */
+#if TRUE /* padding hasn't been needed for a VERY long time (RISC OS 3.5) but RISC OS 3.1 does still need it */
     /* pad title field with spaces */
     trace_2(TRACE_APP_PD4, "out - array = %d, header->titlelen = %d",
                 out - array, header->titlelen);
-    while((out - array) <= header->titlelen)
-        *out++ = ' ';
+    if(wimptx_os_version_query() < RISC_OS_3_5)
+        while((out - array) < header->titlelen) /* was <= but below code forces another space */
+            *out++ = ' ';
 #else
     UNREFERENCED_PARAMETER_InRef_(header);
     /* just a single space needed before command sequence */

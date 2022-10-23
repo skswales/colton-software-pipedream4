@@ -4,11 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Copyright (C) 1989-1998 Colton Software Limited
-# Copyright (C) 1998-2015 R W Colton
+# Copyright © 1989-1998 Colton Software Limited
+# Copyright © 1998-2015 R W Colton
 
 TEXTUAL_VERSION_NUMBER=4.60
-TEXTUAL_VERSION_NUMBER=4.60.02
+TEXTUAL_VERSION_NUMBER=4.60.03
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -43,9 +43,9 @@ ASflags=$(ASflags_BASE)
 CC=cc
 CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback
 # -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
-CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -arch 2 -cpu 3 -throwback
+#CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback -arch 2 -cpu 3
 # -arch 3M to allow use of S/UMULL with -Otime
-#CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -arch 3M -cpu 7 -DNORCROFT_ARCH_M -throwback
+#CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback -arch 3M -cpu 7 -DNORCROFT_ARCH_M
 CCflags=$(CCflags_BASE) -Otime
 #
 # CCflags=$(CCflags_BASE) -Otime -DCHECKING

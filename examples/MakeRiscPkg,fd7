@@ -7,7 +7,7 @@
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
-Set pd$Release 20200321
+Set pd$Release 20221023
 | Remember to update RiscPkg.Control too
 
 Set pd$Disc                                $.Temp.PD4.RiscPkg.PDExamples_<pd$Release>
@@ -22,7 +22,7 @@ Set pd$Zip <pd$Disc>/zip
 Obey <Obey$Dir>.CopyToTemp
 
 %Dir <pd$Disc>
-zip -r <pd$Zip> RiscPkg Apps
+zip -9 -q -r <pd$Zip> RiscPkg Apps
 SetType <pd$Zip> &A91
 Info <pd$Zip>
 Unset <pd$Zip>

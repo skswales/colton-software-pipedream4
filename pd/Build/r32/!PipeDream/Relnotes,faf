@@ -1,15 +1,13 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <meta charset="UTF-8">
 
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
        - License, v. 2.0. If a copy of the MPL was not distributed with this
        - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-    <!-- Copyright (C) 1989-1998 Colton Software Limited,
-       - Copyright (C) 1998-2015 R W Colton -->
+    <!-- Copyright © 1989-1998 Colton Software Limited,
+       - Copyright © 1998-2015 R W Colton -->
 
     <title>PipeDream - Release Notes</title>
 </head>
@@ -40,8 +38,8 @@
     <h4>From the PipeDream package obtained via PlingStore</h4>
     <p>
         The <a href="file:///PipeDreamManuals:StartGuide/index.html"><em>Getting Started Guide</em></a> may be accessed
-        in the Manuals.StartGuide directory.<br/>
-        The accompanying tutorial files may be found in the Examples directory.<br/>
+        in the Manuals.StartGuide directory.<br>
+        The accompanying tutorial files may be found in the Examples directory.<br>
         A copy of the <a href="file:///PipeDreamManuals:RefGuide/index.html"><em>Reference Guide</em></a>
         may be found in the Manuals.RefGuide directory.
     </p>
@@ -69,10 +67,10 @@
     <h2 id="Support">Support</h2>
 
     <p>
-        As PipeDream is now completely free to use, support is a self-help affair.<br />
-        There is a Google Group <strong>colton-software-pipedream</strong> where you may seek help from other users:<br />
-        web site: <a href="https://groups.google.com/group/colton-software-pipedream">https://groups.google.com/group/colton-software-pipedream</a><br />
-        e-mail: <a href="mailto:colton-software-pipedream@googlegroups.com">colton-software-pipedream@googlegroups.com</a><br />
+        As PipeDream is now completely free to use, support is a self-help affair.<br>
+        There is a Google Group <strong>colton-software-pipedream</strong> where you may seek help from other users:<br>
+        web site: <a href="https://groups.google.com/group/colton-software-pipedream">https://groups.google.com/group/colton-software-pipedream</a><br>
+        e-mail: <a href="mailto:colton-software-pipedream@googlegroups.com">colton-software-pipedream@googlegroups.com</a><br>
         Please include files which demonstrate any problems (using a Spark or ZIP archive).
     </p>
 
@@ -80,7 +78,7 @@
     <h2 id="Copyright">Copyright and <a href="file:///PipeDream:RISC_OS/Help/HTML/licenc.htm">Licence</a></h2>
 
     <p>
-        Copyright (C) 1987-2022 Colton Software<br />
+        Copyright © 1987-2022 Colton Software<br>
         <a href="file:///PipeDream:RISC_OS/Help/HTML/licenc.htm#CopyrightExtra">Additional copyright information</a>
     </p>
 
@@ -97,17 +95,24 @@
     <p>Please refer to the <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> for details of changes to functionality.</p>
 
 
+<h4>4.60.03 (23 Oct 2022)</h4>
+
+<p>Cosmetic fixes for menu and toolbar icons running on RISC OS 3.1.</p>
+
+<p>HTML documentation now encoded as UTF-8.</p>
+
+
 <h4>4.60.02 (18 Aug 2022)</h4>
 
 <p>PipeDream no longer attempts to parse expressions as ISO 8601 format
 date / times as this was messing up several users' existing spreadsheets.
 The DATEVALUE() spreadsheet function does still recognise such dates.</p>
 
-<p>CSV file loading no longer parses number fields as expressions, so
-dates such as 2022-08-18 are inserted as text rather than as a formula.
-This means that if you have a CSV file with a column of dates in ISO 8601
-format, they can be loaded unchanged and then converted to usable dates
-using the DATEVALUE() spreadsheet function.</p>
+<p>CSV file loading no longer parses number fields as expressions. Dates
+such as 2022-08-18 are inserted as text rather than as a formula. This means
+that if you have a CSV file with a column of dates in ISO 8601 format, they
+can be loaded unchanged and then converted to usable dates using the
+DATEVALUE() spreadsheet function.</p>
 
 <p>Fix for dragging an icon from the Save dialogue box when the file type
 icon is not present in the Wimp Sprite Pool (e.g. TSV) - as elsewhere, the
@@ -212,7 +217,7 @@ that it can import. See the !Boot file for details.</p>
         Please note that the latest distribution of !System for use with
         pre-RISC OS 5 computers may be found on the RISC OS Open web site at:
         <a href="https://www.riscosopen.org/content/downloads/common/">https://www.riscosopen.org/content/downloads/common/</a>
-        under the heading: <strong>System�resources</strong>.
+        under the heading: <strong>System resources</strong>.
         Please consult the ReadMe file in the downloaded archive.
     </p>
 

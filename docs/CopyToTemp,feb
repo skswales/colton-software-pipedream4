@@ -4,8 +4,8 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 1991-1998 Colton Software Limited
-| Copyright (C) 1998-2015 R W Colton
+| Copyright © 1991-1998 Colton Software Limited
+| Copyright © 1998-2015 R W Colton
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
@@ -59,6 +59,7 @@ SetMacro Alias$coltsoft_settype_TXT SetType %%0 &FFF
                coltsoft_settype_TXT <pd$StartGuide>.content.images.LICENCE
 Unset    Alias$coltsoft_settype_TXT
 
+%Remove <pd$Disc>.Manuals.PipeDream./editorconfig
 | The one in RiscPkg.Copyright is the useful one for the packaged docs
 %Remove <pd$Disc>.RiscPkg.LICENCE
 %Remove <pd$Disc>.LICENCE

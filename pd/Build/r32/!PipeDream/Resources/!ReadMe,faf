@@ -1,106 +1,106 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="Content-Type" Content="text/html; charset=iso-8859-1">
-<TITLE>PipeDream:!ReadMe</TITLE>
-</HEAD>
-<BODY>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PipeDream:!ReadMe</title>
+</head>
+<body>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-<!-- Copyright (C) 2016-2022 Stuart Swales -->
+<!-- Copyright © 2016-2022 Stuart Swales -->
 
-<H1>PipeDream:!ReadMe</H1>
+<h1>PipeDream:!ReadMe</h1>
 
-<P>This directory contains most of PipeDream's RISC OS Application Resources.</P>
+<p>This directory contains most of PipeDream's RISC OS Application Resources.</p>
 
-<P>These files are stored in this directory (and sub-directories thereof) to
+<p>These files are stored in this directory (and sub-directories thereof) to
 avoid inadvertent name collisions with items being looked for on
-PipeDream$DataPath.</P>
+PipeDream$DataPath.</p>
 
 
-<H4>!ReadMe</H4>
+<h4>!ReadMe</h4>
 
-<P>
+<p>
 This file explains the purpose of the files in this directory.
 Most of these files are critical to PipeDream's operation and so should not be deleted or modified without due consideration and care.
-</P>
+</p>
 
 
-<H4>Neutral</H4>
+<h4>Neutral</h4>
 
 <p>Directory containing non-localised resources.</p>
 
 
-<H4>Neutral.!Sprite</H4>
+<h4>Neutral.!Sprite</h4>
 
-<P>Compressed sprite file displayed as the background image on the splash screen.</P>
+<p>Compressed sprite file displayed as the background image on the splash screen.</p>
 
 
-<H4>Neutral.ImageSlot</H4>
+<h4>Neutral.ImageSlot</h4>
 
-<P>
+<p>
 Utility to set the Window Manager slot size appropriately for a RISC OS application executable from its size and AIF header information.
 Replaces *WimpSlot in the application's !Run file.
-</P>
+</p>
 
 
-<H4>Neutral.Loader</H4>
+<h4>Neutral.Loader</h4>
 
-<P>BASIC program that displays a splash screen and sets some PipeDream$xxx variables.</P>
+<p>BASIC program that displays a splash screen and sets some PipeDream$xxx variables.</p>
 
 
-<H4>UK</H4>
+<h4>UK</h4>
 
 <p>Country-specific directory containing resources for the United Kingdom.</p>
 
 
-<H4><em>Country</em>.Messages</H4>
+<h4><em>Country</em>.Messages</h4>
 
-<P>Text file that is used to look up textual messages from language-independent tags and internal error numbers.</P>
-
-
-<H4><em>Country</em>.Sprites</H4>
-
-<P>Lower resolution (rectangular pixel) toolbar and button sprites.</P>
+<p>Text file that is used to look up textual messages from language-independent tags and internal error numbers.</p>
 
 
-<H4><em>Country</em>.Sprites22</H4>
+<h4><em>Country</em>.Sprites</h4>
 
-<P>Higher resolution (square pixel) toolbar and button sprites.</P>
-
-
-<H4><em>Country</em>.tem_xxx</H4>
-
-<P>Unlike many RISC OS applications, PipeDream has multiple window template files.</P>
-
-<P>These are grouped by classic menu:</P>
-
-<TABLE>
-<TR><TD><code>tem_bc</code>   </TD><TD>Block and Cursor menu dialogue boxes.</TD></TR>
-<TR><TD><code>tem_cht</code>  </TD><TD>Chart editing dialogue boxes.</TD></TR>
-<TR><TD><code>tem_el</code>   </TD><TD>Edit and Layout dialogue boxes.</TD></TR>
-<TR><TD><code>tem_f</code>    </TD><TD>File menu dialogue boxes.</TD></TR>
-<TR><TD><code>tem_p</code>    </TD><TD>Print menu dialogue boxes.</TD></TR>
-<TR><TD><code>tem_s</code>    </TD><TD>Spell menu dialogue boxes.</TD></TR>
-<TR></TR>
-<TR><TD><code>tem_main</code> </TD><TD>Main window definitions.</TD></TR>
-<TR><TD><code>tem_risc</code> </TD><TD>RISC_OSLib derived dialogue boxes.</TD></TR>
-</TABLE>
-
-<P>NB To help design-time icon alignment, most icons in PipeDream's template
-files have the border flag applied, which is then stripped off at run-time.</P>
+<p>Lower resolution (rectangular pixel) toolbar and button sprites.</p>
 
 
-<H4><em>Country</em>.Help.HTML</H4>
+<h4><em>Country</em>.Sprites22</h4>
 
-<P>Directory containing help files in HTML format that are displayed if a browser is present.</P>
+<p>Higher resolution (square pixel) toolbar and button sprites.</p>
 
 
-<H4><em>Country</em>.Help.Text</H4>
+<h4><em>Country</em>.tem_xxx</h4>
 
-<P>Text file displayed as trivial help if no browser is present to display the HTML help.</P>
+<p>Unlike many RISC OS applications, PipeDream has multiple window template files.</p>
 
-</BODY>
-</HTML>
+<p>These are grouped by classic menu:</p>
+
+<table>
+<tr><td><code>tem_bc</code>   </td><td>Block and Cursor menu dialogue boxes.</td></tr>
+<tr><td><code>tem_cht</code>  </td><td>Chart editing dialogue boxes.</td></tr>
+<tr><td><code>tem_el</code>   </td><td>Edit and Layout dialogue boxes.</td></tr>
+<tr><td><code>tem_f</code>    </td><td>File menu dialogue boxes.</td></tr>
+<tr><td><code>tem_p</code>    </td><td>Print menu dialogue boxes.</td></tr>
+<tr><td><code>tem_s</code>    </td><td>Spell menu dialogue boxes.</td></tr>
+<tr></tr>
+<tr><td><code>tem_main</code> </td><td>Main window definitions.</td></tr>
+<tr><td><code>tem_risc</code> </td><td>RISC_OSLib derived dialogue boxes.</td></tr>
+</table>
+
+<p>NB To help design-time icon alignment, most icons in PipeDream's template
+files have the border flag applied, which is then stripped off at run-time.</p>
+
+
+<h4><em>Country</em>.Help.HTML</h4>
+
+<p>Directory containing help files in HTML format that are displayed if a browser is present.</p>
+
+
+<h4><em>Country</em>.Help.Text</h4>
+
+<p>Text file displayed as trivial help if no browser is present to display the HTML help.</p>
+
+</body>
+</html>
 

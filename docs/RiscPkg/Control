@@ -4,7 +4,7 @@ Priority: Optional
 Licence: Free
 Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
 Standards-Version: 0.4.0
-Version: 20220722
+Version: 20221023
 Recommends: PipeDream
 Description: PipeDream Getting Started Guide and Reference Guide
  The Getting Started Guide is designed to give you an overall feel for how to use PipeDream by taking you through several examples which you can try out on your computer as you are reading. The examples deal separately with word processing, spreadsheet use, database use and finally a demonstration of PipeDream's capacity to combine these different sorts of work. You can find the accompanying files in the PipeDream-Examples package.

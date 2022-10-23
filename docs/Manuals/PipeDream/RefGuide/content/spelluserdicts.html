@@ -1,29 +1,30 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
-    <title>Spell - User Dictionaries</title>
-    <link href="guide.css" rel="stylesheet" type="text/css" />
-</head>
-<body>
+    <meta charset="UTF-8">
+
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
        - License, v. 2.0. If a copy of the MPL was not distributed with this
        - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-    <!-- Copyright (C) 1991-1998 Colton Software Limited
-       - Copyright (C) 1998-2015 R W Colton -->
-    <div class="navheader">
-        <table id="navheader" summary="Navigation header">
+    <!-- Copyright © 1991-1998 Colton Software Limited
+       - Copyright © 1998-2015 R W Colton -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spell - User Dictionaries</title>
+    <link href="guide.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <nav class="navheader">
+        <table>
             <tr>
-                <td class="navheader_PCN_L"><a accesskey="p" href="spellchecking.html">Prev</a> </td>
-                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td class="navheader_PCN_R"> <a accesskey="n" href="functions/stats.html">Next</a></td>
+                <td><a accesskey="p" href="spellchecking.html">Prev</a> </td>
+                <td><a href="../index.html">Contents</a> </td>
+                <th>PipeDream Reference Guide</th>
+                <td> <a href="fullindex.html">Index</a></td>
+                <td> <a accesskey="n" href="functions/stats.html">Next</a></td>
             </tr>
         </table>
-    </div>
+    </nav>
 
     <h1 id="Spell">Spell - User Dictionaries</h1>
     <p>
@@ -51,11 +52,11 @@
     <h2 id="Creating">Creating a User Dictionary</h2>
     <p>Give the <span class="csg-command">Create User Dictionary</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -103,11 +104,11 @@
     <p>Once you have created a user dictionary, you can open it so that it is searched for words when you check.</p>
     <p>To open a user dictionary, give the <span class="csg-command">Open User Dictionary</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -137,11 +138,11 @@
     </p>
     <p>You can check which dictionaries are currently open with the <span class="csg-command">Display Dictionaries</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -176,11 +177,11 @@
         When you give either of these commands, a dialogue box will appear asking you for the word to be inserted or deleted, and the name of the dictionary on which to operate.
     </p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -238,11 +239,11 @@
     <p>You will rarely want to close a dictionary explicitly, but if you are working with many dictionaries, you may find it useful.</p>
     <p>To close a dictionary give the <span class="csg-command">Close User Dictionary</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -288,11 +289,11 @@
     </p>
     <p>In addition, you can flush user dictionaries, using the <span class="csg-command">Flush Dictionaries</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -320,11 +321,11 @@
     </p>
     <p>To pack a dictionary, give the <span class="csg-command">Pack User Dictionary</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -363,11 +364,11 @@
     <h3 id="Dictionary">Dumping a dictionary</h3>
     <p>To dump a set of words from a dictionary, give the <span class="csg-command">Dump Dictionary</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -419,11 +420,11 @@
     <h3 id="Merging">Merging a file into a user dictionary</h3>
     <p>You can merge a file into a user dictionary with the <span class="csg-command">Merge File with Dictionary</span> command:</p>
     <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
+        <col>
+        <col>
+        <col>
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
@@ -465,8 +466,8 @@
     </p>
 
     <table class="csg-info-table">
-        <col />
-        <col />
+        <col>
+        <col>
         <tbody>
             <tr>
                 <th>For information on</th>
@@ -479,19 +480,19 @@
         </tbody>
     </table>
 
-    <div class="navfooter">
-        <table id="navfooter" summary="Navigation footer">
+    <nav class="navfooter">
+        <table>
             <tr>
-                <td class="navfooter_PUN_L">Spell - Checking </td>
-                <td class="navfooter_PUN_C"></td>
-                <td class="navfooter_PUN_R"> Statistical Functions</td>
+                <td>Spell - Checking </td>
+                <td></td>
+                <td> Statistical Functions</td>
             </tr>
             <tr>
-                <td class="navfooter_PUN_L"><a accesskey="p" href="spellchecking.html">Prev</a> </td>
-                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td class="navfooter_PUN_R"> <a accesskey="n" href="functions/stats.html">Next</a></td>
+                <td><a accesskey="p" href="spellchecking.html">Prev</a> </td>
+                <td><a accesskey="h" href="../index.html">Home</a></td>
+                <td> <a accesskey="n" href="functions/stats.html">Next</a></td>
             </tr>
         </table>
-    </div>
+    </nav>
 </body>
 </html>

@@ -4,7 +4,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2020-2022 Stuart Swales
+| Copyright © 2020-2022 Stuart Swales
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
@@ -12,7 +12,7 @@
 
 | NB As this whole bundle will be named in !Store
 Set pd$Release pd-46000
-Set pd$Release pd-46002
+Set pd$Release pd-46003
 
 Set MakeStore$Dir <Obey$Dir>
 

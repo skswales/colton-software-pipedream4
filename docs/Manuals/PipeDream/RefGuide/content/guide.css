@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 /* --------------------------------- */
 /* CSS for PipeDream Reference Guide */
 /* --------------------------------- */
@@ -6,7 +8,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2022 Stuart Swales */
+/* Copyright © 2014-2022 Stuart Swales */
 
 /* default rules for the whole document */
 body {
@@ -389,8 +391,8 @@ table.csg-command-table, table.csg-command-table th, table.csg-command-table td 
 }
 
 table.csg-command-table th, table.csg-command-table td {
-	padding-left: 0.2em;
-	padding-right: 0.2em;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
 }
 
 table.csg-command-table th {
@@ -415,7 +417,7 @@ table.csg-command-table th.csg-ct-th-tool {
 table.csg-command-table th.csg-ct-th-tool-none {
     width: 6%;
     text-align: center;
-	color: darkGray;
+    color: darkGray;
 }
 
 table.csg-command-table th.csg-ct-th-key {
@@ -424,7 +426,7 @@ table.csg-command-table th.csg-ct-th-key {
 
 table.csg-command-table th.csg-ct-th-key-none {
     width: 20%;
-	color: darkGray;
+    color: darkGray;
 }
 
 table.csg-command-table th.csg-ct-th-cmdseq {
@@ -432,9 +434,9 @@ table.csg-command-table th.csg-ct-th-cmdseq {
 }
 
 table.csg-command-table td img {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 table.csg-info-table {
@@ -453,13 +455,14 @@ table.csg-info-table th {
     background-color: #eeeeee;
 }
 
-.navheader {
+nav.navheader {
 }
 
-#navheader {
+nav.navheader > table {
     width: 100%;
 }
 
+.navheader td:nth-child(1),
 .navheader_PCN_L {
     width: 15%;
     text-align: left;
@@ -467,6 +470,7 @@ table.csg-info-table th {
     vertical-align: bottom;
 }
 
+.navheader td:nth-child(2),
 .navheader_PCN_LC {
     width: 15%;
     text-align: left;
@@ -474,12 +478,14 @@ table.csg-info-table th {
     vertical-align: bottom;
 }
 
+.navheader td:nth-child(3),
 .navheader_PCN_C {
     width: 40%;
     text-align: center;
     vertical-align: top;
 }
 
+.navheader td:nth-child(4),
 .navheader_PCN_CR {
     width: 15%;
     text-align: right;
@@ -487,6 +493,7 @@ table.csg-info-table th {
     vertical-align: bottom;
 }
 
+.navheader td:nth-child(5),
 .navheader_PCN_R {
     width: 15%;
     text-align: right;
@@ -494,19 +501,17 @@ table.csg-info-table th {
     vertical-align: bottom;
 }
 
-.navfooter {
-}
-
-div.navfooter {
+nav.navfooter {
     border-top: 1px solid #888;
     padding-top: 8pt;
     margin-top: 24pt;
 }
 
-#navfooter {
+nav.navfooter > table {
     width: 100%;
 }
 
+.navfooter td:nth-child(1),
 .navfooter_PUN_L {
     width: 40%;
     text-align: left;
@@ -514,12 +519,14 @@ div.navfooter {
     vertical-align: top;
 }
 
+.navfooter td:nth-child(2),
 .navfooter_PUN_C {
     width: 20%;
     text-align: center;
     vertical-align: top;
 }
 
+.navfooter td:nth-child(3),
 .navfooter_PUN_R {
     width: 40%;
     text-align: right;

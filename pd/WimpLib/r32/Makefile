@@ -4,8 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Copyright (C) 1989-1999 Colton Software
-# Copyright (C) 1998-2015 R W Colton
+# Copyright © 1989-1999 Colton Software
+# Copyright © 1998-2015 R W Colton
 
 #URD=$.pipedream4.trunk
 

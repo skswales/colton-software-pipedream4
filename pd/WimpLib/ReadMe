@@ -1,15 +1,15 @@
 WimpLib/ReadMe
 ==============
 
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/.
+** This Source Code Form is subject to the terms of the Mozilla Public
+** License, v. 2.0. If a copy of the MPL was not distributed with this
+** file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-Copyright (C) 2013-2022 Stuart Swales
+** Copyright © 2013-2022 Stuart Swales
 
-Note that any files that appear in this directory or any subdirectory
-thereof as a result of checking out, pruning and patching a copy of
-RISC_OSLib are NOT covered by the above licence.
+** Note that any files that appear in this directory or any subdirectory
+** thereof as a result of checking out, pruning and patching a copy of
+** RISC_OSLib are NOT covered by the above licence.
 
 The WimpLib library is a variant of RISC_OSLib with particular adaptations
 for use with PipeDream.  It MUST be built using a pruned and patched copy of

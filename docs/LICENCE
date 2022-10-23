@@ -1,8 +1,8 @@
-| This Source Code Form is subject to the terms of the Mozilla Public
-| License, v. 2.0. If a copy of the MPL was not distributed with this
-| file, You can obtain one at https://mozilla.org/MPL/2.0/.
+** This Source Code Form is subject to the terms of the Mozilla Public
+** License, v. 2.0. If a copy of the MPL was not distributed with this
+** file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-| Copyright (C) 2014-2022 Stuart Swales
+** Copyright © 2014-2022 Stuart Swales
 
 NB This licence file pertains to the PipeDream documentation source tree;
 a different licence is shipped to the end user in RiscPkg.Copyright.
@@ -16,8 +16,8 @@ versions.
 
 ----------------------------------------------------------------------------
 
-Copyright (C) 1991-1998 Colton Software Limited
-Copyright (C) 1998-2015 R W Colton
+Copyright © 1991-1998 Colton Software Limited
+Copyright © 1998-2015 R W Colton
 
 ======================
 

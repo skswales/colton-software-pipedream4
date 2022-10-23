@@ -1,16 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" Content="text/html; charset=iso-8859-1">
-<title>PipeDream:!ReadMe</title>
-</head>
-<body>
+<meta charset="UTF-8">
+
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-<!-- Copyright (C) 2020-2022 Stuart Swales -->
+<!-- Copyright © 2020-2022 Stuart Swales -->
 
-<H1>PipeDream:!ReadMe</H1>
+<title>PipeDream:!ReadMe</title>
+</head>
+<body>
+<h1>PipeDream:!ReadMe</h1>
 
 <p>This directory contains most of PipeDream's application resources.</p>
 

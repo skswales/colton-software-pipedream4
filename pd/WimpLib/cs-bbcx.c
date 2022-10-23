@@ -26,16 +26,15 @@ riscos_vdu_define_graphics_window(
 {
     /* SKS 19apr95 (Fireworkz), 09sep16 (PipeDream) get round VDU funnel/multiple SWI overhead */
     U8 buffer[9 /*length of VDU 24 sequence*/];
-    P_U8 p_u8 = buffer;
-    *p_u8++ = 24;
-    *p_u8++ = u8_from_int(x1);
-    *p_u8++ = u8_from_int(x1 >> 8);
-    *p_u8++ = u8_from_int(y1);
-    *p_u8++ = u8_from_int(y1 >> 8);
-    *p_u8++ = u8_from_int(x2);
-    *p_u8++ = u8_from_int(x2 >> 8);
-    *p_u8++ = u8_from_int(y2);
-    *p_u8++ = u8_from_int(y2 >> 8);
+    buffer[0] = 24;
+    buffer[1] = u8_from_int(x1);
+    buffer[2] = u8_from_int(x1 >> 8);
+    buffer[3] = u8_from_int(y1);
+    buffer[4] = u8_from_int(y1 >> 8);
+    buffer[5] = u8_from_int(x2);
+    buffer[6] = u8_from_int(x2 >> 8);
+    buffer[7] = u8_from_int(y2);
+    buffer[8] = u8_from_int(y2 >> 8);
     return(os_writeN(buffer, sizeof32(buffer)));
 }
 

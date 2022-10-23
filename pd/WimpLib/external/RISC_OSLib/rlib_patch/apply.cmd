@@ -4,7 +4,7 @@
 @rem License, v. 2.0. If a copy of the MPL was not distributed with this
 @rem file, You can obtain one at https://mozilla.org/MPL/2.0/.
 @rem
-@rem Copyright (C) 2013-2022 Stuart Swales
+@rem Copyright © 2013-2022 Stuart Swales
 @rem
 Set flexlib_tmp_dir=..\gitlab\RiscOS\Sources\Toolbox\Toolboxlib\flexlib
 Set rlib_tmp_dir=..\gitlab\RiscOS\Sources\Lib\RISC_OSLib\rlib

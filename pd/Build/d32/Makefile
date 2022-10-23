@@ -4,11 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Copyright (C) 1989-1998 Colton Software Limited
-# Copyright (C) 1998-2015 R W Colton
+# Copyright © 1989-1998 Colton Software Limited
+# Copyright © 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.57
-#TEXTUAL_VERSION_NUMBER=4.56.02
+TEXTUAL_VERSION_NUMBER=4.60
+TEXTUAL_VERSION_NUMBER=4.60.03
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 

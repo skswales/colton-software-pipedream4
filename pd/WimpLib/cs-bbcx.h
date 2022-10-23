@@ -10,6 +10,10 @@
 #ifndef __cs_bbcx_h
 #define __cs_bbcx_h
 
+#if defined(INLINE_SWIX)
+#include "C:swis.h"
+#endif
+
 #ifndef __bbc_h
 #include "bbc.h"
 #endif
@@ -18,13 +22,41 @@
 cs-riscasm.s
 */
 
+#if defined(INLINE_SWIX)
+_Check_return_
+_Ret_maybenull_
+static inline _kernel_oserror *
+os_writeN(
+    _In_reads_(count) const char * s,
+    _InVal_     U32 count)
+{
+    return(
+        _swix(OS_WriteN, _INR(0, 1),
+        /*in*/  s, count));
+}
+#else
 _Check_return_
 _Ret_maybenull_
 extern _kernel_oserror *
 os_writeN(
     _In_reads_(count) const char * s,
     _InVal_     U32 count);
+#endif
 
+#if defined(INLINE_SWIX)
+_Check_return_
+_Ret_maybenull_
+static inline _kernel_oserror *
+os_plot(
+    _InVal_     int code,
+    _InVal_     int x,
+    _InVal_     int y)
+{
+    return(
+        _swix(OS_Plot, _INR(0, 2),
+        /*in*/  code, x, y));
+}
+#else
 _Check_return_
 _Ret_maybenull_
 extern _kernel_oserror *
@@ -32,6 +64,7 @@ os_plot(
     _InVal_     int code,
     _InVal_     int x,
     _InVal_     int y);
+#endif
 
 #if !defined(COMPILING_WIMPLIB)
 

@@ -4,7 +4,10 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2022 Stuart Swales
+| Copyright © 2013-2022 Stuart Swales
+|
+If "<Patch$Dir>"="" Then IfThere Boot:^.Apps.Development.!Patch Then Filer_Run Boot:^.Apps.Development.!Patch
+If "<Patch$Dir>"="" Then Error 0 Patch had not been 'seen' - try again as it might have now?
 |
 echo <Obey$Dir>
 |
@@ -100,7 +103,7 @@ patch --unified -i "@.c.flex"       -o "<WimpLib_tmp$Dir>.c.flex"       "<flexli
 patch --unified -i "@.c.bbc"        -o "<WimpLib_tmp$Dir>.c.bbc"        "<rlib_tmp$Dir>.c.bbc"
 patch --unified -i "@.c.dbox"       -o "<WimpLib_tmp$Dir>.c.dbox"       "<rlib_tmp$Dir>.c.dbox"
 patch --unified -i "@.c.event"      -o "<WimpLib_tmp$Dir>.c.event"      "<rlib_tmp$Dir>.c.event"
-patch --unified -i "@.c.fileicon"   -o "<WimpLib_tmp$Dir>.c.fileicon"   "<rlib_tmp$Dir>.c.fileicon"
+| patch --unified -i "@.c.fileicon"   -o "<WimpLib_tmp$Dir>.c.fileicon"   "<rlib_tmp$Dir>.c.fileicon"
 | patch --unified -i "@.c.flex"       -o "<WimpLib_tmp$Dir>.c.flex"       "<rlib_tmp$Dir>.c.flex"
 patch --unified -i "@.c.fontlist"   -o "<WimpLib_tmp$Dir>.c.fontlist"   "<rlib_tmp$Dir>.c.fontlist"
 patch --unified -i "@.c.fontselect" -o "<WimpLib_tmp$Dir>.c.fontselect" "<rlib_tmp$Dir>.c.fontselect"

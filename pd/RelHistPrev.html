@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -6,8 +6,8 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-<!-- Copyright (C) 1989-1998 Colton Software Limited,
-   - Copyright (C) 1998-2015 R W Colton -->
+<!-- Copyright © 1989-1998 Colton Software Limited,
+   - Copyright © 1998-2015 R W Colton -->
 
     <title>PipeDream - Ancient History</title>
 </head>
@@ -90,18 +90,18 @@ columns are shown fully.</p>
 <p>PipeDream gives an error for Adjust-click on toolbar buttons where that is not appropriate.</p>
 <p>The <code>End</code> key is no longer referred to as the <code>Copy</code> key.</p>
 <p>Added Microsoft Word / OpenOffice-compatible keyboard shortcuts <code>Ctrl</code>-<code>L</code>,<code>E</code>,<code>R</code> for Left,Centre,Right Align.</p>
-<p>PipeDream sets up some more keyboard shortcuts suggested by the Style Guide when in non-Classic mode:<br />
-<code>Ctrl-Z</code> == Clear markers;<br />
-<code>Ctrl-X</code> == Delete block (to paste list);<br />
-<code>Ctrl-C</code> == Copy block to paste list.<br />
-It also sets up some keyboard shortcuts which were unintentionally left unmapped in non-Classic mode:<br />
-<code>Shift</code>-left arrow == Previous word;<br />
-<code>Shift</code>-right arrow == Next word;<br />
-<code>Shift</code>-up arrow == Page up;<br />
-<code>Shift</code>-down arrow == Page down;<br />
-<code>Ctrl</code>-left arrow == Start of cell;<br />
-<code>Ctrl</code>-right arrow == End of cell;<br />
-<code>Ctrl</code>-up arrow == Top of column;<br />
+<p>PipeDream sets up some more keyboard shortcuts suggested by the Style Guide when in non-Classic mode:<br>
+<code>Ctrl-Z</code> == Clear markers;<br>
+<code>Ctrl-X</code> == Delete block (to paste list);<br>
+<code>Ctrl-C</code> == Copy block to paste list.<br>
+It also sets up some keyboard shortcuts which were unintentionally left unmapped in non-Classic mode:<br>
+<code>Shift</code>-left arrow == Previous word;<br>
+<code>Shift</code>-right arrow == Next word;<br>
+<code>Shift</code>-up arrow == Page up;<br>
+<code>Shift</code>-down arrow == Page down;<br>
+<code>Ctrl</code>-left arrow == Start of cell;<br>
+<code>Ctrl</code>-right arrow == End of cell;<br>
+<code>Ctrl</code>-up arrow == Top of column;<br>
 <code>Ctrl</code>-down arrow == Bottom of column;</p>
 <p>PipeDream dialogue box buttons are now somewhat more RISC OS Style Guide (Issue 3) compliant.</p>
 <p>The standard <strong>File – Save</strong> dialogue box is now Style Guide compliant and less daunting. The full <strong>File – Save</strong> dialogue box is still available from the menu.</p>
@@ -109,9 +109,9 @@ It also sets up some keyboard shortcuts which were unintentionally left unmapped
 <p>PipeDream will start up using about 150KB less memory than 4.57.</p>
 <p>Updated copy of RISC_OSLib used to avoid (rare) zero page accesses.</p>
 <p>Uses <code>*IconSprites !SpritesR4</code> on RISC OS 3, 4 and 6 (alternate pin position).</p>
-<p>Application resources have restructured within !PipeDream.  <code>PipeDream$Path</code> is set appropriately by the Loader. It is used to locate vital resources needed to run PipeDream e.g. messages, sprites and window templates, to locate most data presented by PipeDream to the user e.g. chart markers, master dictionary, printer drivers and also the user's data e.g. Choices, Key, command files, user dictionaries etc.<br />
-If <code>PipeDream$UserPath</code> is set, this is set as the first path element.<br />
-<code>PipeDream$TemplatesPath</code> is also set appropriately by the Loader - it does not contain fallback locations.<br />
+<p>Application resources have restructured within !PipeDream.  <code>PipeDream$Path</code> is set appropriately by the Loader. It is used to locate vital resources needed to run PipeDream e.g. messages, sprites and window templates, to locate most data presented by PipeDream to the user e.g. chart markers, master dictionary, printer drivers and also the user's data e.g. Choices, Key, command files, user dictionaries etc.<br>
+If <code>PipeDream$UserPath</code> is set, this is set as the first path element.<br>
+<code>PipeDream$TemplatesPath</code> is also set appropriately by the Loader - it does not contain fallback locations.<br>
 See the Paths page in the <em>Reference Guide</em>.</p>
 <p>PipeDream uses an external Obey file, <code>ImgConvert</code>, to invoke <code>ChangeFSI</code> to convert image files to sprites. By doing so, it can give more helpful warnings and avoid inadvertently leaving a large Next wimp slot.</p>
 <p>If a Lotus 1-2-3 file is dragged to the PipeDream icon, PipeDream will check whether the <code>!123PD</code> utility is available. If so, PipeDream will invoke it automatically to convert a copy of the file to PipeDream format and load that.</p>
@@ -147,22 +147,22 @@ See the Paths page in the <em>Reference Guide</em>.</p>
 <p>Fixed execution of command files from the <strong>Do command file</strong> dialogue box.</p>
 <p>Speed-up for <code>M_DETERM()</code> and <code>M_INVERSE()</code> for large sparse matrices.</p>
 <p><code>DDB()</code> spreadsheet function accepts an extra parameter, factor (optional). The default is 2.0.</p>
-<p><code>INDEX()</code> spreadsheet function will now accept zero for the column and/or row number.<br />
-If the column number is zero, the whole of the specified row(s) is returned.<br />
+<p><code>INDEX()</code> spreadsheet function will now accept zero for the column and/or row number.<br>
+If the column number is zero, the whole of the specified row(s) is returned.<br>
 If the row number is zero, the whole of the specified column(s) is returned.</p>
-<p><code>INDEX()</code> spreadsheet function will now accept zero for the optional column and/or row size.<br />
-If the column size is zero, the rest of the specified row(s) beginning at the given column number is returned.<br />
+<p><code>INDEX()</code> spreadsheet function will now accept zero for the optional column and/or row size.<br>
+If the column size is zero, the rest of the specified row(s) beginning at the given column number is returned.<br>
 If the row size is zero, the whole of the specified column(s) beginning at the given row number is returned.</p>
 <p><code>SERIESSUM()</code> spreadsheet function has been backported from Fireworkz. An example of its use is given in the PipeDream-Examples package.</p>
 <p>Text @-field handling enhanced to allow colour and font change information contained in refrerenced cells to be inserted into the referencing cell's output when <code>@<em>cell_reference</em>@</code> is used and a global font is in use.</p>
 <p>Text @-field handling enhanced to allow use of HTML format colour strings: <code>@C:#<em>rrggbb</em>@</code>, <code>@C:rgb(<em>r,g,b</em>)@</code>, <code>@C:<em>html_colour_name</em>@</code>.</p>
 <p>Text @-field handling enhanced to allow use of format strings with date, time and page number fields: <code>@D:<em>date_format</em>@</code>, <code>@N:<em>time_format</em>@</code> and <code>@P:<em>number_format</em>@</code>. <code>@D@</code>, <code>@N@</code> and <code>@P@</code> without format strings give the same results as before. The format strings are those used by the <code>TEXT()</code> spreadsheet function.</p>
-<p>Examples:<br />
-<code>@D:yyyy-mm-dd@</code> displays the current date in ISO 8601 format,<br />
-<code>@T:hh:mm@</code> displays the current time without seconds,<br />
+<p>Examples:<br>
+<code>@D:yyyy-mm-dd@</code> displays the current date in ISO 8601 format,<br>
+<code>@T:hh:mm@</code> displays the current time without seconds,<br>
 <code>@P:r#@</code> displays page numbers as lower-case Roman numerals.</p>
-<p>Note that both current date and time components are passed to <code>@D@</code> and <code>@N@</code> to enable a composite date with time string to be displayed.<br />
-Example:<br />
+<p>Note that both current date and time components are passed to <code>@D@</code> and <code>@N@</code> to enable a composite date with time string to be displayed.<br>
+Example:<br>
 <code>@D:yyyy-mm-dd\Thh:mm:ss@</code> displays an ISO 8601 date/time.</p>
 <p>Typing a text-@ character or clicking on a highlight toolbar button (e.g. Bold) enters the data as text when the caret is in an empty cell regardless of the <strong>New cell format</strong> option.</p>
 <p><strong>Insert colour</strong> command (<code>\EITC</code>) added to the <strong>Edit</strong> menu. This command allows the user to choose a colour using the ColourPicker module and inserts the corresponding <code>@C:<em>r,g,b</em>@</code> sequence.</p>
@@ -202,20 +202,20 @@ Example:<br />
 <p>Interactive Help messages are now more consistent with the RISC OS Style Guide recommendations and use Help tokens where possible.</p>
 <p>Writeable icons in <strong>Spell</strong> – <strong>Create</strong> / <strong>Open</strong> / <strong>Pack</strong> user dictionary dialogue boxes use RISC OS Style Guide compliant appearance and size.</p>
 <p>Menus are no longer padded to a fixed field width with spaces.</p>
-<p>    Application resources moved from <code>!PipeDream.Resource</code> to <code>!PipeDream.AppData</code>.<br />
-    Language-specific resources (Dictionaries, Dictionary Definition Files, Document Templates, PipeDream Printer Drivers) are located in a sub-directory of AppData.<br />
-    The only one currently provided fully populated is UK.<br />
-    The Deutsch DictDefn file is provided in the Germany directory.<br />
-    Language-neutral resources (Markers, Pictures) may be found in the Neutral sub-directory of AppData.<br />
+<p>    Application resources moved from <code>!PipeDream.Resource</code> to <code>!PipeDream.AppData</code>.<br>
+    Language-specific resources (Dictionaries, Dictionary Definition Files, Document Templates, PipeDream Printer Drivers) are located in a sub-directory of AppData.<br>
+    The only one currently provided fully populated is UK.<br>
+    The Deutsch DictDefn file is provided in the Germany directory.<br>
+    Language-neutral resources (Markers, Pictures) may be found in the Neutral sub-directory of AppData.<br>
     <code>PipeDream$Path</code> is set by <code>!Boot</code> and <code>!Run</code> and is used to locate these resources.</p>
-<p>    RISC OS-type resources are now located in <code>!PipeDream.Resources</code>.<br />
-    (They had previously been separated out of the Resource directory into a RISC_OS sub-directory).<br />
-    Language-specific RISC OS-type resources (Help, Messages, Sprites, Window Templates) are located in a sub-directory of Resources.<br />
-    The only one currently provided is UK.<br />
-    Language-neutral RISC OS-type resources (Loader, ImageSlot) may be found in the Neutral sub-directory of AppData.<br />
-    A new variable, <code>PipeDreamRes$Path</code>, is set by <code>!Run</code> and is used to locate these resources.<br />
+<p>    RISC OS-type resources are now located in <code>!PipeDream.Resources</code>.<br>
+    (They had previously been separated out of the Resource directory into a RISC_OS sub-directory).<br>
+    Language-specific RISC OS-type resources (Help, Messages, Sprites, Window Templates) are located in a sub-directory of Resources.<br>
+    The only one currently provided is UK.<br>
+    Language-neutral RISC OS-type resources (Loader, ImageSlot) may be found in the Neutral sub-directory of AppData.<br>
+    A new variable, <code>PipeDreamRes$Path</code>, is set by <code>!Run</code> and is used to locate these resources.<br>
     Verified that themed variants of these resources, e.g. iMX6, can be loaded on RISC OS 5 if provided by the user.</p>
-<p>    <code>Resources.UK.Help.HTML</code> is a directory containing helpful info and supersedes the old HTMLHelp file.<br />
+<p>    <code>Resources.UK.Help.HTML</code> is a directory containing helpful info and supersedes the old HTMLHelp file.<br>
     It now contains Command Reference, Spreadsheet Functions and Toolbar information.</p>
 <p>Internal error handler improved to show <strong>Continue</strong> and <strong>Quit</strong> button pair with more logical outcomes.</p>
 <p>Stack overflow handler fixed - no longer gives 'Uncaught trap'.</p>
@@ -223,8 +223,8 @@ Example:<br />
 <p>ROOL DDE 27 build environment used.</p>
 <p><strong>4.55.04 (01 Aug 2016)</strong></p>
 <p><code>CODE()</code> spreadsheet function extended to accept empty string as input (in which case it returns zero).</p>
-<p>Custom function debugging assisted by outputting errors encountered as<br />
-<code>ERROR_CUSTOM: [<em>cf_doc_name</em>] Row <em>N</em> Error <em>String</em></code><br />
+<p>Custom function debugging assisted by outputting errors encountered as<br>
+<code>ERROR_CUSTOM: [<em>cf_doc_name</em>] Row <em>N</em> Error <em>String</em></code><br>
 to Reporter module if it is loaded and enabled.</p>
 <p><strong>4.55.03 (27 Jul 2016)</strong></p>
 <p>Choosing a spreadsheet function from the function selector enters the formula editing line when clicked on an empty cell regardless of the <strong>New cell format</strong> option.</p>
@@ -359,7 +359,7 @@ to Reporter module if it is loaded and enabled.</p>
 <p>Choices directory moved back from top level into !PipeDream as uChoices to assist packaging. PipeDream will now test for the existence of choices in <code>&lt;Choices$Write&gt;.PipeDream</code> on startup and, if needed, copy the default choices directories and files from uChoices over to Choices:PipeDream.</p>
 <p>As before, please note that if you already have modified user dictionaries etc. in a previous non-choices installation of PipeDream (i.e. one prior to 4.50/37), you may wish to copy the contents of your existing <code>&lt;PipeDream$Dir&gt;.User</code> tree into the new location <code>&lt;Choices$Write&gt;.PipeDream</code>.</p>
 <p>If so, run your old !PipeDream (to set the correct <code>&lt;PipeDream$Dir&gt;</code>) and type the following in a Task window (Ctrl-F12):</p>
-<p>CDir &lt;Choices$Write&gt;.PipeDream<br />
+<p>CDir &lt;Choices$Write&gt;.PipeDream<br>
 Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CF~NRV</p>
 <p>Release notes are now in HTML format and linked into <code>!Help</code>.</p>
 <p>Changed release notes to include PipeDream Google Group info (was Fireworkz).</p>
@@ -431,7 +431,7 @@ Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CF~NRV</p>
 <p>The Save file dialogue box now attempts to restore the caret on closing when it is opened as a standalone dialogue box.</p>
 <p>Several potential buffer overflow bugs (especially with long filenames) fixed.</p>
 <p>32-bit Lotus 1-2-3 converter utilities <code>u_ltp</code> (Lotus to PipeDream) and <code>u_ptl</code> (PipeDream to Lotus) are now supplied in PipeDream's Resource.RISC_OS directory (this being a bit more out of the way of other files loaded on the PipeDream path). Please note that there is no cute front end tool — you will need to invoke them in a Task window (Ctrl-F12):</p>
-<p>PipeDream:RISC_OS.u_ltp &lt;infile-lotus&gt; &lt;outfile-pipedream&gt;<br />
+<p>PipeDream:RISC_OS.u_ltp &lt;infile-lotus&gt; &lt;outfile-pipedream&gt;<br>
 PipeDream:RISC_OS.u_ptl &lt;infile-pipedream&gt; &lt;outfile-lotus&gt;</p>
 <p><strong>4.50/44 (13 May 2013)</strong></p>
 <p>Failed supporting document load reporting in 4.50/43 had the unwanted side-effects of (a) stopping any subsequent supporting document loading for that stack of dependent and supporting documents and (b) possibly aborting any command file execution.</p>
@@ -459,7 +459,7 @@ PipeDream:RISC_OS.u_ptl &lt;infile-pipedream&gt; &lt;outfile-lotus&gt;</p>
 <p>Help changed from PipeDream file to HTML help.</p>
 <p>32-bit Lotus 1-2-3 converter utilities <code>u_ltp</code> (Lotus to PipeDream) and <code>u_ptl</code> (PipeDream to Lotus) are now supplied in PipeDream's Resource directory.</p>
 <p>Please note that there is no cute front end tool - you will need to invoke them in a Task window (Ctrl-F12):</p>
-<p>PipeDream:u_ltp &lt;infile-lotus&gt; &lt;outfile-pipedream&gt;<br />
+<p>PipeDream:u_ltp &lt;infile-lotus&gt; &lt;outfile-pipedream&gt;<br>
 PipeDream:u_ptl &lt;infile-pipedream&gt; &lt;outfile-lotus&gt;</p>
 <p>Removed archaic floppy-disc outline logo from splash screen.</p>
 <p><strong>4.50/42 (22 Mar 2013)</strong></p>
@@ -494,9 +494,9 @@ PipeDream:u_ptl &lt;infile-pipedream&gt; &lt;outfile-lotus&gt;</p>
 <p>ROOL RISC_OSLib now imported into separate pd/external directory.</p>
 <p>Attempts support for <code>Wimp$IconTheme</code> for Sprites (RISC_OSLib convergence) although no new themed sprites are actually supplied.</p>
 <p><strong>4.50/37 (19 Sep 2012)</strong></p>
-<p>Add <code>Choices:PipeDream.</code> to the <code>PipeDream$Path</code> variable, replacing <code>&lt;PipeDream$Dir&gt;.User</code>. Please note that if you already have user dictionaries etc., you may wish to copy the contents of your existing<br />
+<p>Add <code>Choices:PipeDream.</code> to the <code>PipeDream$Path</code> variable, replacing <code>&lt;PipeDream$Dir&gt;.User</code>. Please note that if you already have user dictionaries etc., you may wish to copy the contents of your existing<br>
 <code>&lt;PipeDream$Dir&gt;.User</code> into <code>&lt;Choices$Write&gt;.PipeDream</code>:</p>
-<p>CDir &lt;Choices$Write&gt;.PipeDream<br />
+<p>CDir &lt;Choices$Write&gt;.PipeDream<br>
 Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CRV</p>
 <p><code>User</code> directory in !PipeDream has now been renamed as <code>Choices.PipeDream</code>.</p>
 <p>There is a TaskObey script file <code>DoCopy</code> in the <code>Choices</code> directory which will copy the contents of this directory to <code>&lt;Choices$Write&gt;.PipeDream</code>.</p>
@@ -551,7 +551,7 @@ Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CRV</p>
 <p>First 32-bit release of PipeDream, built using RISC OS Open Limited C tools release 20.</p>
 <p>Registration number code and template info removed as the PipeDream installer no longer generates one. Previous <code>Info</code> files may be used to show user and organisation name in the splash screen and <strong>About this program</strong> dialogue box.</p>
 <p><strong>4.50/23 (10 Aug 2000)</strong></p>
-<p>PipeDream documents can now be saved with leafnames longer than 12 characters where this is allowed, e.g. RISC OS 4 new format hard discs, ADFS E+/F+ format floppies and RAM discs. This may also work on earlier systems with the Longnames module loaded or into archive files, but this has<br />
+<p>PipeDream documents can now be saved with leafnames longer than 12 characters where this is allowed, e.g. RISC OS 4 new format hard discs, ADFS E+/F+ format floppies and RAM discs. This may also work on earlier systems with the Longnames module loaded or into archive files, but this has<br>
 not been tested.</p>
 <p>PipeDream tested against RISC OS 4.02 (patch 3 release 2)</p>
 <p><strong>4.50/22 (11 Apr 1999)</strong></p>
