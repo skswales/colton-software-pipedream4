@@ -3,11 +3,7 @@ PipeDream 4 Releases
 
 As a number of the earlier versions did not have git tags corresponding to the svn tags, I've had to add them by hand.
 
-Unfortunately this means that the earlier versions have risen to the top of the Release pages!
-
-The current version is 4.60/02, you can find it by digging...
-
-
+Unfortunately this means that those earlier versions have risen to the top of the Release pages! You may have to go digging.
 
 
 ReadMe for PipeDream 4 Build
@@ -17,19 +13,24 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-Copyright (C) 2013-2022 Stuart Swales
+Copyright © 2013-2022 Stuart Swales
+
 
 Prerequisites
 -------------
 
-Acorn C/C++ Release 25 or later (!Amu, C compiler, headers, libraries, linker).
+ROOL DDE Release 30c or later (C compiler, headers, libraries, linker, !Amu).
 
-InfoZip (install with PackMan) for creating a zip of the final build.
+Curl (install with PackMan) to obtain external build tools.
 
 A RISC OS git client (install Simplegit-Libgit2 with PackMan) to download a copy of RISC_OSLib.
 
-patch (install with PackMan) to patch that copy of RISC_OSLib for use with
+Patch (install with PackMan) to patch that copy of RISC_OSLib for use with
 PipeDream.
+
+Unzip (install with PackMan) to extract external build tools.
+
+Zip (install with PackMan) for creating a zip of the final build.
 
 
 First-time configuration and build
@@ -37,7 +38,7 @@ First-time configuration and build
 
 Ensure that the system has 'seen' AcornC/C++ and set that environment.
 
-Run !!!Boot to set up the PipeDream build environment.
+Run !!!Boot to set up the PipeDream 4 build environment.
 
 Run configure to create the build directories.
 
@@ -47,9 +48,10 @@ RISC_OSLib with PipeDream-specific build options. See ^.WimpLib.ReadMe and
 
 Run !Amu.
 
-Drag 'r32.Makefile' to !Amu... and wait...  A PipeDream build takes
-about 16 minutes on a SA RISC PC.  Building on an ARMX6 takes about
-one minute.
+Drag 'r32.Makefile' to !Amu... and wait... hopefully not very long.
+
+A PipeDream 4 build takes about thirty to forty seconds on a Raspberry Pi 4
+(depending on your overclock) and about sixteen minutes on a SA RISC PC.
 
 
 Subsequent builds
@@ -59,7 +61,7 @@ After any reboot, you will need to:
 
 Ensure that the system has 'seen' AcornC/C++ and set that environment.
 
-Run !!!Boot to set up the PipeDream build environment.
+Run !!!Boot to set up the PipeDream 4 build environment.
 
 Run !Amu.
 
