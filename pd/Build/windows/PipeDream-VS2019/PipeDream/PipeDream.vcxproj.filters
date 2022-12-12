@@ -1335,9 +1335,6 @@
     <None Include="..\..\..\..\RelHistPrev.html">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\complex.html">
       <Filter>docs\RefGuide\functions</Filter>
     </None>
@@ -1448,6 +1445,9 @@
     </None>
     <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\Text">
       <Filter>docs\Help</Filter>
+    </None>
+    <None Include="..\..\..\..\Relnotes.html">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

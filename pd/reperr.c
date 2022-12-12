@@ -104,7 +104,7 @@ make_errorstring(
 static void
 make_reperr_init(void)
 {
-    fputs("# PipeDream en_GB error messages (" __DATE__ ")" "\n", stdout);
+    fputs("# PipeDream 4 en_GB error messages (" __DATE__ ")" "\n", stdout);
 
 /*
 errors local to this application
@@ -199,7 +199,7 @@ message_output(
 }
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr(
     STATUS errornumber,
     _In_opt_z_  PC_U8Z text,
@@ -285,7 +285,7 @@ reperr_getstr(
 *
 ******************************************************************************/
 
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_not_installed(
     STATUS errornumber)
 {
@@ -301,7 +301,7 @@ reperr_not_installed(
 ******************************************************************************/
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_null(
     STATUS errornumber)
 {
@@ -309,7 +309,7 @@ reperr_null(
 }
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 rep_fserr(
     _In_z_      PC_U8 str)
 {
@@ -317,14 +317,27 @@ rep_fserr(
 }
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_kernel_oserror(
-    _In_        _kernel_oserror * const err)
+    _In_        _kernel_oserror * const p_kernel_oserror)
 {
-    const int errflags = Wimp_ReportError_OK;
-    int button_clicked;
+    assert(NULL != p_kernel_oserror);
 
-    assert(NULL != err);
+    consume_bool(report_if_kernel_oserror(p_kernel_oserror));
+
+    return(FALSE);
+}
+
+/*ncr*/
+extern BOOL /*TRUE->is_error*/
+report_if_kernel_oserror(
+    _In_        _kernel_oserror * const p_kernel_oserror)
+{
+    /* for many callers, it's perfectly OK to do tbl_wimp_*() whatever, just call this, to hopefully get smallest code where ultimate speed is no concern */
+    if(NULL == p_kernel_oserror)
+        return(FALSE);
+
+    int button_clicked;
 
     keyidx = NULL;
     cbuff_offset = 0;
@@ -333,14 +346,14 @@ reperr_kernel_oserror(
 
     if(been_error++ < 3) /* allow just a few errors to be reported before we start suppressing them */
     {
-        consume(_kernel_oserror *, wimp_reporterror_rf(err, errflags, &button_clicked, NULL, 2/*Warning*/));
+        consume(_kernel_oserror *, wimp_reporterror_rf(p_kernel_oserror, Wimp_ReportError_OK, &button_clicked, NULL, 2/*Warning*/));
     }
     else
     {   /* but do log suppressed errors */
-        report_output(err->errmess);
+        report_output(p_kernel_oserror->errmess);
     }
 
-    return(FALSE);
+    return(TRUE);
 }
 
 /* replacements for RISC_OSLib */
@@ -349,8 +362,7 @@ extern os_error *
 wimpt_complain(
     os_error * e)
 {
-    if(NULL != e)
-        consume_bool(reperr_kernel_oserror(e));
+    consume_bool(report_if_kernel_oserror(e));
 
     return(e);
 }
@@ -358,14 +370,14 @@ wimpt_complain(
 extern os_error *
 wimp_reporterror(
     os_error * e,
-    wimp_errflags flags,
+    wimp_errflags errflags,
     char * name)
 {
     int button_clicked;
 
     UNREFERENCED_PARAMETER(name); /* always the program name from RISC_OSLib anyway */
 
-    return(de_const_cast(os_error *, wimp_reporterror_rf(e, (int) flags, &button_clicked, NULL, 2 /*Warning*/)));
+    return(de_const_cast(os_error *, wimp_reporterror_rf(e, (int) errflags, &button_clicked, NULL, 2 /*Warning*/)));
 }
 
 #endif /* MAKE_MESSAGE_FILE */

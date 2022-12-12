@@ -1,15 +1,20 @@
---- _src	2021-12-31 14:59:30.410000000 +0000
-+++ _dst	2022-08-18 16:55:46.920000000 +0000
-@@ -31,6 +31,8 @@
+--- _src	2022-10-26 16:47:18.790000000 +0000
++++ _dst	2022-10-31 17:46:49.430000000 +0000
+@@ -31,22 +31,79 @@
   * History: IDJ: 07-Feb-92: prepared for source release
   */
  
+-#define BOOL int
+-#define TRUE 1
+-#define FALSE 0
 +#include "include.h" /* for SKS_ACW */
 +
- #define BOOL int
- #define TRUE 1
- #define FALSE 0
-@@ -40,13 +42,68 @@
++// SKS_ACW #define BOOL int
++// SKS_ACW #define TRUE 1
++// SKS_ACW #define FALSE 0
+ 
+ #include <stdlib.h>
+ #include <string.h>
  #include <stdarg.h>
  
  #include "os.h"
@@ -98,7 +103,7 @@
  {
    os_regset r;
    os_error *e;
-@@ -142,6 +202,8 @@
+@@ -142,10 +202,15 @@
  }
  #endif
  
@@ -107,7 +112,64 @@
  #pragma -s1
  
  os_error * wimp_create_wind(wimp_wind * w, wimp_w * result)
-@@ -193,6 +255,7 @@
+ {
++#if defined(SKS_ACW)
++  return(tbl_wimp_create_window((WimpWindow *) w, (int *) result));
++#else
+   os_regset r;
+   os_error *e;
+ 
+@@ -156,10 +221,14 @@
+   *result = r.r[0];
+ 
+   return(e);
++#endif /* SKS_ACW */
+ }
+ 
+ os_error * wimp_create_icon(wimp_icreate * i, wimp_i * result)
+ {
++#if defined(SKS_ACW)
++  return(tbl_wimp_create_icon(0, i, (int *) result));
++#else
+   os_regset r;
+   os_error *e;
+ 
+@@ -170,10 +239,16 @@
+   *result = r.r[0];
+ 
+   return(e);
++#endif /* SKS_ACW */
+ }
+ 
+ os_error * wimp_delete_wind(wimp_w w)
+ {
++#if defined(SKS_ACW)
++    WimpDeleteWindowBlock block;
++    block.window_handle = w;
++    return(tbl_wimp_delete_window(&block));
++#else
+     os_regset r;
+     os_error *e;
+ 
+@@ -182,10 +257,17 @@
+     e = os_swix(DeleteWindow, &r);
+ 
+     return(e);
++#endif /* SKS_ACW */
+ }
+ 
+ os_error * wimp_delete_icon(wimp_w w, wimp_i i)
+ {
++#if defined(SKS_ACW)
++    WimpDeleteIconBlock block;
++    block.window_handle = w;
++    block.icon_handle = i;
++    return(tbl_wimp_delete_icon(&block));
++#else
+     os_regset r;
+     os_error *e;
+     int j[2];
+@@ -193,11 +275,13 @@
      j[0] = (int)w;
      j[1] = (int)i;
  
@@ -115,7 +177,13 @@
      r.r[1] = (int) j;
  
      e = os_swix(DeleteIcon, &r);
-@@ -205,6 +268,7 @@
+ 
+     return(e);
++#endif /* SKS_ACW */
+ }
+ 
+ os_error * wimp_open_wind(wimp_openstr * o)
+@@ -205,6 +289,7 @@
      os_regset r;
      os_error *e;
  
@@ -123,7 +191,7 @@
      r.r[1] = (int)o;
  
      e = os_swix(OpenWindow, &r);
-@@ -218,6 +282,7 @@
+@@ -218,6 +303,7 @@
      os_regset r;
      os_error *e;
  
@@ -131,7 +199,7 @@
      r.r[1] = (int)&w;
  
      e = os_swix(CloseWindow, &r);
-@@ -235,6 +300,7 @@
+@@ -235,6 +321,7 @@
  
      e = os_swix(RedrawWindow, &r);
  
@@ -139,7 +207,7 @@
      *result = r.r[0];
  
      return(e);
-@@ -250,6 +316,7 @@
+@@ -250,6 +337,7 @@
  
      e = os_swix(UpdateWindow, &r);
  
@@ -147,7 +215,7 @@
      *result = r.r[0];
  
      return(e);
-@@ -265,6 +332,7 @@
+@@ -265,6 +353,7 @@
  
      e = os_swix(GetRectangle, &r);
  
@@ -155,7 +223,7 @@
      *result = r.r[0];
  
      return(e);
-@@ -278,6 +346,7 @@
+@@ -278,6 +367,7 @@
  
      result->o.w = w;
  
@@ -163,7 +231,7 @@
      r.r[1] = (int)result;
  
      e = os_swix(GetWindowState, &r);
-@@ -291,6 +360,7 @@
+@@ -291,6 +381,7 @@
      os_regset r;
      os_error *e;
  
@@ -171,7 +239,7 @@
      r.r[1] = (int)result;
      e = os_swix(GetWindowInfo, &r);
  
-@@ -318,6 +388,7 @@
+@@ -318,6 +409,7 @@
      b.flags_v = value;
      b.flags_m = mask;
  
@@ -179,7 +247,7 @@
      r.r[1] = (int)&b;
  
      e = os_swix(SetIconState, &r);
-@@ -346,6 +417,7 @@
+@@ -346,6 +438,7 @@
  
    e = os_swix(GetIconState, &r);
  
@@ -187,7 +255,7 @@
    *result = b.icon_s;
  
    return(e);
-@@ -367,6 +439,7 @@
+@@ -367,6 +460,7 @@
  
    e = os_swix(GetPointerInfo, &r);
  
@@ -195,7 +263,7 @@
    *result = m.m;
    return(e);
  }
-@@ -377,6 +450,7 @@
+@@ -377,6 +471,7 @@
    os_regset r;
    os_error *e;
  
@@ -203,7 +271,25 @@
    r.r[1] = (int)d;
  
    e = os_swix(DragBox, &r);
-@@ -410,6 +484,7 @@
+@@ -385,6 +480,8 @@
+ }
+ 
+ 
++#ifndef SKS_ACW
++
+ os_error * wimp_force_redraw(wimp_redrawstr * r)
+ {
+   os_error *e;
+@@ -394,6 +491,8 @@
+   return(e);
+ }
+ 
++#endif /* SKS_ACW */
++
+ 
+ os_error * wimp_set_caret_pos(wimp_caretstr * c)
+ {
+@@ -410,6 +509,7 @@
    os_regset r;
    os_error *e;
  
@@ -211,7 +297,7 @@
    r.r[1] = (int)c;
  
    e = os_swix(GetCaretPosition, &r);
-@@ -423,6 +498,7 @@
+@@ -423,6 +523,7 @@
    os_regset r;
    os_error *e;
  
@@ -219,7 +305,7 @@
    r.r[1] = (int)m;
    r.r[2] = x;
    r.r[3] = y;
-@@ -497,6 +573,7 @@
+@@ -497,6 +598,7 @@
    os_regset r;
    os_error *e;
  
@@ -227,7 +313,7 @@
    r.r[1] = (int)name;
  
    e = os_swix(OpenTemplate, &r);
-@@ -527,7 +604,9 @@
+@@ -527,7 +629,9 @@
  
  os_error *wimp_processkey(int chcode)
  {
@@ -238,7 +324,25 @@
  }
  
  #ifndef UROM
-@@ -571,6 +650,7 @@
+@@ -556,6 +660,8 @@
+     return e;
+ }
+ 
++#if !defined(NORCROFT_INLINE_SWIX) /* SKS_ACW */
++
+ os_error *wimp_starttask(char *clicmd)
+ {
+   os_regset r;
+@@ -566,11 +672,16 @@
+   return e;
+ }
+ 
++#endif /* NORCROFT_INLINE_SWIX */ /* SKS_ACW */
++
++#ifndef SKS_ACW
++
+ os_error *wimp_getwindowoutline(wimp_redrawstr *re)
+ {
    os_regset r;
    os_error *e;
  
@@ -246,7 +350,7 @@
    r.r[1] = (int) re;
    e = os_swix(GetWindowOutline, &r);
    return e;
-@@ -581,6 +661,7 @@
+@@ -581,6 +692,7 @@
    os_regset r;
    os_error *e;
  
@@ -254,14 +358,25 @@
    r.r[1] = (int) i;
    e = os_swix(PlotIcon, &r);
    return e;
-@@ -668,20 +749,75 @@
-   return os_swix(BlockCopy, &r);
+@@ -598,6 +710,8 @@
+ }
+ #endif
+ 
++#endif /* SKS_ACW */
++
+ os_error *wimp_readpalette(wimp_palettestr* p)
+ {
+   os_regset r;
+@@ -610,6 +724,8 @@
+   return e;
  }
  
 +#ifndef SKS_ACW
 +
- os_error *wimp_reporterror(os_error* er, wimp_errflags flags, char *name)
+ #ifndef UROM
+ os_error *wimp_setpalette(wimp_palettestr* p)
  {
+@@ -673,15 +789,68 @@
    return os_swi3(os_X | ReportError, (int) er, flags, (int) name);
  }
  
@@ -332,7 +447,7 @@
  }
  
  os_error *wimp_create_submenu(wimp_menustr *sub, int x, int y)
-@@ -696,6 +832,8 @@
+@@ -696,6 +865,8 @@
    return e;
  }
  
@@ -341,7 +456,7 @@
  os_error *wimp_slotsize(int *currentslot /*inout*/,
                          int *nextslot /*inout*/,
                          int *freepool /*out*/) {
-@@ -705,6 +843,8 @@
+@@ -705,6 +876,8 @@
    return e;
  }
  
@@ -350,3 +465,23 @@
  os_error *wimp_transferblock(
    wimp_t sourcetask,
    char *sourcebuf,
+@@ -735,11 +908,19 @@
+  return os_swix(SpriteOp, r) ;
+ }
+ 
++#ifndef SKS_ACW
++
+ os_error *wimp_setfontcolours(int foreground, int background)
+ {
++#if defined(NORCROFT_INLINE_SWIX)
++    return(_swix(Wimp_SetFontColours, _INR(0, 2), 0, background, foreground));
++#else
+   return os_swi3(os_X | SetFontColours, 0, background, foreground);
++#endif
+ }
+ 
++#endif /* SKS_ACW */
++
+ os_error *wimp_readpixtrans(sprite_area *area, sprite_id *id,
+                          sprite_factors *factors, sprite_pixtrans *pixtrans)
+ {

@@ -24,7 +24,7 @@ message_output(
     _In_z_      PC_U8Z buffer);
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr(
     STATUS errornumber,
     _In_opt_z_  PC_U8Z text,
@@ -35,23 +35,28 @@ reperr_getstr(
     STATUS errornumber);
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_null(
     STATUS errornumber);
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_not_installed(
     STATUS errornumber);
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 rep_fserr(
     _In_z_      PC_U8Z str);
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_kernel_oserror(
+    _In_        _kernel_oserror * const err);
+
+/*ncr*/
+extern BOOL /*TRUE->is_error*/
+report_if_kernel_oserror(
     _In_        _kernel_oserror * const err);
 
 /* error definition */

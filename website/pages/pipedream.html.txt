@@ -1,0 +1,55 @@
+﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+
+<h2>What is PipeDream 4?</h2>
+
+PipeDream 4 can be used for word processing: to create letters, reports, invitations, film scripts and books. You can also use PipeDream 4 as a spreadsheet: to create ledgers, simple shopping lists, complex scientific models and cash flow forecasts. You can even use PipeDream 4 as a database for storing parts lists, names and addresses, details of personal collections and mark sheets.
+
+PipeDream 4 can help you do things that would be very difficult or impossible with other programs. For example:
+
+<ul>
+    <li>Include live calculations in your word processing;</li>
+    <li>Annotate your spreadsheets with formattable paragraphs of text;</li>
+    <li>Write a letter in your word processor and send it to a selection of people from your names and addresses database;</li>
+    <li>Check the spelling of your spreadsheet;</li>
+    <li>Sort into alphabetical order the list that you have just typed into your word processor;</li>
+    <li>Create a new field containing calculations in your database and sort on it;</li>
+    <li>Create live charts from data in your spreadsheets and databases and include the charts in your reports.</li>
+</ul>
+
+PipeDream 4 was the winner of the non-commercial software category in the RISC OS Awards for 2019.
+
+PipeDream 4 is available only for RISC OS. It can be used under emulation (using <a href="https://www.marutan.net/rpcemu/">RPCEmu<a/>) on Microsoft Windows, Linux and macOS.
+
+<h2>Where can I find PipeDream 4?</h2>
+
+Under <a href="/coltsoft/pipedream/downloads/" title="Downloads">Downloads</a>, you will find the latest released program and an archive of older versions, together with a copy of the Examples package and the Manuals package (containing the <em>Getting Started Guide</em> and <em>Reference Guide</em> for off-line use).
+
+If you download either of the <a href="https://www.marutan.net/rpcemu/">RPCEmu<a/> <a href="https://www.marutan.net/rpcemu/easystart.html">Easy Start Bundles</a> you will find a copy of PipeDream 4 already installed.
+
+The source is available from a Subversion repository kindly hosted on <a href="http://www.riscos.info/index.php/PipeDream" title="Source">riscos.info</a> .
+
+<h2>Open Source Licensing</h2>
+
+Thanks to Richard Colton, PipeDream 4 is now open source and completely free to use!
+
+PipeDream 4 is released under the <a href="https://mozilla.org/MPL/2.0/">Mozilla Public License 2.0</a> (MPL). Why MPL you may ask? <a href="https://julien.ponge.org/blog/mozilla-public-license-v2-a-good-middleground/" target="_blank">This blog</a> shows why it's a good thing.
+
+PipeDream 4 <a href="/coltsoft/pipedream/getting_started/" title="Getting Started Guide"><em>Getting Started Guide</em></a> and <a href="/coltsoft/pipedream/reference_guide/" title="Reference Guide"><em>Reference Guide</em></a> are also released under the MPL.
+
+PipeDream 4 Examples are licensed under a <a href="http://creativecommons.org/licenses/by-sa/4.0/deed.en_GB">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+
+<h2>Support for PipeDream 4</h2>
+
+As PipeDream 4 is now completely free to use, support is a self-help affair.
+
+There is a Google Group <a href="http://groups.google.co.uk/group/colton-software-pipedream" target="_blank" title="colton-software-pipedream">colton-software-pipedream</a> where you may seek help from other users. Please include files which demonstrate any problems (using a Spark or ZIP archive).
+
+To subscribe to this restricted group e-mail: <a href="mailto:colton-software-pipedream+subscribe@googlegroups.com">colton-software-pipedream+subscribe@googlegroups.com</a>
+
+<h2>Older versions of PipeDream</h2>
+
+PipeDream 3 was the winner of the 1989/90 BBC Acorn User Award for Best 32-bit Business Software. PipeDream 3 was also runner-up in the Best 32-bit Educational Software and Best 32-bit DTP/Word Processor categories. PipeDream 3 is not available for download as it is not directly compatible with modern RISC OS systems. If you have a copy and wish to use it on such systems, you will need to use <a target="_blank" href="http://sendiri.co.uk/aemulor/">Aemulor</a>.
+
+PipeDream 2 for MS-DOS may be obtained from <a href="http://www.rakewell.com/pc/pc_z.shtml">rakewell.com</a>.
+
+View Professional on the BBC Micro can be considered to be the first PipeDream.

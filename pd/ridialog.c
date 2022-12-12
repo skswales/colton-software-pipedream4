@@ -1637,7 +1637,7 @@ dproc_aboutfile(
     rs.r[1] = 0;
     rs.r[2] = filetype;
     rs.r[3] = 0;
-    if(NULL != WrapOsErrorReporting(_kernel_swi(OS_FSControl, &rs, &rs)))
+    if( WrapOsErrorReporting_IsError(_kernel_swi(OS_FSControl, &rs, &rs)) )
         tempstring[0] = CH_NULL;
     else
     {
@@ -1654,13 +1654,18 @@ dproc_aboutfile(
     } /*block*/
 
     { /* textual representation of file modification date/time */
+#if defined(NORCROFT_INLINE_SWIX)
+    if( WrapOsErrorReporting_IsError(_swix(OS_ConvertStandardDateAndTime, _INR(0,2), &currentfileinfo, tempstring, sizeof32(tempstring))) )
+        tempstring[0] = CH_NULL;
+#else
     _kernel_swi_regs rs;
 
     rs.r[0] = (int) &currentfileinfo;
     rs.r[1] = (int) tempstring;
     rs.r[2] = sizeof32(tempstring);
-    if(NULL != WrapOsErrorReporting(_kernel_swi(OS_ConvertStandardDateAndTime, &rs, &rs)))
+    if( WrapOsErrorReporting_IsError(_kernel_swi(OS_ConvertStandardDateAndTime, &rs, &rs)) )
         tempstring[0] = CH_NULL;
+#endif
 
     tempstring[sizeof(tempstring)-1] = CH_NULL; /* Ensure terminated */
 
@@ -1689,7 +1694,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2022 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987" "\x97" "2022 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 
@@ -2033,7 +2038,7 @@ dproc_loadfile(
     BOOL can_restore_caret = TRUE;
     BOOL do_restore_caret = TRUE;
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         can_restore_caret = FALSE;
 
     assert_dialog(3, D_LOAD);
@@ -2220,7 +2225,7 @@ savefile_saveproc(
         else
         {
             wimp_mousestr ms;
-            if(NULL != WrapOsErrorReporting(wimp_get_point_info(&ms)))
+            if( WrapOsErrorReporting_IsError(wimp_get_point_info(&ms)) )
             {
                 pointer_window_handle = HOST_WND_NONE;
             }
@@ -2328,7 +2333,7 @@ dproc_savefile_common(
     BOOL can_restore_caret = TRUE;
     BOOL do_restore_caret = FALSE;
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         can_restore_caret = FALSE;
 
     i->dptr = dptr;
@@ -2674,9 +2679,7 @@ extended_colours_update_patch(
     const HOST_WND window_handle = dbox_window_handle(dialog__dbox);
     U8Z buffer[32];
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     /*reportf("ecup: %i was '%s' and '%s'", icon_handle, icon_state.icon.data.it.buffer, icon_state.icon.data.it.validation);*/
@@ -2763,7 +2766,6 @@ dproc_extended_colours(
     DIALOG *dptr)
 {
     dbox_field f;
-    S32 i;
     DIALOG temp_dialog[N_COLOURS]; /* update temp copy! */
     WimpCaret caret;
     BOOL can_restore_caret = TRUE;
@@ -2771,13 +2773,13 @@ dproc_extended_colours(
 
     assert_dialog(N_COLOURS - 1, D_EXTENDED_COLOURS);
 
-    for(i = 0; i < N_COLOURS; i++)
+    for(S32 i = 0; i < N_COLOURS; i++)
         temp_dialog[i] = dptr[i];
 
-    for(i = 0; i < N_COLOURS; i++)
+    for(S32 i = 0; i < N_COLOURS; i++)
         extended_colours_update_patch(i + extcolours_Patch, get_option_as_u32(&dptr[i].option));
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         can_restore_caret = FALSE;
 
     do_restore_caret = TRUE; /* have to restore manually as it's not a real submenu window */
@@ -2801,10 +2803,9 @@ dproc_extended_colours(
         {   /* one of the Edit.. buttons has been clicked */
             /* move from this modal dialogue box to the colour picker */
             const S32 idx = f - extcolours_Edit;
+            const wimp_i icon_handle = idx + extcolours_Label;
             WimpGetIconStateBlock icon_state;
-            icon_state.window_handle = dbox_window_handle(dialog__dbox);
-            icon_state.icon_handle = idx + extcolours_Label;
-            if(NULL == WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+            if( !WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(dbox_window_handle(dialog__dbox), icon_handle, &icon_state)) )
             {
                 const char * title = icon_state.icon.data.it.buffer;
 
@@ -2822,7 +2823,7 @@ dproc_extended_colours(
     if(!dialog__fillin_ok)
         return;
 
-    for(i = 0; i < N_COLOURS; i++)
+    for(S32 i = 0; i < N_COLOURS; i++)
     {
         dptr[i].option = temp_dialog[i].option;
         reportf("colours[%d]: " U32_XTFMT, i, dptr[i].option);

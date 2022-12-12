@@ -14,13 +14,13 @@
 </head>
 <body>
     <h1 id="Dates">Date and Time Functions</h1>
-    <p>PipeDream has a set of date and time functions which enable you to build dates and times in number cells and do calculations with them.</p>
+    <p>PipeDream 4 has a set of date and time functions which enable you to build dates and times in number cells and do calculations with them.</p>
     <p>You can enter dates and times in one of three ways:</p>
     <ul>
         <li>typing the date in the form <code>25.12.1973</code> or <code>25.12.73</code> or the time in the form <code>23:59:59</code>;</li>
-        <li>using the TODAY function which gives the current date;</li>
-        <li>using the NOW function which gives the current date and time;</li>
-        <li>using the functions DATE and TIME.</li>
+        <li>using the <span class="csg-function">TODAY()</span> function which gives the current date;</li>
+        <li>using the <span class="csg-function">NOW()</span> function which gives the current date and time;</li>
+        <li>using the functions <span class="csg-function">DATE()</span> and <span class="csg-function">TIME()</span>.</li>
     </ul>
 
     <h2 class="csg-function" id="AGE">AGE</h2>
@@ -37,7 +37,7 @@
     <h5>Example:</h5>
     <p>AGE(26.6.1994, 25.8.1982)</p>
     <p>returns the age as a number, expressed as 12.10, that is, someone aged 12 years and 10 months.</p>
-    <p>Use INT() to extract the number of years from the result and 100*(n-INT(n)) to extract the number of months.</p>
+    <p>Use <span class="csg-function">INT()</span> to extract the number of years from the result and <code>100*(n-INT(n))</code> to extract the number of months.</p>
 
     <h2 class="csg-function" id="DATE">DATE</h2>
     <h5>Syntax:</h5>
@@ -109,13 +109,14 @@
     <p>returns <code>29</code>.</p>
 
     <h2 class="csg-function" id="MONTHNAME">MONTHNAME</h2>
-    <p>MONTHNAME(<span class="csg-function-parameter">number</span>|<span class="csg-function-parameter">date</span>)</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">MONTHNAME(<span class="csg-function-parameter">number</span>|<span class="csg-function-parameter">date</span>)</p>
     <p>Returns a month name string corresponding to the <span class="csg-function-parameter">number</span> or <span class="csg-function-parameter">date</span> (where January is month one).</p>
 
     <h2 class="csg-function" id="NOW">NOW</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">NOW</p>
-    <p>Returns today&rsquo;s date and time, in the form <code>2.9.1991 18:33:04</code>.</p>
+    <p>Returns today’s date and time, in the form <code>2.9.1991 18:33:04</code>.</p>
 
     <h2 class="csg-function" id="SECOND">SECOND</h2>
     <h5>Syntax:</h5>
@@ -148,7 +149,7 @@
     <h2 class="csg-function" id="TODAY">TODAY</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">TODAY</p>
-    <p>Returns today&rsquo;s date, in the form <code>2.9.1991</code>.</p>
+    <p>Returns today’s date, in the form <code>2.9.1991</code>.</p>
 
     <h2 class="csg-function" id="WEEKDAY">WEEKDAY</h2>
     <h5>Syntax:</h5>
@@ -159,7 +160,8 @@
     <p>returns <code>6</code> (Friday).</p>
 
     <h2 class="csg-function" id="WEEKNUMBER">WEEKNUMBER</h2>
-    <p>WEEKNUMBER(<span class="csg-function-parameter">date</span>)</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">WEEKNUMBER(<span class="csg-function-parameter">date</span>)</p>
     <p>Returns the week number corresponding to the <span class="csg-function-parameter">date</span>.</p>
     <h5>Revisions:</h5>
     <p>This function was added in 4.50/06.</p>

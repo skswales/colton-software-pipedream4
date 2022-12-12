@@ -1,5 +1,5 @@
-ReadMe for PipeDream Build
---------------------------
+ReadMe for PipeDream 4 Build
+----------------------------
 
 ** This Source Code Form is subject to the terms of the Mozilla Public
 ** License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +29,7 @@ First-time configuration and build
 
 Ensure that the system has 'seen' AcornC/C++ and set that environment.
 
-Run !!!Boot to set up the PipeDream build environment.
+Run !!!Boot to set up the PipeDream 4 build environment.
 
 Run configure to create the build directories.
 
@@ -39,9 +39,10 @@ RISC_OSLib with PipeDream-specific build options. See ^.WimpLib.ReadMe and
 
 Run !Amu.
 
-Drag 'r32.Makefile' to !Amu... and wait...  A PipeDream build takes
-about 16 minutes on a SA RISC PC.  Building on an ARMX6 takes about
-one minute.
+Drag 'r32.Makefile' to !Amu... and wait... hopefully not very long.
+
+A PipeDream 4 build takes about thirty to forty seconds on a Raspberry Pi 4
+(depending on your overclock) and about sixteen minutes on a SA RISC PC.
 
 
 Subsequent builds
@@ -51,7 +52,7 @@ After any reboot, you will need to:
 
 Ensure that the system has 'seen' AcornC/C++ and set that environment.
 
-Run !!!Boot to set up the PipeDream build environment.
+Run !!!Boot to set up the PipeDream 4 build environment.
 
 Run !Amu.
 

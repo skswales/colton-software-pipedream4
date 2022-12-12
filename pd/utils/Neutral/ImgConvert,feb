@@ -6,10 +6,10 @@
 |
 | Copyright © 2020-2022 Stuart Swales
 |
-If "%*0"="" Then Error This utility is used by PipeDream to convert image files
-If "<ChangeFSI$Dir>"="" Then Error 0 PipeDream needs ChangeFSI to convert this file
+If "%*0"="" Then Error 0 This utility is used by PipeDream 4 to convert image files
+If "<ChangeFSI$Dir>"="" Then Error 0 PipeDream 4 needs ChangeFSI to convert this file
 IfThere <ChangeFSI$Dir>.ChangeFSI Then Else Error 0 ChangeFSI is missing
 |
-RMEnsure UtilityModule 3.60 Error ChangeFSI can only be run under RISC OS 3.60 or later
+RMEnsure UtilityModule 3.60 Error 0 ChangeFSI can only be run under RISC OS 3.60 or later
 WimpSlot -min 320K -max 508K
 Run <ChangeFSI$Dir>.ChangeFSI %*0

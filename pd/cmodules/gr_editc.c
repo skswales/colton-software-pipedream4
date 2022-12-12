@@ -966,11 +966,28 @@ gr_riscdiag_path_render(
         if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
             fill = (drawmod_filltype) (fill | ((pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK) >> 5));
 
+#if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+        e = _swix(Draw_Fill, _INR(0,3),
+                  bodge_path_seq /* path sequence */,
+                  fill_Default   /* fill style    */,
+                  &path_xform    /* xform matrix  */,
+                  /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
+                  2 * GR_RISCDRAW_PER_RISCOS);
+#elif 1
+        _kernel_swi_regs rs;
+        rs.r[0] = (int) bodge_path_seq.wordp /* path sequence */;
+        rs.r[1] =       fill_Default         /* fill style    */;
+        rs.r[2] = (int) &path_xform          /* xform matrix  */;
+                  /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
+        rs.r[3] =       2 * GR_RISCDRAW_PER_RISCOS;
+        e = _kernel_swi(Draw_Fill, &rs, &rs);
+#else
         e = drawmod_fill(bodge_path_seq /* path sequence */,
                          fill_Default   /* fill style    */,
                          &path_xform    /* xform matrix  */,
                          /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
                          2 * GR_RISCDRAW_PER_RISCOS);
+#endif
 
         if(NULL != e)
             return(0);
@@ -994,10 +1011,14 @@ gr_riscdiag_path_render(
         { /* New machines usually demand this mechanism */
         int colnum_foreground = gr_editc_colourtrans_ReturnColourNumber(os_rgb_foreground);
         int colnum_background = gr_editc_colourtrans_ReturnColourNumber(os_rgb_background);
+#if defined(NORCROFT_INLINE_SWIX)
+        (void) _swix(OS_SetColour, _INR(0,1), 3, colnum_foreground ^ colnum_background);
+#else
         _kernel_swi_regs rs;
         rs.r[0] = 3;
         rs.r[1] = colnum_foreground ^ colnum_background;
         (void) _kernel_swi(OS_SetColour, &rs, &rs);
+#endif
         } /*block*/
 
         fill = (drawmod_filltype) (fill_FBint | fill_FNonbint | fill_FBext);
@@ -1016,10 +1037,22 @@ gr_riscdiag_path_render(
         line.spec.trail_tricap_h = (pObject.path->pathstyle.tricap_h * pObject.path->pathwidth) / 16;
         line.dash_pattern        = (P_ANY) line_dash_pattern;
 
+#if 1
+        _kernel_swi_regs rs;
+        rs.r[0] = (int) bodge_path_seq.wordp /* path sequence */;
+        rs.r[1] =       fill                 /* fill style    */;
+        rs.r[2] = (int) &path_xform          /* xform matrix  */;
+        rs.r[3] =       line.flatness;
+        rs.r[4] =       line.thickness;
+        rs.r[5] = (int) &line.spec;
+        rs.r[6] = (int) line.dash_pattern;
+        e = _kernel_swi(Draw_Stroke, &rs, &rs);
+#else
         e = drawmod_stroke(bodge_path_seq /* path sequence */,
                            fill           /* fill style    */,
                            &path_xform    /* xform matrix  */,
                            &line          /* line style    */);
+#endif
 
         if(NULL != e)
             return(0);
@@ -1077,15 +1110,13 @@ gr_chartedit_selection_xor(
 
     gr_chartedit_riscos_setup_update(cep, &cep->selection.p_gr_diag->gr_riscdiag.draw_diag.data, &update_and_redraw_window_block.update);
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
 
     while(more)
     {
         gr_chartedit_selection_xor_core(cep, &update_and_redraw_window_block.redraw);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
     }
 }
 
@@ -1255,9 +1286,7 @@ gr_chartedit_riscos_Open_Window_Request(
     if(0 == cep->riscos.heading_size)
     {   /* on first open read baseline from an icon offset in the window */
         WimpGetIconStateBlock icon_state;
-        icon_state.window_handle = cep->riscos.window_handle;
-        icon_state.icon_handle = GR_CHARTEDIT_TEM_ICON_BASE;
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(cep->riscos.window_handle, GR_CHARTEDIT_TEM_ICON_BASE, &icon_state)) )
             icon_state.icon.bbox.ymin = -32;
 
         /*                   +ve =                                   small -ve/+ve +                      larger +ve */
@@ -1305,7 +1334,7 @@ gr_chartedit_riscos_Open_Window_Request(
         open_window_request.visible_area.ymin -= GR_CHARTEDIT_DISPLAY_TM_OS;
     }
 
-    if(NULL != WrapOsErrorReporting(winx_open_window(&open_window_request)))
+    if( WrapOsErrorReporting_IsError(winx_open_window(&open_window_request)) )
         return(TRUE);
 
     /* open_window_request has been updated to give actual opened state */
@@ -1466,17 +1495,13 @@ gr_chartedit_riscos_Redraw_Window_Request(
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
 
-    redraw_window_block.window_handle = redraw_window_request->window_handle;
-
-    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_redraw_window_x(redraw_window_request->window_handle, &redraw_window_block, &more)); /* more := FALSE on error */
 
     while(more)
     {
         gr_chartedit_riscos_redraw_core(cep, &redraw_window_block);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)); /* more := FALSE on error */
     }
 
     return(TRUE);
@@ -1558,15 +1583,13 @@ gr_chartedit_riscos_force_redraw(
     if(immediate)
     {
         /* call redraw handler in update loop to get more instant effects */
-        if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
 
         while(more)
         {
             gr_chartedit_riscos_redraw_core(cep, &update_and_redraw_window_block.redraw);
 
-            if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
-               more = FALSE;
+            void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
         }
     }
     else

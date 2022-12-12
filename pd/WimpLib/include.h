@@ -67,6 +67,12 @@
 #define PDACTION 1
 #define DBOX_MOTION_UPDATES 1
 
+
+#if !CROSS_COMPILE
+#define NORCROFT_INLINE_ASM 1
+#endif
+
+
 /* standard includes for WimpLib */
 
 #include "cmodules/coltsoft/ansi.h"
@@ -115,6 +121,8 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #ifndef __swis_h
 #include "swis.h" /* C: */
 #endif
+
+#define _XOS(swi_no) ((swi_no) | (1U << 17))
 
 #ifndef __os_h
 #include "os.h"

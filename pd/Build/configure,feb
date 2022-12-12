@@ -4,7 +4,7 @@
 |
 | Copyright © 2012-2022 Stuart Swales
 |
-Set pd$configure$tokenize &.^.^.coltsoft.pipedream__4_60__branch.cs-free.SFryatt.tokenize
+Set pd$configure$tokenize &.^.^.coltsoft.pipedream__4_61__branch.cs-free.SFryatt.tokenize
 IfThere <pd$configure$tokenize> Then Copy <pd$configure$tokenize> <Obey$Dir>.Tools.tokenize ~C~VN
 Unset pd$configure$tokenize
 IfThere <Obey$Dir>.Tools.tokenize Then Else Error 0 Use Tools.GetTokenize to get a copy of Tokenize from https://www.stevefryatt.org.uk/risc-os/tokenize

@@ -1,0 +1,66 @@
+﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/"><strong>Downloads</strong></a>
+
+Here you will find the latest releases and archive of older versions.
+
+<h2>Current Releases</h2>
+
+A comprehensive PipeDream package containing the application, documentation and examples is obtainable via the PlingStore catalogue.
+
+Individual packages may be obtained and installed using PackMan. These are all RISC OS RiscPkg format files (a ZIP format).
+
+<strong>PipeDream</strong>
+2022-18-04 <a href="/coltsoft-downloads/pipedream/PipeDream/PipeDream_4_60_02.zip">4.60.02</a>
+
+<strong>PipeDream Examples</strong>
+2020-03-21 <a href="/coltsoft-downloads/pipedream/PDExamples/PDExamples_20200321.zip">Examples 20200321</a>
+
+<strong>PipeDream Manuals (Getting Started and Reference Guides for off-line use)</strong>
+2020-06-11 <a href="/coltsoft-downloads/pipedream/PDManuals/PDManuals_20220722.zip">Manuals 20220722</a>
+
+<strong>Lotus 1-2-3 .WK1 to PipeDream converter</strong>
+2022-07-22 <a href="/coltsoft-downloads/pipedream/PipeDream-123PD/PipeDream-123PD_1_16.zip">123PD 1.16</a>
+
+<strong>PipeDream to Lotus 1-2-3 .WK1 converter</strong>
+2022-07-22 <a href="/coltsoft-downloads/pipedream/PipeDream-PD123/PipeDream-PD123_1_16.zip">PD123 1.16</a>
+
+The source is available from a Subversion repository kindly hosted on <a href="http://www.riscos.info/index.php/PipeDream">riscos.info</a>.
+
+<strong>PipeDream Tutorial</strong> (ZIP format archive)
+2020-06-09 <a href="/coltsoft-downloads/pipedream/PDManuals/PDManuals_20200503.zip">Tutorial 20200609</a>
+This Tutorial-only zip file contains files with ten or fewer characters, suitable for use on systems without long file name support.
+
+<strong>PipeDream Dictionaries</strong> (ZIP format archive)
+2016-01-17 <a href="/coltsoft-downloads/pipedream/PDDicts_20160117.zip">PDDicts 20160117 (en-GB)</a>
+
+<h2>Previous Releases</h2>
+
+Versions older than those listed below may be found on the <a href="https://sourceforge.net/projects/coltonsoftwarepipedream/">PipeDream (Colton Software) SourceForge</a> site.
+
+2022-08-04 <a href="/coltsoft-downloads/pipedream/PipeDream/PipeDream_4_60_01.zip">4.60.01</a>
+2022-07-22 4.60 (withdrawn - file type error at startup)
+2021-10-01 <a href="/coltsoft-downloads/pipedream/PipeDream/PipeDream_4_59_01.zip">4.59.01</a>
+2021-09-06 <a href="/coltsoft-downloads/pipedream/PipeDream/PipeDream_4_59_00.zip">4.59</a>
+
+2019-12-20 <a href="/coltsoft-downloads/pipedream/PDExamples/PDExamples_20191220.zip">Examples 20191220</a>
+
+2020-06-11 <a href="/coltsoft-downloads/pipedream/PDManuals/PDManuals_20200611.zip">Manuals 20200611</a>
+
+2021-09-12 <a href="/coltsoft-downloads/pipedream/PipeDream-123PD/PipeDream-123PD_1_15.zip">123PD 1.15</a>
+
+2021-09-12 <a href="/coltsoft-downloads/pipedream/PipeDream-PD123/PipeDream-PD123_1_15.zip">PD123 1.15</a>
+
+<h2>Items of historical interest</h2>
+
+1992-05-22 <a href="/coltsoft-downloads/pipedream/Historic/PD_Impres_19920522_102.zip">PD_Impres_19920522_102</a>
+
+This ZIP archive contains the PipeDream to Impression DDF file converter.
+
+It is a 26-bit application and has been observed to work on 32-bit RISC OS under Aemulor Pro. YMMV.
+
+1989-07-21 <a href="/coltsoft-downloads/pipedream/Historic/Z88FS_19890721_100.zip">Z88FS_19890721_100</a>
+
+This ZIP archive contains the Z88: filing system and desktop filer module to allow files to be transferred to RISC OS from Z88 PC-LINK and vice versa.
+
+It is a 26-bit module and is likely only to work on older 26-bit RISC OS versions. It hasn't been tested since the mid-1990s!
+
+The Z88 lives on at <a href="http://www.rakewell.com">rakewell.com</a> - please do visit their site!

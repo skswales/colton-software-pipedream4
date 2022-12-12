@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="../csv.html">Prev</a> </td>
                 <td><a href="../../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="../fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="database.html">Next</a></td>
             </tr>
@@ -28,7 +28,7 @@
 
     <h1 id="Custom">Custom Functions</h1>
     <p>
-        PipeDream enables you to define your own functions.
+        PipeDream 4 enables you to define your own functions.
         You can use custom functions to simplify specialised calculations which you often perform.
         Custom functions store in one place specialised formulae which you can use in many places.
     </p>
@@ -39,10 +39,10 @@
         This is done by typing its definition into a document which becomes a <em>custom function sheet</em>.
         Custom function sheets behave differently to ordinary PipeDream documents.
     </p>
-    <p>The definition starts with the function called FUNCTION and ends with the function called RESULT.</p>
+    <p>The definition starts with the function called <span class="csg-function">FUNCTION</span> and ends with the function called <span class="csg-function">RESULT()</span>.</p>
     <p>Before you define the function, you need to make the following decisions:</p>
     <ul>
-        <li>What is the function&rsquo;s name?</li>
+        <li>What is the function’s name?</li>
         <li>What parameters does the function have?</li>
         <li>Do the types of the function parameters need to be specified?</li>
         <li>What does the function do?</li>
@@ -51,7 +51,7 @@
 
     <h2 id="Calling">Calling the Function</h2>
     <p>
-        You call a custom function by typing its name into a formula, just as you do with built-in functions such as SUM.
+        You call a custom function by typing its name into a formula, just as you do with built-in functions such as <span class="csg-function">SUM</span>.
         Calls to custom functions are usually external references and so need to be prefixed by <code>[file]</code>,
         where <code>file</code> is the name of the custom function sheet.
         The exception to this is when you call one custom function from within another custom function on the same custom function sheet.
@@ -70,34 +70,34 @@
 
     <h2 id="FUNCTION">FUNCTION</h2>
     <p>
-        The function FUNCTION is used to define a custom function.
-        Any document containing FUNCTION automatically becomes a custom function sheet.
-        FUNCTION must have at least one parameter and may have several.
-        All parameters to FUNCTION must be strings.
+        The function <span class="csg-function">FUNCTION()</span> is used to define a custom function.
+        Any document containing <span class="csg-function">FUNCTION</span> automatically becomes a custom function sheet.
+        <span class="csg-function">FUNCTION</span> must have at least one parameter and may have several.
+        All parameters to <span class="csg-function">FUNCTION</span> must be strings.
     </p>
     <p>The first parameter is the name of the custom function which you are defining.</p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>FUNCTION("fred")</code></p>
-    <p>defines a custom function called &lsquo;fred&rsquo;.</p>
-    <p>Parameters to FUNCTION after the first one specify the parameters to the custom function.</p>
+    <p>defines a custom function called <code><em>fred</em></code>.</p>
+    <p>Parameters to <span class="csg-function">FUNCTION</span> after the first one specify the parameters to the custom function.</p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>FUNCTION("my_add","number_l","number_2")</code></p>
-    <p>defines a custom function called &lsquo;my_add&rsquo; with two parameters, called &lsquo;number_1&rsquo; and &lsquo;number_2&rsquo;.</p>
+    <p>defines a custom function called <em>my_add</em> with two parameters, called <em>number_1</em> and <em>number_2</em>.</p>
     <p>You can specify the types of the parameters and it is usually best to do so.</p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>FUNCTION("my_divide","one:number","two:number")</code></p>
     <p>
-        defines a custom function called &lsquo;my_divide&rsquo; with two parameters called &lsquo;one&rsquo; and &lsquo;two&rsquo;, both of which must be numbers.
+        defines a custom function called <code><em>my_divide</em></code> with two parameters called <em>one</em> and <em>two</em>, both of which must be numbers.
         Note that the type must be preceded by a colon.
     </p>
     <p>Several possible types may be given for each parameter, separated by commas.</p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>FUNCTION("my_convert","one:date,text","two:number")</code></p>
     <p>
-        defines a custom function called &lsquo;my_convert&rsquo; with two parameters called &lsquo;one&rsquo; and &lsquo;two&rsquo;.
-        Parameter &lsquo;one&rsquo; can be either a date or a text string; &lsquo;two&rsquo; must be a number.
+        defines a custom function called <code><em>my_convert</em></code> with two parameters called <em>one</em> and <em>two</em>.
+        Parameter <em>one</em> can be either a date or a text string; <em>two</em> must be a number.
     </p>
-    <p>Possible types are the same as those which may be returned by the TYPE function:</p>
+    <p>Possible types are the same as those which may be returned by the <span class="csg-function">TYPE()</span> function:</p>
     <table border="0" class="csg-sample-indent">
         <col>
         <col>
@@ -129,17 +129,17 @@
         </tbody>
     </table>
     <p>
-        If you don&rsquo;t specify a type, PipeDream assumes that the function will accept numbers, text and dates.
-        If none of the custom function&rsquo;s parameters has the type set to array and you pass an array or range of cells to it, PipeDream performs automatic array expansion.
+        If you don’t specify a type, PipeDream assumes that the function will accept numbers, text and dates.
+        If none of the custom function’s parameters has the type set to array and you pass an array or range of cells to it, PipeDream performs automatic array expansion.
     </p>
 
     <h2 id="Parameters">Parameters</h2>
-    <p>When you want to use a parameter within a custom function, you need to give its name as defined in FUNCTION, preceded by an <code>@</code> character.</p>
+    <p>When you want to use a parameter within a custom function, you need to give its name as defined in <span class="csg-function">FUNCTION</span>, preceded by an <code>@</code> character.</p>
     <p>For example, inside the function <code>my_add</code> defined above, you might type:</p>
     <p class="csg-sample-indent"><code>@number_1+@number_2</code></p>
 
     <h2 id="RESULT">RESULT</h2>
-    <p>When the custom function has finished its processing, you must return a result using the function RESULT.</p>
+    <p>When the custom function has finished its processing, you must return a result using the function <span class="csg-function">RESULT()</span>.</p>
     <h5>Examples:</h5>
     <p class="csg-sample-indent"><code>RESULT(10)</code></p>
     <p>returns 10 to the caller.</p>
@@ -150,24 +150,24 @@
     <p>
         On a custom function sheet, recalculation, or execution of custom function statements, works differently to a normal PipeDream document.
         You can start a custom function in any cell you like on a custom function sheet.
-        Type FUNCTION into the cell where you want to start the custom function.
-        Execution then proceeds down the column containing FUNCTION.
+        Type <span class="csg-function">FUNCTION()</span> into the cell where you want to start the custom function.
+        Execution then proceeds down the column containing <span class="csg-function">()</span>.
         A custom function sheet can contain many custom functions.
     </p>
     <p>
         PipeDream proceeds row by row, evaluating the formula in each cell.
         The result of the formula is then stored in the cell.
-        You can&rsquo;t see the results on a custom function sheet because PipeDream always shows the formulae rather than the results in custom function sheets.
+        You can’t see the results on a custom function sheet because PipeDream always shows the formulae rather than the results in custom function sheets.
     </p>
     <p>
-        Unless you use one of the custom function control statements, such as FOR, IF or WHILE,
-        execution keeps going down the column until RESULT is found, at which point control passes back to the caller.
+        Unless you use one of the custom function control statements, such as <span class="csg-function">FOR()</span>, <span class="csg-function">IF()</span> or <span class="csg-function">WHILE()</span>,
+        execution keeps going down the column until <span class="csg-function">RESULT()</span> is found, at which point control passes back to the caller.
     </p>
     <p>Formulae on custom function sheets are displayed with three dots (...) before them so that you can distinguish the formulae from text cells.</p>
 
     <h2 id="Statements">Custom Function Control Statements</h2>
     <p>The custom function control statements are:</p>
-    <ul>
+    <span class="csg-function"><ul>
         <li>BREAK</li>
         <li>CONTINUE</li>
         <li>ELSE</li>
@@ -182,12 +182,12 @@
         <li>RESULT</li>
         <li>UNTIL</li>
         <li>WHILE</li>
-    </ul>
+    </ul></span>
     <p>
         These statements can be used to modify the flow of execution within a custom function.
-        Normally, execution proceeds down the column starting at the cell after FUNCTION and ending at RESULT.
+        Normally, execution proceeds down the column starting at the cell after <span class="csg-function">FUNCTION()</span> and ending at <span class="csg-function">()</span>.
         Most control statements must appear in a cell on their own.
-        Exceptions to this are BREAK, CONTINUE, RESULT and GOTO which can appear in function parameters.
+        Exceptions to this are <span class="csg-function">BREAK</span>, <span class="csg-function">CONTINUE</span>, <span class="csg-function">RESULT()</span> and <span class="csg-function">GOTO()</span> which can appear in function parameters.
     </p>
     <h5>Examples:</h5>
     <pre class="csg-sample-indent">
@@ -197,11 +197,11 @@ IF(C&lt;=D,RESULT(C))
 
     <h2 id="IF">IF &hellip; ELSE &hellip; ELSEIF &hellip; ENDIF</h2>
     <p>
-        When IF is used with one parameter, it starts an IF &hellip; ENDIF sequence.
+        When <span class="csg-function">IF()</span> is used with one parameter, it starts an <span class="csg-function">IF</span> &hellip; <span class="csg-function">ENDIF</span> sequence.
         The parameter is a condition and if the condition is true, execution continues on the following line.
-        If the condition is not true, execution jumps to the first line after the IF statement which contains an ELSE or an ELSEIF or an ENDIF.
-        You must have an IF before ELSE, ELSEIF or ENDIF.
-        You do not need to provide ELSE or ELSEIF statements but you must provide an ENDIF.
+        If the condition is not true, execution jumps to the first line after the <span class="csg-function">IF</span> statement which contains an <span class="csg-function">ELSE</span> or an <span class="csg-function">ELSEIF</span> or an <span class="csg-function">ENDIF</span>.
+        You must have an <span class="csg-function">IF()</span> before <span class="csg-function">ELSE</span>, <span class="csg-function">ELSEIF()</span> or <span class="csg-function">ENDIF</span>.
+        You do not need to provide <span class="csg-function">ELSE</span> or <span class="csg-function">ELSEIF()</span> statements but you must provide an <span class="csg-function">ENDIF</span>.
     </p>
     <h5>Example:</h5>
     <pre class="csg-sample-indent">
@@ -215,8 +215,8 @@ ELSE
   SET_VALUE(C16,1)
 ENDIF
     </pre>
-    <p>You can use spaces to make IF statements more readable.</p>
-    <p>You can nest IF statements inside each other.</p>
+    <p>You can use spaces to make <span class="csg-function">IF()</span> statements more readable.</p>
+    <p>You can nest <span class="csg-function">IF()</span> statements inside each other.</p>
     <h5>Example:</h5>
     <pre class="csg-sample-indent">
 IF(A15&gt;B15)
@@ -227,8 +227,8 @@ IF(A15&gt;B15)
 ENDIF
     </pre>
     <p>
-        You can also use an IF statement with two or three parameters.
-        In this case, the second and third parameters are used as the statements to be executed in the true and false cases and there is no ENDIF statement.
+        You can also use an <span class="csg-function">IF()</span> statement with two or three parameters.
+        In this case, the second and third parameters are used as the statements to be executed in the true and false cases and there is no <span class="csg-function">ENDIF</span> statement.
     </p>
     <p>Examples are:</p>
     <pre class="csg-sample-indent">
@@ -297,9 +297,9 @@ NEXT
     <h2 id="CONTINUE">CONTINUE</h2>
     <p>Execution continues at the most recent loop.</p>
     <ul>
-        <li>In a WHILE loop, it continues at the next WHILE;</li>
-        <li>In a REPEAT loop, it continues at the UNTIL;</li>
-        <li>In a FOR loop, it continues at the NEXT.</li>
+        <li>In a <span class="csg-function">FOR()</span> loop, it continues at the <span class="csg-function">NEXT</span>;</li>
+        <li>In a <span class="csg-function">REPEAT</span> loop, it continues at the <span class="csg-function">UNTIL()</span>;</li>
+        <li>In a <span class="csg-function">WHILE()</span> loop, it continues at the next <span class="csg-function">WHILE()</span>.</li>
     </ul>
 
     <h2 id="BREAK">BREAK</h2>
@@ -311,7 +311,7 @@ NEXT
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>BREAK(2)</code></p>
     <p>breaks out of two loops.</p>
-    <p>The following custom functions are provided in the PipeDream Examples:</p>
+    <p>The following custom functions are provided in the PipeDream 4 Examples:</p>
     <pre class="csg-sample-indent">
 function("fact","arg_1")
 result(if(@arg_1=1,1,@arg_1*fact(@arg_1-1)))
@@ -319,7 +319,7 @@ result(if(@arg_1=1,1,@arg_1*fact(@arg_1-1)))
     <p><code>fact</code> returns the factorial of a positive integer.</p>
     <p>
         Note that it is an example of a recursive custom function in that, for values greater than one, it calls itself.
-        It is also an example of a function which doesn&rsquo;t check its parameters to see if it has been given sensible values!
+        It is also an example of a function which doesn’t check its parameters to see if it has been given sensible values!
     </p>
     <pre class="csg-sample-indent">
 function("find_space","str:text")
@@ -330,7 +330,7 @@ result(i)
     </pre>
     <p><code>find_space</code> finds the position of the first space in the input string.</p>
     <p>
-        It sets up a FOR loop with a control variable called <code>i</code> and uses <code>i</code> as an index into the string.
+        It sets up a <span class="csg-function">FOR</span> loop with a control variable called <code>i</code> and uses <code>i</code> as an index into the string.
         When it finds a space, it breaks out of the loop and returns <code>i</code>.
         If there are no spaces in the string, it returns the length of the string plus one.
     </p>
@@ -345,14 +345,14 @@ result(stringout)
     </pre>
     <p><code>strip_spaces</code> strips the spaces from the start of a string and gives back the string.</p>
     <p>
-        The name <code>stringout</code> is used to store the string during the function&rsquo;s execution.
-        A WHILE loop tests whether the first character of the string is a space (ASCII 32).
+        The name <code>stringout</code> is used to store the string during the function’s execution.
+        A <span class="csg-function">WHILE()</span> loop tests whether the first character of the string is a space (ASCII 32).
         If it is, <code>stringout</code> is reset so that it loses the initial space.
-        An IF statement tests to see if the resulting string still has any length and, if it hasn&rsquo;t, breaks out of the loop.
-        Notice that the IF does not need an ENDIF because it has more than one parameter.
+        An <span class="csg-function">IF()</span> statement tests to see if the resulting string still has any length and, if it hasn’t, breaks out of the loop.
+        Notice that the <span class="csg-function">IF()</span> does not need an <span class="csg-function">ENDIF</span> because it has more than one parameter.
         Finally, when the loop terminates, or is broken out of, the new string is returned.
     </p>
-    <p>You will find other custom function sheets in the PipeDream Examples.</p>
+    <p>You will find other custom function sheets in the PipeDream 4 Examples.</p>
     <p>
         Often, the best way to learn how to write custom functions is to start with a function which someone else has written and develop it yourself.
         For example, you may like to try extending <code>strip_spaces</code> so that it not only looks for spaces but also for dots at the start of the string.
@@ -362,11 +362,13 @@ result(stringout)
 
     <h2 id="Special">Special Functions</h2>
     <p>The following functions can be used with custom functions. They are described in detail in <a href="misc.html">Miscellaneous Functions</a>.</p>
-    <p>ALERT</p>
-    <p>INPUT</p>
-    <p>SET_NAME</p>
-    <p>SET_VALUE</p>
-    <p>TYPE</p>
+    <span class="csg-function"><ul>
+        <li>ALERT</li>
+        <li>INPUT</li>
+        <li>SET_NAME</li>
+        <li>SET_VALUE</li>
+        <li>TYPE</li>
+    </ul></span>
 
     <table class="csg-info-table">
         <col>

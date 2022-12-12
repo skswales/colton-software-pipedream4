@@ -197,7 +197,7 @@ io_create(
 
             if(NULL != user->window_template)
             {
-                if(NULL == WrapOsErrorReporting(winx_create_window(user->window_template, &window_handle, io_event_handler, (void *) user)))
+                if( !WrapOsErrorReporting_IsError(winx_create_window(user->window_template, &window_handle, io_event_handler, (void *) user)) )
                 {
                     user->window_handle = window_handle;
 
@@ -272,8 +272,7 @@ io_open(
     {
         WimpGetWindowStateBlock window_state;
 
-        window_state.window_handle = user->window_handle;
-        if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        if( !WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(user->window_handle, &window_state)) )
         {
             WimpOpenWindowBlock open_window_block = * (WimpOpenWindowBlock *) &window_state;
 
@@ -281,7 +280,7 @@ io_open(
 
             open_window_block.behind = -1; /* Make sure this window is opened in front */
 
-            if(NULL == WrapOsErrorReporting(winx_open_window(&open_window_block)))
+            if( !WrapOsErrorReporting_IsError(winx_open_window(&open_window_block)) )
             {
                 user->button = -1; /* nothing has happened yet */
                 return(0);

@@ -17,7 +17,7 @@
     <p>
         Database functions are variants of the statistical functions AVG, COUNT, MAX, MIN, STD, STDP, SUM, VAR and VARP
         which operate upon a range of cells (your database) subject to the condition which forms their second parameter.
-        There is an example of each database function in the PipeDream Examples.
+        There is an example of each database function in the PipeDream 4 Examples.
     </p>
     <p>Database functions all have the form:</p>
     <p class="csg-function-declaration">
@@ -125,7 +125,7 @@
     </table>
     <p>the formula</p>
     <p class="csg-sample-indent"><code>DCOUNTA(B1B5,B1B5="B^#")</code></p>
-    <p>returns 3 which is the number of items in the range B1B5 which begin with &lsquo;B&rsquo;.</p>
+    <p>returns 3 which is the number of items in the range B1B5 which begin with ‘B’.</p>
     <p>&nbsp;</p>
     <p>The database functions are as follows:</p>
 
@@ -152,8 +152,8 @@
         DCOUNTA(<span class="csg-function-parameter">range</span>,
         <span class="csg-function-parameter">condition</span>)
     </p>
-    <p>As DCOUNT, but applies to all cells, not just number cells.</p>
-    <p>Usually DCOUNTA should be used in preference to DCOUNT.</p>
+    <p>As <span class="csg-function">DCOUNT()</span>, but applies to all cells, not just number cells.</p>
+    <p>Usually <span class="csg-function">DCOUNTA()</span> should be used in preference to <span class="csg-function">DCOUNT()</span>.</p>
 
     <h2 class="csg-function" id="DMAX">DMAX</h2>
     <h5>Syntax:</h5>
@@ -184,9 +184,9 @@
         &radic;<span class="csg-function-formula-outer-parentheses">{</span>
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span> - 1))
@@ -211,9 +211,9 @@
         &radic;<span class="csg-function-formula-outer-parentheses">{</span>
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         <span class="csg-function-formula-variable">n</span><sup>2</sup>
@@ -244,9 +244,9 @@
     <p class="csg-function-formula">
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span> - 1))
@@ -268,9 +268,9 @@
     <p class="csg-function-formula">
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         <span class="csg-function-formula-variable">n</span><sup>2</sup>

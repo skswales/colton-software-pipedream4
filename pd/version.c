@@ -12,18 +12,19 @@
 /*#include "common/gflags.h"*/
 
 /* NB See also
- * Build.r32.!PipeDream.Relnotes
+ * Relnotes/html
  * Build.r32.Makefile (for !Boot/!Run building)
  * Build.r32.MakeRiscPkg
  * Build.r32.RiscPkg.Control
  * &.extrautils.PlingStore.MakeStore
  */
 
-#define HexVersion   0x46003
-#define Version      "4.60.03"
-#define CurrentDate  "23-Oct-2022"
+#define HexVersion   0x46100
+#define Version      "4.61"
+#define CurrentDate  "12-Dec-2022"
 
 /*
+* 12-Dec-2022 - 4.61
 * 23-Oct-2022 - 4.60.03
 * 18-Aug-2022 - 4.60.02
 * 04-Aug-2022 - 4.60.01

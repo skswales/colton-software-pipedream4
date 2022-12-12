@@ -1244,9 +1244,9 @@ really_draw_row_border(
 
         consume_int(sprintf(number.data.t, "%d", (int) trow + 1));
 
-        if(NULL == WrapOsErrorReporting(tbl_wimp_plot_icon(&number)))
+        if( !WrapOsErrorReporting_IsError(tbl_wimp_plot_icon(&number)) )
         {
-            if(NULL == WrapOsErrorReporting(tbl_wimp_plot_icon(&border)))
+            if( !WrapOsErrorReporting_IsError(tbl_wimp_plot_icon(&border)) )
             {   /* draw first vbar - needs to include hbar */
                 if(grid_on)
                     draw_grid_vbar(TRUE);

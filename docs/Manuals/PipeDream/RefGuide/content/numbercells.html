@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="numberformats.html">Prev</a> </td>
                 <td><a href="../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="options.html">Next</a></td>
             </tr>
@@ -151,7 +151,7 @@
     </p>
     <p id="FormulaWindow">
         If you want to create a new number cell containing a formula consisting of more than one line,
-        you can press <span class="csg-cmdseq">Cmd-EFW</span> or click on the PipeDream icon to open the formula window.
+        you can press <span class="csg-cmdseq">Cmd-EFW</span> or click the PipeDream 4 icon to open the formula window.
         A window appears on the screen into which you type your number cell contents.
         You can use the keys listed above for editing the contents of the formula window.
     </p>
@@ -328,7 +328,7 @@
     <p class="csg-sample-indent"><code>30 April 1991&nbsp;</code> in a text cell</p>
     <p>
         Dates and times can be sorted into chronological order, and PipeDream has functions that manipulate time and date values.
-        The function TODAY returns the current date.
+        The function <span class="csg-function">TODAY()</span> returns the current date.
     </p>
     <p>
         Dates run from year 100 AD onwards.
@@ -408,18 +408,18 @@
 
     <h3 id="Logical">Logical</h3>
     <p>The logical operators operate on numeric or logical values.</p>
-    <p>Logical FALSE is taken as zero, TRUE as non-zero.</p>
+    <p>Logical <span class="csg-function">FALSE</span> is taken as zero, <span class="csg-function">TRUE</span> as non-zero.</p>
     <p>A true condition returns the value TRUE (1).</p>
     <p><code>&amp;&nbsp;&nbsp;&nbsp;</code>AND</p>
     <p><code>|&nbsp;&nbsp;&nbsp;</code>OR</p>
     <p><code>!&nbsp;&nbsp;&nbsp;</code>unary NOT</p>
-    <p>Note that if the left hand side of an AND expression evaluates to FALSE, the right hand side is not evaluated.</p>
-    <p>Similarly, if the left hand side of an OR expression evaluates to TRUE, the right hand side is not evaluated.</p>
+    <p>Note that if the left hand side of an AND expression evaluates to <span class="csg-function">FALSE</span>, the right hand side is not evaluated.</p>
+    <p>Similarly, if the left hand side of an OR expression evaluates to <span class="csg-function">TRUE</span>, the right hand side is not evaluated.</p>
 
     <h3 id="Relational">Relational</h3>
     <p>The relational operators can compare dates, strings, and numbers.</p>
     <p>Both operands must be of the same type.</p>
-    <p>The result is a Logical value of FALSE (zero) or TRUE (one).</p>
+    <p>The result is a Logical value of <span class="csg-function">FALSE</span> (zero) or <span class="csg-function">TRUE</span> (one).</p>
     <p><code>&lt;&nbsp;&nbsp;&nbsp;</code>less than</p>
     <p><code>&lt;=&nbsp;&nbsp;</code>less than or equal to</p>
     <p><code>&lt;&gt;&nbsp;&nbsp;</code>not equal to</p>
@@ -543,10 +543,10 @@
         where <em>filename</em> is the name of the document containing the cells being referred to.
     </p>
     <p>
-        As with cell references, ranges are normally &lsquo;relative&rsquo; which means that, if the range is replicated or copied from one cell to another,
+        As with cell references, ranges are normally <em>relative</em> which means that, if the range is replicated or copied from one cell to another,
         the difference in position between the two cells will be added on to or subtracted from the range.
-        Each half of either cell reference in the range may be &lsquo;fixed&rsquo; (made &lsquo;absolute&rsquo;) by
-        preceding the column letter or the row number by a dollar sign (&lsquo;$&rsquo;) (see <a href="Cell">Cell References</a>).
+        Each half of either cell reference in the range may be <em>fixed</em> (made ‘absolute’) by
+        preceding the column letter or the row number by a dollar sign (‘$’) (see <a href="Cell">Cell References</a>).
     </p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>A1A100</code></p>
@@ -570,10 +570,10 @@
         <em>filename</em> is the name of the file containing the cell being referred to.
     </p>
     <p>
-        Cell references are normally &lsquo;relative&rsquo; which means that, if the reference is replicated or copied from one cell to another,
+        Cell references are normally <em>relative</em> which means that, if the reference is replicated or copied from one cell to another,
         the difference in position between the two cells will be added on to or subtracted from the reference.
     </p>
-    <p>Each half of the cell reference may be &lsquo;fixed&rsquo; (made &lsquo;absolute&rsquo;) by preceding the column letter or the row number by a dollar sign (&lsquo;$&rsquo;), as in:</p>
+    <p>Each half of the cell reference may be <em>fixed</em> (made ‘absolute’) by preceding the column letter or the row number by a dollar sign (‘$’), as in:</p>
     <p class="csg-sample-indent"><code>$A$1</code></p>
     <p class="csg-sample-indent"><code>AC$27</code></p>
     <p>External references (i.e. references to cells in other documents) can be fixed in the same way, as in:</p>
@@ -586,7 +586,7 @@
         <span class="csg-command">Replicate</span> commands.
     </p>
     <p>
-        When a cell to which a cell reference refers is deleted, the cell reference is marked with a percent sign (&lsquo;%&rsquo;) to indicate that the reference is no longer valid.
+        When a cell to which a cell reference refers is deleted, the cell reference is marked with a percent sign (‘%’) to indicate that the reference is no longer valid.
         Cells containing such formulae will display the <code>Bad cell</code> error message.
     </p>
 

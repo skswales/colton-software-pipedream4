@@ -1,5 +1,5 @@
---- _src	2021-12-31 14:59:30.430000000 +0000
-+++ _dst	2022-08-18 16:55:46.840000000 +0000
+--- _src	2022-10-26 16:47:18.810000000 +0000
++++ _dst	2022-10-31 14:11:02.600000000 +0000
 @@ -32,6 +32,14 @@
   *
   */
@@ -233,7 +233,7 @@
  /* -------- Termination. -------- */
  
  static int win__active = 0;
-@@ -378,41 +458,64 @@
+@@ -378,41 +458,68 @@
    return(FALSE);
  }
  
@@ -243,7 +243,7 @@
  
  void win_settitle(wimp_w w, char *newtitle)
  {
-   wimp_redrawstr r;
+-  wimp_redrawstr r;
    wimp_winfo *winfo;
 +  char *str;
 +  size_t count;
@@ -260,11 +260,12 @@
 -    wimpt_noerr(wimp_get_wind_info(winfo));
 +    if(NULL != wimp_get_wind_info(winfo))
 +        return;
-+
+ 
+-  /* --- put the new title string in the title icon's buffer --- */
+-    strcpy(winfo->info.title.indirecttext.buffer, newtitle);
 +    myassert1x(winfo->info.nicons <= MAX_N_ICONS, "win_settitle: reading info for %d icons corrupted stack", winfo->info.nicons);
  
-   /* --- put the new title string in the title icon's buffer --- */
--    strcpy(winfo->info.title.indirecttext.buffer, newtitle);
++  /* --- put the new title string in the title icon's buffer --- */
 +    if((winfo->info.titleflags & wimp_INDIRECT) == 0)
 +    {
 +        myassert0x(0, "win_settitle: non-indirected title bar icon");
@@ -274,8 +275,12 @@
 +    count = winfo->info.title.indirecttext.bufflen;
 +    *str  = CH_NULL;
 +    strncat(str, newtitle, count - 1);
- 
++
++#if 1
++    winx_changedtitle(w);
++#else
    /* --- invalidate the title bar in absolute coords --- */
++    wimp_redrawstr r;
      r.w = (wimp_w) -1;    /* absolute screen coords */
      r.box = winfo->info.box;
 -    r.box.y1 += 36;            /* tweak */
@@ -286,8 +291,9 @@
 +        const int dy = wimpt_dy();
 +        r.box.y0 = r.box.y0 + dy; /* title bar starts one raster up */
 +        r.box.y1 = r.box.y0 + wimptx_title_height() - 2*dy;
-+        (void) wimpt_complain(wimp_force_redraw(&r));
++        (void) wimpt_complain(tbl_wimp_force_redraw(r.w, r.box.x0, r.box.y0. r.box.x1, r.box.y1));
 +    }
++#endif
  
    /* --- free space used to window info --- */
 -    free(winfo);

@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="../datetime.html">Prev</a> </td>
                 <td><a href="../../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="../fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="../editing.html">Next</a></td>
             </tr>
@@ -44,7 +44,7 @@
     <h5>Example:</h5>
     <p>AGE(26.6.1994, 25.8.1982)</p>
     <p>returns the age as a number, expressed as 12.10, that is, someone aged 12 years and 10 months.</p>
-    <p>Use INT() to extract the number of years from the result and 100*(n-INT(n)) to extract the number of months.</p>
+    <p>Use <span class="csg-function">INT()</span> to extract the number of years from the result and <codE>100*(n-INT(n))</code> to extract the number of months.</p>
 
     <h2 class="csg-function" id="DATE">DATE</h2>
     <h5>Syntax:</h5>
@@ -116,13 +116,14 @@
     <p>returns <code>29</code>.</p>
 
     <h2 class="csg-function" id="MONTHNAME">MONTHNAME</h2>
-    <p>MONTHNAME(<span class="csg-function-parameter">number</span>|<span class="csg-function-parameter">date</span>)</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">MONTHNAME(<span class="csg-function-parameter">number</span>|<span class="csg-function-parameter">date</span>)</p>
     <p>Returns a month name string corresponding to the <span class="csg-function-parameter">number</span> or <span class="csg-function-parameter">date</span> (where January is month one).</p>
 
     <h2 class="csg-function" id="NOW">NOW</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">NOW</p>
-    <p>Returns today&rsquo;s date and time, in the form <code>2.9.1991 18:33:04</code>.</p>
+    <p>Returns today’s date and time, in the form <code>2.9.1991 18:33:04</code>.</p>
 
     <h2 class="csg-function" id="SECOND">SECOND</h2>
     <h5>Syntax:</h5>
@@ -155,7 +156,7 @@
     <h2 class="csg-function" id="TODAY">TODAY</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">TODAY</p>
-    <p>Returns today&rsquo;s date, in the form <code>2.9.1991</code>.</p>
+    <p>Returns today’s date, in the form <code>2.9.1991</code>.</p>
 
     <h2 class="csg-function" id="WEEKDAY">WEEKDAY</h2>
     <h5>Syntax:</h5>
@@ -166,7 +167,8 @@
     <p>returns <code>6</code> (Friday).</p>
 
     <h2 class="csg-function" id="WEEKNUMBER">WEEKNUMBER</h2>
-    <p>WEEKNUMBER(<span class="csg-function-parameter">date</span>)</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">WEEKNUMBER(<span class="csg-function-parameter">date</span>)</p>
     <p>Returns the week number corresponding to the <span class="csg-function-parameter">date</span>.</p>
     <h5>Revisions:</h5>
     <p>This function was added in 4.50/06.</p>

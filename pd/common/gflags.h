@@ -54,6 +54,10 @@
 
 #define EXTENDED_COLOUR 1 /* BBGGRR1n or 0000000n */
 
+#if !CROSS_COMPILE
+#define NORCROFT_INLINE_ASM 1
+#endif
+
 /*
 gr_rdiag.c and numbers.c require these to be defined
 */
@@ -121,8 +125,13 @@ __WrapOsErrorChecking(
     _In_z_      PCTSTR tstr);
 
 /*ncr*/
-extern BOOL
+extern BOOL /*FALSE*/
 reperr_kernel_oserror(
+    _In_        _kernel_oserror * const p_kernel_oserror);
+
+/*ncr*/
+extern BOOL /*TRUE->is_error*/
+report_if_kernel_oserror(
     _In_        _kernel_oserror * const p_kernel_oserror);
 
 /*ncr*/
@@ -131,17 +140,37 @@ WrapOsErrorReporting(
     _In_opt_    _kernel_oserror * p_kernel_oserror)
 {
     if(NULL != p_kernel_oserror)
-        (void) reperr_kernel_oserror(p_kernel_oserror);
+        consume_bool(report_if_kernel_oserror(p_kernel_oserror));
 
     return(p_kernel_oserror);
+}
+
+/*ncr*/
+static inline BOOL /*TRUE->is_error*/
+WrapOsErrorReporting_IsError( /* potentially slower as always calls function */
+    _In_opt_    _kernel_oserror * p_kernel_oserror)
+{
+    return(report_if_kernel_oserror(p_kernel_oserror));
 }
 
 static inline void
 void_WrapOsErrorReporting(
     _In_opt_    _kernel_oserror * p_kernel_oserror)
 {
+#if 1 /* slower, as always calls function, but smaller code */
+    report_if_kernel_oserror(p_kernel_oserror);
+#else
     if(NULL != p_kernel_oserror)
-        (void) reperr_kernel_oserror(p_kernel_oserror);
+        consume_bool(report_if_kernel_oserror(p_kernel_oserror));
+#endif
+}
+
+static inline void
+void_WrapOsErrorReporting_Faster(
+    _In_opt_    _kernel_oserror * p_kernel_oserror)
+{
+    if(NULL != p_kernel_oserror)
+        consume_bool(report_if_kernel_oserror(p_kernel_oserror));
 }
 
 #ifndef sbchar_isdigit

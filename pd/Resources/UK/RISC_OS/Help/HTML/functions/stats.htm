@@ -15,10 +15,10 @@
 <body>
     <h1 id="Statistical">Statistical Functions</h1>
     <p>
-        The following statistical functions are provided by PipeDream.
+        The following statistical functions are provided by PipeDream 4.
         These functions operate on a range of cells or a list of several items.
-        Note that a list can include a mix of individual values, cell references, ranges of cells and arrays.
-        There are examples of the statistical functions in the PipeDream Examples.
+        Note that a list can include a mix of individual values, cell references, ranges of cells, and arrays.
+        There are examples of the statistical functions in the PipeDream 4 Examples.
     </p>
 
     <h2 class="csg-function" id="AVG">AVG</h2>
@@ -36,15 +36,15 @@
     <p>Returns the value of the Beta function for arguments <span class="csg-function-parameter">a</span> and <span class="csg-function-parameter">b</span>.</p>
     <p>One definition of the Beta function is</p>
     <p class="csg-function-formula">
-        <span class="csg-math-symbol-upper-case">&Beta;</span>(<span class="csg-function-formula-variable">a</span>, <span class="csg-function-formula-variable">b</span>)
+        <span class="csg-math-symbol csg-math-bigger">&Beta;</span>(<span class="csg-function-formula-variable">a</span>, <span class="csg-function-formula-variable">b</span>)
         &nbsp;=&nbsp;
-        <span class="csg-math-symbol-upper-case">&Gamma;</span>(<span class="csg-function-formula-variable">a</span>) &middot;
-        <span class="csg-math-symbol-upper-case">&Gamma;</span>(<span class="csg-function-formula-variable">b</span>) &divide;
-        <span class="csg-math-symbol-upper-case">&Gamma;</span>(<span class="csg-function-formula-variable">a</span> + <span class="csg-function-formula-variable">b</span>)
+        <span class="csg-math-symbol csg-math-bigger">&Gamma;</span>(<span class="csg-function-formula-variable">a</span>) &middot;
+        <span class="csg-math-symbol csg-math-bigger">&Gamma;</span>(<span class="csg-function-formula-variable">b</span>) &divide;
+        <span class="csg-math-symbol csg-math-bigger">&Gamma;</span>(<span class="csg-function-formula-variable">a</span> + <span class="csg-function-formula-variable">b</span>)
     </p>
     <p>This special function is actually evaluated by PipeDream using the formula</p>
     <p class="csg-function-formula">
-        <span class="csg-math-symbol-upper-case">&Beta;</span>(<span class="csg-function-formula-variable">a</span>, <span class="csg-function-formula-variable">b</span>)
+        <span class="csg-math-symbol csg-math-bigger">&Beta;</span>(<span class="csg-function-formula-variable">a</span>, <span class="csg-function-formula-variable">b</span>)
         &nbsp;=&nbsp;
         exp(
         gammaln(<span class="csg-function-formula-variable">a</span>) +
@@ -147,7 +147,7 @@
         <span class="csg-function-parameter">x_data</span>)
     </p>
     <p>
-        Takes the result of the LOGEST function (<span class="csg-function-parameter">LOGEST_data</span>)
+        Takes the result of the <span class="csg-function">LOGEST()</span> function (<span class="csg-function-parameter">LOGEST_data</span>)
         and applies it to <span class="csg-function-parameter">x_data</span>
         to return estimated <span class="csg-function-parameter">y_data</span>.
     </p>
@@ -155,13 +155,13 @@
     <h2 class="csg-function" id="LINEST">LINEST</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">
-        LINEST(<span class="csg-function-parameter">known_y&rsquo;s</span>,
-        <span class="csg-function-parameter">known_x&rsquo;s</span>)
+        LINEST(<span class="csg-function-parameter">known_y’s</span>,
+        <span class="csg-function-parameter">known_x’s</span>)
     </p>
     <p>
         Calculates the formula of the straight line which best fits your data
-        (<span class="csg-function-parameter">known_y&rsquo;s</span> and
-        <span class="csg-function-parameter">known_x&rsquo;s</span>) and returns an array.
+        (<span class="csg-function-parameter">known_y’s</span> and
+        <span class="csg-function-parameter">known_x’s</span>) and returns an array.
     </p>
 
     <h3 id="Simple">Simple linear regression</h3>
@@ -179,8 +179,8 @@
     </p>
     <h5>Example:</h5>
     <p>
-        LINEST is used to calculate the gradient and intercept of the best-fitting straight line through the data points.
-        INDEX is used to extract separate elements of the result array.
+        <span class="csg-function">LINEST()</span> is used to calculate the gradient and intercept of the best-fitting straight line through the data points.
+        <span class="csg-function">INDEX()</span> is used to extract separate elements of the result array.
     </p>
     <table border="1" class="csg-sample-indent csg-sample">
         <col>
@@ -242,7 +242,8 @@
         &nbsp;=&nbsp;
         a<sub style="font-size: 70%;">0</sub>
         +
-        <span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=m</sup> (a<sub class="csg-function-formula-variable">i</sub> &middot; <span class="csg-function-formula-variable">x<sub>i</sub></span>)
+        <sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">m</sup>
+        (a<sub class="csg-function-formula-variable">i</sub> &middot; <span class="csg-function-formula-variable">x<sub>i</sub></span>)
     </p>
     <p>
         where the <span class="csg-function-formula-variable">x<sub>i</sub></span> are the
@@ -410,7 +411,7 @@
     <p>You have a list of customer names in column <code>A</code> and in column <code>C</code> you have a corresponding list of sales figures for individual sales to those customers, then</p>
     <p class="csg-sample-indent"><code>SET_VALUE(D1E20,LISTCOUNT({A1A100,C1C100}))</code></p>
     <p>would write out 20 rows of customers names and total sales figures in <code>D1E20</code>. <code>{A1A100,C1C100}</code> makes a two column array of 100 rows.</p>
-    <p>You could use <code>SORT()</code> and <code>FLIP()</code> to sort the result of <code>LISTCOUNT()</code> into order before listing it out.</p>
+    <p>You could use <span class="csg-function">SORT()</span> and <span class="csg-function">FLIP()</span> to sort the result of <span class="csg-function">LISTCOUNT()</span> into order before listing it out.</p>
 
     <h5>Revisions:</h5>
     <p>This function was added in 4.52/06.</p>
@@ -418,8 +419,8 @@
     <h2 class="csg-function" id="LOGEST">LOGEST</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">
-        LOGEST(<span class="csg-function-parameter">known_y&rsquo;s</span>,
-        <span class="csg-function-parameter">known_x&rsquo;s</span>)
+        LOGEST(<span class="csg-function-parameter">known_y’s</span>,
+        <span class="csg-function-parameter">known_x’s</span>)
     </p>
     <p>Calculates an exponential curve which fits your data and returns an array which describes the curve.</p>
     <p>The equation for the curve is:</p>
@@ -433,13 +434,14 @@
         <em>y</em>
         &nbsp;=&nbsp;
         a<sub style="font-size: 70%;">0</sub> &middot;
-        <span class="csg-math-symbol-upper-case">&Pi;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=m</sup> (a<sub class="csg-function-formula-variable">i</sub><sup class="csg-function-formula-variable">xi</sup>)
+        <sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-prod">&Product;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">m</sup>
+        (a<sub class="csg-function-formula-variable">i</sub><sup class="csg-function-formula-variable">x<small>i</small></sup>)
     </p>
     <p>
         where the <span class="csg-function-formula-variable">x<sub>i</sub></span> are the
         independent <span class="csg-function-formula-variable">x</span> variables.
     </p>
-    <p>This function is simply a logarithmic version of LINEST.</p>
+    <p>This function is simply a logarithmic version of <span class="csg-function">LINEST()</span>.</p>
 
     <h2 class="csg-function" id="MAX">MAX</h2>
     <h5>Syntax:</h5>
@@ -508,14 +510,15 @@
         SPEARMAN(<span class="csg-function-parameter">array_or_range1</span>,
         <span class="csg-function-parameter">array_or_range2</span>)
     </p>
-    <p>Returns the Spearman&rsquo;s rank correlation coefficient for the two arrays (or ranges of cells).</p>
-    <p>The input data can be taken from the RANK() function.</p>
+    <p>Returns the Spearman’s rank correlation coefficient for the two arrays (or ranges of cells).</p>
+    <p>The input data can be taken from the <span class="csg-function">RANK()</span> function.</p>
     <p>The equation used is:</p>
     <p class="csg-function-formula">
         <i>r<sub>s</sub></i> =
         1 -
         <span class="csg-function-formula-outer-parentheses">(</span>
-        6 &middot; <span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">d<sub>i</sub></span><sup>2</sup>
+        6 &middot;
+        <sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">d<sub>i</sub></span><sup>2</sup>
         &nbsp;&divide;&nbsp;
         (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span><sup>2</sup> - 1))
         <span class="csg-function-formula-outer-parentheses">)</span>
@@ -531,9 +534,9 @@
         &radic;<span class="csg-function-formula-outer-parentheses">{</span>
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span> - 1))
@@ -555,9 +558,9 @@
         &radic;<span class="csg-function-formula-outer-parentheses">{</span>
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         <span class="csg-function-formula-variable">n</span><sup>2</sup>
@@ -576,7 +579,7 @@
         <span class="csg-function-parameter">x_data</span>)
     </p>
     <p>
-        Takes the result of the LINEST function (<span class="csg-function-parameter">LINEST_data</span>)
+        Takes the result of the <span class="csg-function">LINEST()</span> function (<span class="csg-function-parameter">LINEST_data</span>)
         and applies it to <span class="csg-function-parameter">x_data</span>
         to return estimated <span class="csg-function-parameter">y_data</span>.
     </p>
@@ -591,9 +594,9 @@
     <p class="csg-function-formula">
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span> - 1))
@@ -614,9 +617,9 @@
     <p class="csg-function-formula">
         <span class="csg-function-formula-outer-parentheses">(</span>
         <span class="csg-function-formula-variable">n</span> &middot;
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
         -
-        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        (<sub class="csg-function-formula-variable csg-math-symbol-limit-lower">i</sub><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
         <span class="csg-function-formula-outer-parentheses">)</span>
         &nbsp;&divide;&nbsp;
         <span class="csg-function-formula-variable">n</span><sup>2</sup>

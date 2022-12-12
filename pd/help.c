@@ -8,8 +8,6 @@
 
 /* Help system for PipeDream */
 
-/* SKS 2013 */
-
 #include "common/gflags.h"
 
 #include "datafmt.h"
@@ -18,28 +16,44 @@
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
+#if defined(NORCROFT_INLINE_SWIX)
+#include "swis.h"
+#endif
+
+static void
+help_starttask(PCTSTR command)
+{
+    reportf("StartTask %s", command);
+
+#if defined(NORCROFT_INLINE_SWIX)
+    void_WrapOsErrorReporting(_swix(Wimp_StartTask, _IN(0), command));
+#else
+    void_WrapOsErrorReporting(wimp_starttask((PTSTR) command));
+#endif
+}
+
 extern void
 Help_fn(void)
 {
-    PTSTR tempstr = "Run <PipeDream$Dir>.!Help index/htm";
-    reportf("StartTask %s", tempstr);
-    void_WrapOsErrorReporting(wimp_starttask(tempstr));
+    const PCTSTR tempstr = "Run <PipeDream$Dir>.!Help index/htm";
+
+    help_starttask(tempstr);
 }
 
 extern void
 InteractiveHelp_fn(void)
 {
-    PTSTR tempstr = "Run <Help$Start>.!Run";
-    reportf("StartTask %s", tempstr);
-    void_WrapOsErrorReporting(wimp_starttask(tempstr));
+    const PCTSTR tempstr = "Run <Help$Start>.!Run";
+
+    help_starttask(tempstr);
 }
 
 extern void
 ShowLicence_fn(void)
 {
-    PTSTR tempstr = "Run <PipeDream$Dir>.!Help licenc/htm"; /* NB limit to ten chars for systems without long file names */
-    reportf("StartTask %s", tempstr);
-    void_WrapOsErrorReporting(wimp_starttask(tempstr));
+    const PCTSTR tempstr = "Run <PipeDream$Dir>.!Help licenc/htm"; /* NB limit to ten chars for systems without long file names */
+
+    help_starttask(tempstr);
 }
 
 _Check_return_
@@ -47,20 +61,20 @@ extern STATUS
 ho_help_url(
     _In_z_      PCTSTR url)
 {
-    STATUS status = STATUS_OK;
-    char tempstr[1024];
+    TCHARZ tempstr[1024];
 
     if( (NULL == _kernel_getenv("Alias$Open_URI_http", tempstr, elemof32(tempstr))) &&
         (CH_NULL != tempstr[0]) )
     {
-       _kernel_swi_regs rs;
+        _kernel_swi_regs rs;
         rs.r[0] = 0;
         if( (NULL == _kernel_swi(0x4E380 /*URI_Version*/, &rs, &rs)) )
         {
             consume_int(snprintf(tempstr, elemof32(tempstr), "URIdispatch %s", url));
-            reportf("StartTask %s", tempstr);
-            void_WrapOsErrorReporting(wimp_starttask(tempstr));
-            return(status);
+
+            help_starttask(tempstr);
+
+            return(STATUS_OK);
         }
     }
 
@@ -68,9 +82,10 @@ ho_help_url(
         (CH_NULL != tempstr[0]) )
     {
         consume_int(snprintf(tempstr, elemof32(tempstr), "URLOpen_HTTP %s", url));
-        reportf("StartTask %s", tempstr);
-        void_WrapOsErrorReporting(wimp_starttask(tempstr));
-        return(status);
+
+        help_starttask(tempstr);
+
+        return(STATUS_OK);
     }
 
     return(-1/*create_error(ERR_HELP_URL_FAILURE)*/);

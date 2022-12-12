@@ -878,7 +878,6 @@ fivebytetime_from_date(
     STATUS status;
     S32 year, month, day;
     RISCOS_TIME_ORDINALS time_ordinals;
-    _kernel_swi_regs rs;
 
     if(status_fail(status = ss_dateval_to_ymd(ss_date_date, &year, &month, &day)))
     {
@@ -891,11 +890,18 @@ fivebytetime_from_date(
     time_ordinals.month = month;
     time_ordinals.day   = day;
 
+#if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+    if(NULL != WrapOsErrorChecking(_swix(Territory_ConvertOrdinalsToTime, _INR(0,2),
+                                         -1 /* use current territory */, &p_fivebyte->utc[0], &time_ordinals)))
+        zero_struct_ptr(p_fivebyte);
+#else
+    _kernel_swi_regs rs;
     rs.r[0] = -1; /* use current territory */
     rs.r[1] = (int) &p_fivebyte->utc[0];
     rs.r[2] = (int) &time_ordinals;
     if(NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertOrdinalsToTime, &rs, &rs)))
         zero_struct_ptr(p_fivebyte);
+#endif
 
     return(STATUS_OK);
 }
@@ -923,7 +929,7 @@ PROC_EXEC_PROTO(c_weeknumber)
     rs.r[2] = (int) buffer;
     rs.r[3] = sizeof32(buffer);
     rs.r[4] = (int) "%WK";
-    if(NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertDateAndTime, &rs, &rs)))
+    if( NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertDateAndTime, &rs, &rs)) )
         weeknumber_result = 0; /* a result of zero -> info not available */
     else
         weeknumber_result = (S32) fast_strtoul(buffer, NULL);

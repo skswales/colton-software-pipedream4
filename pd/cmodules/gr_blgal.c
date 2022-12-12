@@ -1261,8 +1261,7 @@ gr_chartedit_gallery_barlinescatch_init(
         const HOST_WND window_handle = dbox_window_handle(*p_dbox);
         WimpGetWindowStateBlock window_state;
 
-        window_state.window_handle = window_handle;
-        if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        if( !WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(window_handle, &window_state)) )
         {   /* send it an Open_Window_Request message */
             wimp_eventstr e;
             memcpy32(&e.data.o, &window_state, sizeof32(WimpOpenWindowRequestEvent));

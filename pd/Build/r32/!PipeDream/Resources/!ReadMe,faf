@@ -8,7 +8,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
-<!-- Copyright © 2016-2022 Stuart Swales -->
+<!-- Copyright © 2016–2022 Stuart Swales -->
 
 <h1>PipeDream:!ReadMe</h1>
 
@@ -72,7 +72,7 @@ Replaces *WimpSlot in the application's !Run file.
 
 <h4><em>Country</em>.tem_xxx</h4>
 
-<p>Unlike many RISC OS applications, PipeDream has multiple window template files.</p>
+<p>Unlike many RISC OS applications, PipeDream 4 has multiple window template files.</p>
 
 <p>These are grouped by classic menu:</p>
 

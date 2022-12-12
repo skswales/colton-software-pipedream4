@@ -1,5 +1,5 @@
---- _src	2021-12-31 14:59:31.180000000 +0000
-+++ _dst	2022-08-18 16:55:47.140000000 +0000
+--- _src	2022-10-26 16:47:19.560000000 +0000
++++ _dst	2022-10-27 18:58:35.600000000 +0000
 @@ -44,6 +44,9 @@
          GBLL    ModeMayBeNonUser
  ModeMayBeNonUser   SETL  {FALSE}
@@ -10,7 +10,70 @@
          GET     Hdr:ListOpts
          GET     Hdr:APCS.Common
          GET     Hdr:Macros
-@@ -104,17 +107,17 @@
+@@ -66,37 +69,37 @@
+         EXPORT  |bbc_get|
+         ]
+         EXPORT  |bbc_vdu|
+-        EXPORT  |bbc_vduw|
+-        EXPORT  |os_swi|
++;;; SKS_ACW     EXPORT  |bbc_vduw|
++;;; SKS_ACW     EXPORT  |os_swi|
+         EXPORT  |os_swix|
+-        EXPORT  |os_swi0|
++;;; SKS_ACW     EXPORT  |os_swi0|
+         EXPORT  |os_swi1|
+-        EXPORT  |os_swi2|
+-        EXPORT  |os_swi3|
+-        EXPORT  |os_swi4|
+-        EXPORT  |os_swi5|
+-        EXPORT  |os_swi6|
+-        EXPORT  |os_swi1r|
+-        EXPORT  |os_swi2r|
+-        EXPORT  |os_swi3r|
+-        EXPORT  |os_swi4r|
+-        EXPORT  |os_swi5r|
+-        EXPORT  |os_swi6r|
++;;; SKS_ACW     EXPORT  |os_swi2|
++;;; SKS_ACW     EXPORT  |os_swi3|
++;;; SKS_ACW     EXPORT  |os_swi4|
++;;; SKS_ACW     EXPORT  |os_swi5|
++;;; SKS_ACW     EXPORT  |os_swi6|
++;;; SKS_ACW     EXPORT  |os_swi1r|
++;;; SKS_ACW     EXPORT  |os_swi2r|
++;;; SKS_ACW     EXPORT  |os_swi3r|
++;;; SKS_ACW     EXPORT  |os_swi4r|
++;;; SKS_ACW     EXPORT  |os_swi5r|
++;;; SKS_ACW     EXPORT  |os_swi6r|
+         EXPORT  |os_swix0|
+         EXPORT  |os_swix1|
+         EXPORT  |os_swix2|
+-        EXPORT  |os_swix3|
+-        EXPORT  |os_swix4|
+-        EXPORT  |os_swix5|
+-        EXPORT  |os_swix6|
+-        EXPORT  |os_swix1r|
+-        EXPORT  |os_swix2r|
+-        EXPORT  |os_swix3r|
+-        EXPORT  |os_swix4r|
+-        EXPORT  |os_swix5r|
+-        EXPORT  |os_swix6r|
++;;; SKS_ACW     EXPORT  |os_swix3|
++;;; SKS_ACW     EXPORT  |os_swix4|
++;;; SKS_ACW     EXPORT  |os_swix5|
++;;; SKS_ACW     EXPORT  |os_swix6|
++;;; SKS_ACW     EXPORT  |os_swix1r|
++;;; SKS_ACW     EXPORT  |os_swix2r|
++;;; SKS_ACW     EXPORT  |os_swix3r|
++;;; SKS_ACW     EXPORT  |os_swix4r|
++;;; SKS_ACW     EXPORT  |os_swix5r|
++;;; SKS_ACW     EXPORT  |os_swix6r|
+         EXPORT  |os_byte|
+-        EXPORT  |os_word|
++;;; SKS_ACW     EXPORT  |os_word|
+         EXPORT  |os_read_var_val|
+ 
+         AREA    |C$$code|, CODE, READONLY
+@@ -104,21 +107,23 @@
  |v$codesegment|
  
          [ :LNOT:UROM
@@ -21,17 +84,24 @@
          Return  ,LinkNotStacked
          ]
  
++ [ {FALSE} ;;; SKS_ACW
  bbc_vduw
 -        SWI     XOS_WriteC
 +        SVC     #XOS_WriteC
          Return  ,LinkNotStacked,VS
          MOV     a1, a1, LSR #8
 -bbc_vdu SWI     XOS_WriteC
++ ] ;;; SKS_ACW
 +bbc_vdu SVC     #XOS_WriteC
          MOVVC   a1, #0
          Return  ,LinkNotStacked
  
-@@ -130,12 +133,12 @@
+-
++ [ {FALSE} ;;; SKS_ACW
+ ; void os_swi(int swicode, os_regset* /*inout*/);
+ 
+ ; In    a1 contains swi number, a2 points to ARM register structure
+@@ -130,14 +135,14 @@
          BEQ     os_swi_noregset
          STR     r1, [sp, #-4]!
          LDMIA   r1, {r0-r9}
@@ -44,9 +114,19 @@
 -        SWI     XOS_CallASWIR12
 +        SVC     #XOS_CallASWIR12
          Return  "v1-v6"
+-
++ ] ;;; SKS_ACW
  
+ ; os_error *os_swix(int swicode, os_regset* /*inout*/);
  
-@@ -151,13 +154,13 @@
+@@ -145,38 +150,37 @@
+ 
+ os_swix
+         STMDB   sp!, {v1-v6, lr}
+-        ORR     a1, a1, #XOS_MASK       ; make a SWI of V-error type
+-        MOV     r12, r0
++        ORR     r12, a1, #XOS_MASK      ; make a SWI of V-error type (SKS_ACW shortened)
+         CMP     r1, #0
          BEQ     os_swix_noregset
          STR     r1, [sp, #-4]!
          LDMIA   r1, {r0-r9}
@@ -62,7 +142,37 @@
          MOVVC   a1, #0
          Return  "v1-v6"
  
-@@ -184,46 +187,48 @@
+ os_swix0
+ os_swix1
+ os_swix2
+-os_swix3
+-os_swix4
+-os_swix5
+-os_swix6
+-os_swix7
++;;; SKS_ACW os_swix3
++;;; SKS_ACW os_swix4
++;;; SKS_ACW os_swix5
++;;; SKS_ACW os_swix6
++;;; SKS_ACW os_swix7
+         ORR     a1, a1, #&20000
+-os_swi0
++;;; SKS_ACW os_swi0
+ os_swi1
+-os_swi2
+-os_swi3
+-os_swi4
+-os_swi5
+-os_swi6
++;;; SKS_ACW os_swi2
++;;; SKS_ACW os_swi3
++;;; SKS_ACW os_swi4
++;;; SKS_ACW os_swi5
++;;; SKS_ACW os_swi6
+         STMDB   sp!, {v1-v6, lr}
+         MOV     r12, r0
+         MOV     a1, a2
+@@ -184,46 +188,49 @@
          MOV     a3, a4
          ADD     lr, sp, #7*4
          LDMIA   lr, {a4, v1, v2}
@@ -75,6 +185,7 @@
          MOV     pc, ip
  
 -os_swix1r
++ [ {FALSE} ;;; SKS_ACW
 +os_swix1r ROUT
          ORR     a1, a1, #&20000
  os_swi1r
@@ -119,7 +230,7 @@
          ORR     a1, a1, #&20000
  os_swi3r
          STMDB   sp!, {v1-v6, lr}
-@@ -231,10 +236,10 @@
+@@ -231,10 +238,10 @@
          MOV     a1, a2
          MOV     a2, a3
          MOV     a3, a4
@@ -132,7 +243,7 @@
          TEQ     v1, #0
          STRNE   a1, [v1]
          TEQ     v2, #0
-@@ -242,9 +247,10 @@
+@@ -242,9 +249,10 @@
          TEQ     v3, #0
          STRNE   a3, [v3]
          MOV     a1, #0
@@ -144,7 +255,7 @@
          ORR     a1, a1, #&20000
  os_swi4r
          STMDB   sp!, {v1-v6, lr}
-@@ -253,10 +259,10 @@
+@@ -253,10 +261,10 @@
          MOV     a2, a3
          MOV     a3, a4
          LDR     a4, [sp, #7 * 4]
@@ -157,7 +268,7 @@
          TEQ     v1, #0
          STRNE   a1, [v1]
          TEQ     v2, #0
-@@ -266,9 +272,10 @@
+@@ -266,9 +274,10 @@
          TEQ     v4, #0
          STRNE   a4, [v4]
          MOV     a1, #0
@@ -169,7 +280,7 @@
          ORR     a1, a1, #&20000
  os_swi5r
          STMDB   sp!, {v1-v6, lr}
-@@ -278,10 +285,10 @@
+@@ -278,10 +287,10 @@
          MOV     a3, a4
          ADD     lr, sp, #7 * 4
          LDMIA   lr, {a4, v1}
@@ -182,7 +293,7 @@
          TEQ     v3, #0
          STRNE   a1, [v3]
          TEQ     v4, #0
-@@ -293,9 +300,10 @@
+@@ -293,9 +302,10 @@
          TEQ     ip, #0
          STRNE   v1, [ip]
          MOV     a1, #0
@@ -194,7 +305,7 @@
          ORR     a1, a1, #&20000
  os_swi6r
          STMDB   sp!, {v1-v6, lr}
-@@ -305,10 +313,10 @@
+@@ -305,10 +315,10 @@
          MOV     a3, a4
          ADD     lr, sp, #7 * 4
          LDMIA   lr, {a4, v1, v2}
@@ -207,15 +318,17 @@
          TEQ     v3, #0
          STRNE   a1, [v3]
          TEQ     v4, #0
-@@ -322,6 +330,7 @@
+@@ -322,7 +332,9 @@
          TEQ     lr, #0
          STRNE   v2, [lr]
          MOV     a1, #0
 +99
          Return  "v1-v6"
++ ] ;;; SKS_ACW
  
  os_byte
-@@ -330,7 +339,7 @@
+         FunctionEntry
+@@ -330,26 +342,28 @@
          MOV     ip, r2
          LDR     r1, [r1]
          LDR     r2, [r2]
@@ -224,16 +337,18 @@
          STR     r1, [r3]
          STR     r2, [ip]
          MOVVC   r0, #0
-@@ -338,7 +347,7 @@
+         Return
  
++ [ {FALSE} ;;; SKS_ACW
  os_word
          MOV     ip, lr
 -        SWI     XOS_Word
 +        SVC     #XOS_Word
          MOVVC   r0, #0
          Return  ,LinkNotStacked,,ip
++ ] ;;; SKS_ACW
  
-@@ -346,10 +355,10 @@
+ os_read_var_val
          FunctionEntry "r4"
          MOV     r3, #0
          MOV     r4, #3

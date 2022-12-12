@@ -1,4 +1,4 @@
-REM PipeDream Loader
+REM PipeDream 4 Loader
 REM
 REM This Source Code Form is subject to the terms of the Mozilla Public
 REM License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -298,7 +298,7 @@ ENDIF
 :
 :
 DEF PROCinfo_generate
-REM PipeDream no longer supports Info file generation
+REM PipeDream 4 no longer supports Info file generation
 ENDPROC
 :
 :

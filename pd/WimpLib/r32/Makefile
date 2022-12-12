@@ -7,7 +7,7 @@
 # Copyright © 1989-1999 Colton Software
 # Copyright © 1998-2015 R W Colton
 
-#URD=$.pipedream4.trunk
+#URD=$.pipedream4.pipedream__4_61__branch
 
 WimpLib=^
 
@@ -19,18 +19,17 @@ CMODULES=$(PD).cmodules
 
 AS=ObjAsm
 # --arm to allow assembly of UAL syntax code
-# -cpu 3M to allow assembly of S/UMULL
-ASflags_BASE=-I$(PD).common.Hdr --arm --arm_only -cpu 3M --throwback
+ASflags_BASE=-I$(PD).common.Hdr --arm --arm_only --throwback
 ASflags=$(ASflags_BASE)
 
-# NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!
+# NB PipeDream 4 uses a global register for its sb variable, so avoid using that in this library code!
 
 CC=cc
 CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback
 # -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
-CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -arch 2 -cpu 3 -throwback
+#CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback -arch 2 -cpu 3
 # -arch 3M to allow use of S/UMULL with -Otime
-#CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -arch 3M -cpu 7 -DNORCROFT_ARCH_M -throwback
+#CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback -arch 3M -cpu 7 -DNORCROFT_ARCH_M
 CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 
@@ -65,6 +64,11 @@ o.cs-flex:     $(WimpLib).c.cs-flex
 o.cs-resspr:   $(WimpLib).h.cs-resspr
 o.cs-resspr:   $(WimpLib).c.cs-resspr
         $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-resspr
+
+o.cs-wimp-tb:  $(WimpLib).c.cs-wimp-tb
+o.cs-wimp-tb:  $(WimpLib).h.cs-wimp
+o.cs-wimp-tb:  $(WimpLib).h.wimp
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-wimp-tb
 
 o.cs-wimptx:   $(WimpLib).c.wimpt $(WimpLib).h.wimpt
 o.cs-wimptx:   $(WimpLib).h.cs-wimptx
@@ -105,6 +109,7 @@ o.cs-fileicon \
 o.cs-msgs \
 o.cs-resspr \
 o.cs-templat \
+o.cs-wimp-tb \
 o.cs-wimptx \
 o.cs-winf \
 o.cs-winx \

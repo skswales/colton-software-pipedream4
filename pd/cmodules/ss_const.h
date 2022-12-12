@@ -700,6 +700,36 @@ ss_date_decode_as_t5( /* diff minimization - PipeDream has more args */
 *
 ******************************************************************************/
 
+#if 1
+
+_Check_return_
+static inline int32_t /*INT32_MIN->overflowed*/
+int32_add_overflowed(
+    _In_        const int32_t addend_a,
+    _In_        const int32_t addend_b)
+{
+#if RISCOS
+    /* NB contorted order to save register juggling on ARM Norcroft for arithmetic op */
+    const int64_t int64 = (int64_t) addend_b + addend_a;
+#else
+    const int64_t int64 = (int64_t) addend_a + addend_b;
+#endif
+
+    /* NB no clamping to [INT32_MIN,INT32_MAX] in this variant */
+
+    return(int64_would_overflow_int32(int64) ? INT32_MIN : (int32_t) int64);
+}
+
+#else
+
+_Check_return_
+extern int32_t /*INT32_MIN->overflowed*/
+int32_add_overflowed(
+    _In_        const int32_t addend_a,
+    _In_        const int32_t addend_b);
+
+#endif
+
 typedef struct INT64_WITH_INT32_OVERFLOW
 {
     int64_t int64_result;

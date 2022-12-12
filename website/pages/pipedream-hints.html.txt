@@ -1,0 +1,15 @@
+﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/"><strong>Hints and Tips</strong></a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+
+<h3>Personalisation</h3>
+
+If you had a paid-for copy of PipeDream 4, you will find an <em>Info</em> file within your old copy of !PipeDream. You can copy this file into your new new free-to-use copy of !PipeDream and your registered details will be displayed on the splash screen and saved with each of your documents.
+
+
+<h3>Schema 2</h3>
+
+You can use the PipeDream to/from Lotus 1-2-3 file converters to transfer data to/from Schema 2 if you have the appropriate S2/WK1 converters loaded.
+
+
+<h3>Scrolling</h3>
+
+Due to the way PipeDream pane windows are stacked on their container, the mouse scroll wheel on RISC OS 5 might not scroll your document window as expected. A document with the input focus should scroll OK if you use the scroll wheel when pointing at any of a document window's window furniture. Using the mouse scroll wheel on systems with the WindowScroll module ought to operate as expected.

@@ -248,6 +248,25 @@ wimptx_stack_overflow_handler(int sig);
 cs-riscasm.s
 */
 
+#if defined(NORCROFT_INLINE_ASM)
+
+#ifndef XHourglass_On
+#define XHourglass_On           (0x406C1 + os_X)
+#define XHourglass_Off          (0x406C1 + os_X)
+#define XHourglass_Percentage   (0x406C4 + os_X)
+#endif
+
+extern void __swi(XHourglass_Off)
+riscos_hourglass_off(void);
+
+extern void __swi(XHourglass_On)
+riscos_hourglass_on(void);
+
+extern void __swi(XHourglass_Percentage)
+riscos_hourglass_percentage(int percentage);
+
+#else
+
 extern void
 riscos_hourglass_off(void);
 
@@ -255,10 +274,12 @@ extern void
 riscos_hourglass_on(void);
 
 extern void
-riscos_hourglass_percent(int percent);
+riscos_hourglass_percentage(int percentage);
 
 extern void
 riscos_hourglass_smash(void);
+
+#endif /* NORCROFT_INLINE_ASM */
 
 #endif /* __cs_wimptx_h */
 

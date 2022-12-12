@@ -15,8 +15,8 @@
 <body>
     <h1 id="String">String Functions</h1>
     <p>
-        The following text string functions are provided by PipeDream.
-        There are examples of the string functions in the PipeDream Examples.
+        The following text string functions are provided by PipeDream 4.
+        There are examples of the string functions in the PipeDream 4 Examples.
     </p>
 
     <h2 class="csg-function" id="CHAR">CHAR</h2>
@@ -72,7 +72,7 @@
     <p class="csg-sample-indent"><code>FIND("needle","haystack needle in")</code></p>
     <p>returns <code>10</code>.</p>
     <p><span class="csg-function-parameter">find_text</span> cannot contain wildcards.</p>
-    <p>FIND is case-sensitive and does not ignore leading and trailing spaces.</p>
+    <p><span class="csg-function">FIND()<span> is case-sensitive and does not ignore leading and trailing spaces.</p>
 
     <h2 class="csg-function" id="JOIN">JOIN</h2>
     <h5>Syntax:</h5>
@@ -201,7 +201,7 @@
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>STRING(1234.567,1)</code></p>
     <p>returns <code>"1234.6"</code>.</p>
-    <p>See the description of the ROUND function in <a href="math.htm#ROUND">Miscellaneous Functions</a>.</p>
+    <p>See the description of the <span class="csg-function">ROUND()</span> function in <a href="math.htm#ROUND">Miscellaneous Functions</a>.</p>
 
     <h2 class="csg-function" id="TEXT">TEXT</h2>
     <h5>Syntax:</h5>
@@ -211,11 +211,15 @@
     </p>
     <p>
         Returns a string of the <span class="csg-function-parameter">number</span> in the style specified.
-        This allows formatted results other than those provided by PipeDream&rsquo;s basic style system.
+        This allows formatted results other than those provided by PipeDream’s basic style system.
     </p>
     <p><span class="csg-function-parameter">number</span> may be a number or a date.</p>
     <p><span class="csg-function-parameter">string</span> is a format string in Fireworkz number format style.</p>
-    <p>Please refer to the Fireworkz <em>User Guide</em> for details.</p>
+    <p>
+       Please refer to the
+       <a href="https://croftnuisk.co.uk/coltsoft-docs/fireworkz/UserGuide/content/sg/sg03_number_formats_and_styles.htm"><em>Number formats and Styles</em></a>
+       section of the Fireworkz <em>User Guide</em> for details.
+    </p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>TEXT(1234.567, "#,.###.,00&nbsp;\&euro;")</code> returns <code>1.234,57&nbsp;\&euro;</code></p>
     <p class="csg-sample-indent"><code>TEXT(1234.567, "g0.###&nbsp;\m")</code> returns <code>1.235&nbsp;km</code></p>

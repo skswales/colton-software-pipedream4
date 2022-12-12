@@ -2374,8 +2374,7 @@ update_variables(void)
 
         {
         WimpGetWindowStateBlock window_state;
-        window_state.window_handle = rear_window_handle;
-        if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        if( !WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(rear_window_handle, &window_state)) )
             winx_send_open_window_request(rear_window_handle, TRUE, (WimpOpenWindowBlock *) &window_state);
         } /*block*/
     }

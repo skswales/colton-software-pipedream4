@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="../fileops.html">Prev</a> </td>
                 <td><a href="../../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="../fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="../firstwordplus.html">Next</a></td>
             </tr>
@@ -29,7 +29,7 @@
     <h1 id="Financial">Financial Functions</h1>
     <p>
         The following financial functions are provided by PipeDream.
-        There is an example of each financial function in the PipeDream Examples.
+        There is an example of each financial function in the PipeDream 4 Examples.
     </p>
 
 
@@ -59,11 +59,11 @@
             <td>is the present value of the investment</td>
         </tr>
     </table>
-    <p>The formula underlying <code>CTERM</code> is:</p>
+    <p>The formula underlying <span class="csg-function">CTERM</span> is:</p>
     <p class="csg-function-formula">periods = ln(<i>future_value</i> &divide; <i>present_value</i>) &divide; ln(1 + <i>interest</i>)</p>
     <h5>Example:</h5>
     <p>
-        How long does it take to turn &pound;1000 into &pound;2000 at a fixed rate of 10% per year?
+        How long does it take to turn £1000 into £2000 at a fixed rate of 10% per year?
         The answer is calculated with the formula <code>CTERM(0.10,2000,1000)</code>.
         The answer in this case is 7.27 years.
     </p>
@@ -103,9 +103,9 @@
     </table>
     <h5>Example:</h5>
     <p>
-        You pay &pound;5000 for a machine that will have a salvage value of &pound;1000 at the end of 5 years.
+        You pay £5000 for a machine that will have a salvage value of £1000 at the end of 5 years.
         What is the depreciation in the first year?
-        The formula to find out is <code>DDB(5000,1000,5,1)</code> which returns &pound;2000, the depreciation allowance for the first year.
+        The formula to find out is <code>DDB(5000,1000,5,1)</code> which returns £2000, the depreciation allowance for the first year.
     </p>
     <h5>Revision:</h5>
     <p>Starting with 4.56, this function accepts an optional extra parameter, <span class="csg-function-parameter">factor</span>.</p>
@@ -134,13 +134,13 @@
             <td>is the number of periods during which payments will be made</td>
         </tr>
     </table>
-    <p><code>FV</code> uses the following formula to calculate future value:</p>
+    <p><span class="csg-function">FV</span> uses the following formula to calculate future value:</p>
     <p class="csg-function-formula">future value = <i>payment</i> &times; ((1 + <i>interest</i>)<sup><i>term</i></sup> &minus; 1) &divide; <i>interest</i></p>
     <h5>Example:</h5>
     <p>
-        You put &pound;400 annually into an account which earns 5% per annum.
+        You put £400 annually into an account which earns 5% per annum.
         What is the value of the account after 25 years?
-        The formula <code>FV(400,0.05,25)</code> calculates the result, &pound;19,090.84.
+        The formula <code>FV(400,0.05,25)</code> calculates the result, £19,090.84.
     </p>
 
 
@@ -195,15 +195,15 @@
             <td>the interest rate you receive on reinvested cash</td>
         </tr>
     </table>
-    <p>MIRR considers both the cost of the investment and the interest received on reinvestment of the cash.</p>
+    <p><span class="csg-function">MIRR()</span> considers both the cost of the investment and the interest received on reinvestment of the cash.</p>
     <h5>Example:</h5>
     <p>
         You are a potter just completing your third year in business.
-        Three years ago, you borrowed &pound;120,000 at 10% annual interest to buy a workshop and equipment.
-        Your annual income for the past three years has been &pound;39,000, &pound;30,000, and &pound;21,000.
+        Three years ago, you borrowed £120,000 at 10% annual interest to buy a workshop and equipment.
+        Your annual income for the past three years has been £39,000, £30,000, and £21,000.
         During these years, you reinvested your profits, earning 12% annually.
         If you enter the initial cost as a negative number in cell B1 and the annual incomes in cells B2, B3 and B4,
-        to calculate the investment&rsquo;s modified rate of return after 3 years, you would type
+        to calculate the investment’s modified rate of return after 3 years, you would type
         <code>MIRR(B1B4,.10,.12)</code> which would return -0.04804 as the result.
     </p>
 
@@ -229,14 +229,14 @@
     <p>The following formula is used to calculate net present value:</p>
     <p class="csg-function-formula">
         net present value =
-        <span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-math-symbol-limit-upper"><i>i</i>=<i>n</i></sup>
-        ( <i>v</i><sub><i>i</i></sub> &divide; (1 + <i>interest</i>)<sup><i>i</i></sup> )
+        <em><sub class="csg-math-symbol-limit-lower">i</sub></em><span class="csg-math-symbol-sum">&Sum;</span><sub class="csg-math-symbol-limit-lower">1</sub><em><sup class="csg-math-symbol-limit-upper">n</sup></em>
+        ( <i>v</i><em><sub>i</sub></em> &divide; (1 + <i>interest</i>)<em><sup>i</sup></em> )
     </p>
     <h5>Example:</h5>
     <p>
         Cells B10 to B14 each contain the number 120 each representing a cash flow.
         What is the net present value of the cash flows given a discount rate of 10%?
-        The formula <code>NPV(0.10,B10B14)</code> displays the result &pound;454.89, the present value of the future cash flows.
+        The formula <code>NPV(0.10,B10B14)</code> displays the result £454.89, the present value of the future cash flows.
     </p>
 
 
@@ -268,8 +268,8 @@
     <p class="csg-function-formula">payment = <i>principal</i> &times; ( <i>interest</i> &divide; (1 &minus; (1 + <i>interest</i>)<sup>-<i>term</i></sup>) )</p>
     <h5>Example:</h5>
     <p>
-        What is the monthly payment on a loan of &pound;150,000, given a 10% annual interest rate and a term of 20 years?
-        The formula <code>PMT(150000,0.10/12,20*12)</code> returns the correct monthly payment, &pound;1447.53.
+        What is the monthly payment on a loan of £150,000, given a 10% annual interest rate and a term of 20 years?
+        The formula <code>PMT(150000,0.10/12,20*12)</code> returns the correct monthly payment, £1447.53.
     </p>
 
 
@@ -299,9 +299,9 @@
     <p class="csg-function-formula">present value = <i>payment</i> &times; ( (1 &minus; (1 + <i>interest</i>)<sup>-<i>term</i></sup>) &divide; <i>interest</i> )</p>
     <h5>Example:</h5>
     <p>
-        You are considering starting a trust fund for your grandson, where you pay &pound;2000 a year for 30 years.
-        Given that you could earn 12% by investing your money elsewhere, what is the present value of the trust fund, including the interest that you won&rsquo;t earn?
-        The formula <code>PV(2000,0.12,30)</code> returns &pound;16110.37, the cash value of the trust fund in today&rsquo;s pounds.
+        You are considering starting a trust fund for your grandson, where you pay £2000 a year for 30 years.
+        Given that you could earn 12% by investing your money elsewhere, what is the present value of the trust fund, including the interest that you won’t earn?
+        The formula <code>PV(2000,0.12,30)</code> returns £16110.37, the cash value of the trust fund in today’s pounds.
     </p>
 
 
@@ -334,8 +334,8 @@
     <p class="csg-function-formula">interest = ( (<i>future_value</i> &divide; <i>present_value</i>) <sup>1/<i>term</i></sup> ) &minus; 1</p>
     <h5>Example:</h5>
     <p>
-        25 years from now, you want to retire with &pound;1,000,000 in the bank.
-        You have &pound;50,000 to put into a pension fund.
+        25 years from now, you want to retire with £1,000,000 in the bank.
+        You have £50,000 to put into a pension fund.
         How much interest (compounded monthly) will you need to earn to accumulate the million pounds?
         The answer is given by the formula <code>RATE(1000000,50000,25*12)</code> .
         The answer is 0.01, which you multiply by 12 to get the annual interest rate of 12% (0.12).
@@ -372,14 +372,14 @@
     <p class="csg-function-formula">depreciation = (<i>cost</i> &minus; <i>salvage</i>) &divide; <i>life</i></p>
     <h5>Example:</h5>
     <p>
-        You buy a computer for &pound;500 which has a salvage value of &pound;100 in five years.
+        You buy a computer for £500 which has a salvage value of £100 in five years.
         In any given year, the depreciation allowance is given by the formula
-        <code>SLN(500,100,5)</code> which returns &pound;80.00.
+        <code>SLN(500,100,5)</code> which returns £80.00.
     </p>
 
 
     <h2 class="csg-function" id="SYD">SYD</h2>
-    <p>Determines the depreciation allowance of a given year using the sum-of-years&rsquo; digits method.</p>
+    <p>Determines the depreciation allowance of a given year using the sum-of-years’ digits method.</p>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">
         SYD(<span class="csg-function-parameter">cost</span>,
@@ -412,9 +412,9 @@
     </table>
     <h5>Example:</h5>
     <p>
-        You purchase a &pound;500 computer that has a salvage value of &pound;100 after five years.
+        You purchase a £500 computer that has a salvage value of £100 after five years.
         The depreciation allowance for the first year is given by the formula
-        <code>SYD(500,100,5,1)</code> which returns &pound;133.33.
+        <code>SYD(500,100,5,1)</code> which returns £133.33.
     </p>
 
 
@@ -444,7 +444,7 @@
     <p class="csg-function-formula">term = <i>ln</i>(1 + (<i>future_value</i> &times; <i>interest</i> &divide; <i>payment</i>)) &divide; <i>ln</i>(1 + <i>interest</i>)</p>
     <h5>Example:</h5>
     <p>
-        Given that you can invest &pound;5000 a year into a pension fund, at 10% annual interest, how long will it take to accumulate &pound;1,000,000?
+        Given that you can invest £5000 a year into a pension fund, at 10% annual interest, how long will it take to accumulate £1,000,000?
         The formula <code>TERM(5000,0.10,1000000)</code> returns the answer, 31.94 years.
     </p>
 

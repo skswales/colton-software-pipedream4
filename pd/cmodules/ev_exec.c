@@ -78,11 +78,7 @@ date_date_add_number_calc(
     _InVal_     SS_DATE_DATE ss_date_date,
     _InVal_     S32 s32)
 {
-    INT64_WITH_INT32_OVERFLOW int64_with_int32_overflow;
-
-    p_ss_data_res->arg.ss_date.date = int32_add_check_overflow(ss_date_date, s32, &int64_with_int32_overflow);
-
-    if(!int64_with_int32_overflow.f_overflow)
+    if( INT32_MIN != (p_ss_data_res->arg.ss_date.date = int32_add_overflowed(s32, ss_date_date)) )
         return(true);
 
     ss_data_set_error(p_ss_data_res, EVAL_ERR_ARGRANGE);
@@ -95,11 +91,7 @@ date_time_add_number_calc(
     _InVal_     SS_DATE_TIME ss_date_time,
     _InVal_     S32 s32)
 {
-    INT64_WITH_INT32_OVERFLOW int64_with_int32_overflow;
-
-    p_ss_data_res->arg.ss_date.time = int32_add_check_overflow(ss_date_time, s32, &int64_with_int32_overflow);
-
-    if(!int64_with_int32_overflow.f_overflow)
+    if( INT32_MIN != (p_ss_data_res->arg.ss_date.time = int32_add_overflowed(s32, ss_date_time)) )
         return(true);
 
     ss_data_set_error(p_ss_data_res, EVAL_ERR_ARGRANGE);

@@ -204,13 +204,11 @@ colourpicker_message_ColourPickerResetColourRequest(
 
     {
     _kernel_swi_regs rs;
-    _kernel_oserror * e;
-
     rs.r[0] = 0
         | (1 << 6) /* update from RGB triplet */;
     rs.r[1] = p_colourpicker_callback->dialogue_handle;
     rs.r[2] = (int) &colour_picker_block;
-    e = WrapOsErrorReporting(_kernel_swi(0x47704 /*ColourPicker_UpdateDialogue*/, &rs, &rs));
+    void_WrapOsErrorReporting(_kernel_swi(0x47704 /*ColourPicker_UpdateDialogue*/, &rs, &rs));
     } /*block*/
 
     return(TRUE);
@@ -293,12 +291,11 @@ colourpicker_open_dialogue(
     P_COLOURPICKER_CALLBACK p_colourpicker_callback)
 {
     _kernel_swi_regs rs;
-    _kernel_oserror * e;
 
     rs.r[0] = (int) p_colourpicker_callback->colour_picker_type;
     rs.r[1] = (int) &colour_picker_block;
 
-    if(NULL != (e = WrapOsErrorReporting(_kernel_swi(0x47702 /*ColourPicker_OpenDialogue*/, &rs, &rs))))
+    if( WrapOsErrorReporting_IsError(_kernel_swi(0x47702 /*ColourPicker_OpenDialogue*/, &rs, &rs)) )
     {
         p_colourpicker_callback->dialogue_handle = 0;
         p_colourpicker_callback->window_handle = 0;
@@ -333,26 +330,34 @@ colourpicker_is_open(
     return(p_colourpicker_callback->window_handle > 0);
 }
 
-static void
+static inline void
 host_message_filter_add(
     const int * const wimp_messages)
 {
+#if defined(NORCROFT_INLINE_SWIX)
+    (void) _swix(0x400F6 /*Wimp_AddMessages*/, _IN(0), wimp_messages);
+#else
     _kernel_swi_regs rs;
     _kernel_oserror * e;
 
     rs.r[0] = (int) wimp_messages;
     e = _kernel_swi(0x400F6 /*Wimp_AddMessages*/, &rs, &rs);
+#endif
 }
 
-static void
+static inline void
 host_message_filter_remove(
     const int * const wimp_messages)
 {
+#if defined(NORCROFT_INLINE_SWIX)
+    (void) _swix(0x400F7 /*Wimp_RemoveMessages*/, _IN(0), wimp_messages);
+#else
     _kernel_swi_regs rs;
     _kernel_oserror * e;
 
     rs.r[0] = (int) wimp_messages;
     e = _kernel_swi(0x400F7 /*Wimp_RemoveMessages*/, &rs, &rs);
+#endif
 }
 
 static void
@@ -387,10 +392,9 @@ colourpicker_close_dialogue(
 
                 {
                 _kernel_swi_regs rs;
-                _kernel_oserror * e;
                 rs.r[0] = 0;
                 rs.r[1] = p_colourpicker_callback->dialogue_handle;
-                e = WrapOsErrorReporting(_kernel_swi(0x47703 /*ColourPicker_CloseDialogue*/, &rs, &rs));
+                void_WrapOsErrorReporting(_kernel_swi(0x47703 /*ColourPicker_CloseDialogue*/, &rs, &rs));
                 } /*block*/
 
                 break;
@@ -442,8 +446,7 @@ colour_picker_block.title = p_title;
         WimpGetWindowStateBlock window_state;
         int parent_x, parent_y;
 
-        window_state.window_handle = parent_window_handle;
-        void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state));
+        void_WrapOsErrorReporting(tbl_wimp_get_window_state_x(parent_window_handle, &window_state));
         parent_x = window_state.visible_area.xmin;
         parent_y = window_state.visible_area.ymax;
 

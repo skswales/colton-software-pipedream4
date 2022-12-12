@@ -49,7 +49,7 @@ Set bld$Resources$Dir   <Obey$Dir>.!PipeDream.Resources
 |
 | Resources (Application Data)
 |
-| PipeDream$Path is used to locate application data presented to the PipeDream user
+| PipeDream$Path is used to locate application data presented to the PipeDream 4 user
 | e.g. document templates, dictionaries, chart markers
 |
 %CDir                                                           <pd$Disc>.Z.Resources
@@ -179,22 +179,24 @@ Set bld$Resources$Dir   <Obey$Dir>.!PipeDream.Resources
 | HTML files
 %Copy <src$Resources$Dir>.UK.RISC_OS.Help.HTML                  <pd$Disc>.Z.Resources.UK.RISC_OS.Help.* ~rf~cln~v
 %Copy <src$Resources$Dir>.UK.RISC_OS.Help.HTML.functions        <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.* ~rf~cln~v
-SetMacro Alias$pd_SetType_HTM SetType %%0 &FAF
-Repeat         pd_SetType_HTM                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML -files
-Repeat         pd_SetType_HTM                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.functions -files
-Unset    Alias$pd_SetType_HTM
+SetMacro Alias$coltsoft_SetType_HTM SetType %%0 &FAF
+Repeat         coltsoft_SetType_HTM                             <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML -files
+Repeat         coltsoft_SetType_HTM                             <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.functions -files
+Unset    Alias$coltsoft_SetType_HTM
 
 | CSS files
-SetMacro Alias$pd_SetType_CSS SetType %%0 &F79
-               pd_SetType_CSS                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.help/css
-Unset    Alias$pd_SetType_CSS
+SetMacro Alias$coltsoft_SetType_CSS SetType %%0 &F79
+               coltsoft_SetType_CSS                             <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.help/css
+Unset    Alias$coltsoft_SetType_CSS
 
 | PNG files
 %CDir                                                           <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images
 %Copy <src$Resources$Dir>.UK.RISC_OS.Help.HTML.images.toolbar   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.* ~rf~cln~v
-SetMacro Alias$pd_SetType_PNG SetType %%0 &B60
-Repeat         pd_SetType_PNG                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.toolbar -files
-Unset    Alias$pd_SetType_PNG
+SetMacro Alias$coltsoft_SetType_PNG SetType %%0 &B60
+Repeat         coltsoft_SetType_PNG                             <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.toolbar -files
+Unset    Alias$coltsoft_SetType_PNG
+
+%Remove                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML./editorconfig
 
 %Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.functions.* r/r
 %Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.toolbar.* r/r
@@ -232,8 +234,6 @@ Unset    Alias$pd_SetType_PNG
 %Access                                                         <pd$Disc>.Z.uChoices.PipeDream.* wr/r
 %Access                                                         <pd$Disc>.Z.uChoices.PipeDream wr/r
 %Access                                                         <pd$Disc>.Z.uChoices wr/r
-
-Unset Alias$pd_SetType
 
 %Rename <pd$Disc>.Z                                             <pd$Disc>.Apps.Document.!PipeDream
 

@@ -271,10 +271,6 @@ application_redraw_core(
     dspfld_from = -1;
 
     maybe_draw_screen();
-
-    #ifdef HAS_FUNNY_CHARACTERS_FOR_WRCH
-    wrch_undefinefunnies();     /* restore soft character definitions */
-    #endif
 }
 
 /******************************************************************************
@@ -358,7 +354,7 @@ riscos_set_bg_colour_from_wimp_colour_value(
     current_bg_wimp_colour_value = wimp_colour_value;
     font_colours_invalid = TRUE;
 
-    trace_1(TRACE_SETCOLOUR, "wimp_setcolour(bg " U32_XTFMT ")", wimp_colour_value);
+    trace_1(TRACE_SETCOLOUR, "riscos_set_bg_colour_from_wimp_colour_value(bg " U32_XTFMT ")", wimp_colour_value);
     if(0 != (0x10 & wimp_colour_value))
     {
         RISCOS_PALETTE_U os_rgb;
@@ -371,7 +367,7 @@ riscos_set_bg_colour_from_wimp_colour_value(
     else
     {
         void_WrapOsErrorReporting(
-            wimp_setcolour(wimp_colour_value | 0x80 /*background*/));
+            tbl_wimp_set_colour(wimp_colour_value | 0x80 /*background*/));
     }
 }
 
@@ -385,7 +381,7 @@ riscos_set_fg_colour_from_wimp_colour_value(
     current_fg_wimp_colour_value = wimp_colour_value;
     font_colours_invalid = TRUE;
 
-    trace_1(TRACE_SETCOLOUR, "wimp_setcolour(fg " U32_XTFMT ")", wimp_colour_value);
+    trace_1(TRACE_SETCOLOUR, "riscos_set_fg_colour_from_wimp_colour_value(fg " U32_XTFMT ")", wimp_colour_value);
     if(0 != (0x10 & wimp_colour_value))
     {
         RISCOS_PALETTE_U os_rgb;
@@ -398,7 +394,7 @@ riscos_set_fg_colour_from_wimp_colour_value(
     else
     {
         void_WrapOsErrorReporting(
-            wimp_setcolour(wimp_colour_value));
+            tbl_wimp_set_colour(wimp_colour_value));
     }
 }
 
@@ -646,10 +642,8 @@ main_window_height(void)
     ok = (main_window_handle != HOST_WND_NONE);
 
     if(ok)
-    {
-        window_state.window_handle = main_window_handle;
-        ok = (NULL == tbl_wimp_get_window_state(&window_state));
-    }
+        if( /*NULL != */ tbl_wimp_get_window_state_x(main_window_handle, &window_state) )
+            ok = FALSE;
 
     if(ok)
     {
@@ -684,10 +678,8 @@ main_window_width(void)
     ok = (main_window_handle != HOST_WND_NONE);
 
     if(ok)
-    {
-        window_state.window_handle = main_window_handle;
-        ok = (NULL == tbl_wimp_get_window_state(&window_state));
-    }
+        if( /*NULL != */ tbl_wimp_get_window_state_x(main_window_handle, &window_state) )
+            ok = FALSE;
 
     if(ok)
     {
@@ -1807,16 +1799,14 @@ compute_scroll_y(void)
 static void
 openpane(
     const BBox * const boxp,
-    _HwndRef_   HOST_WND behind)
+    _HwndRef_   HOST_WND behind_window)
 {
     GDI_COORD borderline = 0; /* a negative number, relative to top edge of rear window */
     WimpOpenWindowBlock open_window_block;
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
-    if(NULL == WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( !WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_COLUMN_HEADINGS, &icon_state)) )
         borderline = icon_state.icon.bbox.ymin; /* approx -132 */
     } /*block*/
 
@@ -1828,9 +1818,10 @@ openpane(
         open_window_block.visible_area.ymax = open_window_block.visible_area.ymax + borderline; /* else main window abuts colh window and both cover rear window */
     open_window_block.xscroll = 0;
     open_window_block.yscroll = 0;
-    open_window_block.behind = behind;
+    open_window_block.behind = behind_window;
 
-    void_WrapOsErrorReporting(tbl_wimp_open_window(&open_window_block));
+    if( WrapOsErrorReporting_IsError(tbl_wimp_open_window(&open_window_block)) )
+        return;
 
     open_window_block.window_handle = colh_window_handle;
     open_window_block.visible_area = *boxp; /* pane completely covers rear window */
@@ -1839,27 +1830,26 @@ openpane(
     open_window_block.yscroll = 0;
     open_window_block.behind = main_window_handle;
 
-    void_WrapOsErrorReporting(tbl_wimp_open_window(&open_window_block));
+    if( WrapOsErrorReporting_IsError(tbl_wimp_open_window(&open_window_block)) )
+        return;
 
     if(displaying_borders)
     {
         WimpGetIconStateBlock icon_state;
         WimpCreateIconBlock create;
-        GDI_COORD os_x1;
 
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+        if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_CONTENTS_LINE, &icon_state)) )
+            return;
 
         create.icon = icon_state.icon;
 
         trace_4(TRACE_APP_EXPEDIT, "Contents line icon currently (%d,%d, %d,%d)",
                                    create.icon.bbox.xmin, create.icon.bbox.ymin, create.icon.bbox.xmax, create.icon.bbox.ymax);
 
-        os_x1 = BBox_width(&open_window_block.visible_area) - MAX(dx, dy); /*16;*/
+        GDI_COORD os_x1 = BBox_width(&open_window_block.visible_area) - MAX(dx, dy); /*16;*/
 
-        if(os_x1 < (create.icon.bbox.xmin + 16))
-            os_x1 = create.icon.bbox.xmin + 16; /* perhaps unnecessary but I don't trust Neil */
+        if( os_x1 < (create.icon.bbox.xmin + 16) )
+            os_x1 =  create.icon.bbox.xmin + 16; /* perhaps unnecessary but I don't trust Neil */
 
         if(create.icon.bbox.xmax != os_x1)
         {
@@ -1952,8 +1942,7 @@ application_Open_Window_Request(
 
     {
     WimpGetWindowStateBlock window_state;
-    window_state.window_handle = main_window_handle;
-    if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( !WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(main_window_handle, &window_state)) )
     {   /* note absolute coordinates of window (NOT work area extent) origin */
         setorigins(window_state.visible_area.xmin, window_state.visible_area.ymax);
     }
@@ -2209,8 +2198,7 @@ draw_altered_state(void)
     S32 scroll_x, scroll_y;
 
     /* read current rear window size etc. */
-    window_state.window_handle = rear_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(rear_window_handle, &window_state)) )
         return(FALSE);
     trace_5(TRACE_APP_PD4, "\n\n\n*** draw_altered_state(): get_wind_state(" UINTPTR_XTFMT ") returns %d, %d, %d, %d;",
                 (uintptr_t) window_state.window_handle,
@@ -2397,7 +2385,7 @@ riscos_caret_hide(void)
 
     trace_0(TRACE_APP_PD4_RENDER, "riscos_caret_hide()");
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         return;
 
     if(main_window_handle != caret_window_handle)
@@ -2433,7 +2421,7 @@ riscos_caret_restore(void)
 
     trace_0(TRACE_APP_PD4_RENDER, "riscos_caret_restore()");
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         return;
 
     if(main_window_handle != caret_window_handle)
@@ -2528,12 +2516,16 @@ colourtrans_SetFontColours(
     _In_        unsigned int fg_colour,
     _In_        unsigned int max_offset)
 {
+#if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+    return(_swix(ColourTrans_SetFontColours, _INR(0,3), font_handle, bg_colour, fg_colour, max_offset));
+#else
     _kernel_swi_regs rs;
     rs.r[0] = font_handle;
     rs.r[1] = bg_colour;
     rs.r[2] = fg_colour;
     rs.r[3] = max_offset;
     return(_kernel_swi(ColourTrans_SetFontColours, &rs, &rs)); /* don't care about updated values here */
+#endif
 }
 
 extern void
@@ -2955,8 +2947,7 @@ riscprint_end(
         e2 = print_abortjob(riscos_printer.job);
         e = e ? e : e2;
         assert(NULL != e);
-        if(NULL != e)
-            reperr_kernel_oserror(e);
+        consume_bool(report_if_kernel_oserror(e));
         been_error = FALSE;
     }
 

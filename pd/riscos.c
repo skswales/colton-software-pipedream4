@@ -2078,11 +2078,8 @@ main_event_Redraw_Window_Request(
 
     trace_0(TRACE_APP_PD4, "main_event_Redraw_Window_Request()");
 
-    redraw_window_block.window_handle = redraw_window_request->window_handle;
-
     /* wimp errors in redraw are fatal */
-    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_redraw_window_x(redraw_window_request->window_handle, &redraw_window_block, &more)); /* more := FALSE on error */
 
     while(more)
     {
@@ -2099,8 +2096,7 @@ main_event_Redraw_Window_Request(
         /* redraw area, not update */
         application_redraw_core((const RISCOS_RedrawWindowBlock *) &redraw_window_block);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)); /* more := FALSE on error */
     }
 
     return(TRUE);
@@ -3030,9 +3026,7 @@ riscos_finalise_once(void)
     {
         riscos__initialised = FALSE;
 
-        #ifdef HAS_FUNNY_CHARACTERS_FOR_WRCH
-        wrch_undefinefunnies();
-        #endif
+        /* empty nowadays */
     }
 }
 
@@ -3185,15 +3179,15 @@ riscos_initialise_once(void)
 extern void
 riscos_invalidate_document_window(void)
 {
+    BBox redraw_area;
+
+    redraw_area.xmin = -0x07FFFFFF;
+    redraw_area.ymin = -0x07FFFFFF;
+    redraw_area.xmax = +0x07FFFFFF;
+    redraw_area.ymax = +0x07FFFFFF;
+
     if(main_window_handle != HOST_WND_NONE)
     {
-        BBox redraw_area;
-
-        redraw_area.xmin = -0x07FFFFFF;
-        redraw_area.ymin = -0x07FFFFFF;
-        redraw_area.xmax = +0x07FFFFFF;
-        redraw_area.ymax = +0x07FFFFFF;
-
         void_WrapOsErrorReporting(
             tbl_wimp_force_redraw(main_window_handle,
                                   redraw_area.xmin, redraw_area.ymin,
@@ -3202,14 +3196,7 @@ riscos_invalidate_document_window(void)
 
     if(colh_window_handle != HOST_WND_NONE)
     {
-        BBox redraw_area;
-
         colh_colour_icons();                    /* ensure colours of wimp maintained icons are correct */
-
-        redraw_area.xmin = -0x07FFFFFF;
-        redraw_area.ymin = -0x07FFFFFF;
-        redraw_area.xmax = +0x07FFFFFF;
-        redraw_area.ymax = +0x07FFFFFF;
 
         void_WrapOsErrorReporting(
             tbl_wimp_force_redraw(colh_window_handle, /* will force icons maintained by us to be redrawn */
@@ -3251,7 +3238,7 @@ riscos_readfileinfo(
     res = _kernel_osfile(OSFile_ReadNoPath, name, &fileblk);
 
     if(res == _kernel_ERROR)
-        void_WrapOsErrorReporting(_kernel_last_oserror());
+        consume_bool(report_if_kernel_oserror(_kernel_last_oserror()));
 
     if(res != OSFile_ObjectType_File)
     {   /* includes error case */
@@ -3439,7 +3426,7 @@ riscos_updatearea(
     trace_6(TRACE_APP_PD4, "riscos_updatearea(%s, %d, %d, %d, %d, %d)",
              report_procedure_name(report_proc_cast(redrawproc)), window_handle, x0, y0, x1, y1);
 
-    /* RISC OS graphics primitives all need coordinates limited to s16 */
+    /* RISC OS graphics primitives all need coordinates limited to S16 */
     x0 = MAX(x0, SHRT_MIN);
     y0 = MAX(y0, SHRT_MIN);
     x1 = MIN(x1, SHRT_MAX);
@@ -3452,8 +3439,7 @@ riscos_updatearea(
     update_and_redraw_window_block.update.update_area.ymax = y1;
 
     /* wimp errors in update are fatal */
-    if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
 
     while(more)
     {
@@ -3468,8 +3454,7 @@ riscos_updatearea(
         /* we are updating area */
         redrawproc((const RISCOS_RedrawWindowBlock *) &update_and_redraw_window_block.redraw);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
     }
 }
 
@@ -3500,7 +3485,7 @@ riscos_writefileinfo(
     }
 
     if(res == _kernel_ERROR)
-        void_WrapOsErrorReporting(_kernel_last_oserror());
+        consume_bool(report_if_kernel_oserror(_kernel_last_oserror()));
 }
 
 extern void
@@ -3539,8 +3524,21 @@ static int
 akbd__poll(
     int x)
 {
-    int r = _kernel_osbyte(0x81, x, 255);
+#if defined(NORCROFT_INLINE_ASM)
+    int x_AND_y = 0;
+
+    __asm {
+        MOV     R1, x;
+        MOV     R0, #0x81;
+        MOV     R2, #0xFF;
+        SVC     #_XOS(OS_Byte), /*in*/ {R0,R1,R2}, /*out*/ {R0,R1,R2,PSR}, /*corrupted*/ {};
+        ANDVC   x_AND_y, R1, R2;
+    }
+    return(x_AND_y == 0xFF); /* X and Y both 255? */
+#else
+    const int r = _kernel_osbyte(0x81, x, 255);
     return((r & 0x0000FFFF) == 0x0000FFFF);     /* X and Y both 255? */
+#endif
 }
 
 extern int
@@ -3553,213 +3551,6 @@ extern int
 akbd_pollctl(void)
 {
     return(akbd__poll(-2));
-}
-
-/* tboxlibs compatible shims a la WimpLib */
-
-_kernel_oserror *
-tbl_wimp_create_window(WimpWindow *defn, int *handle)
-{
-    _kernel_oserror * e;
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) defn;
-
-    e = _kernel_swi(Wimp_CreateWindow, &rs, &rs);
-
-    *handle = e ? 0 : rs.r[0];
-
-    return(e);
-}
-
-_kernel_oserror *
-tbl_wimp_create_icon(
-    int priority,
-    WimpCreateIconBlock *defn,
-    int *handle)
-{
-    _kernel_oserror * e;
-    _kernel_swi_regs rs;
-
-    rs.r[0] = (int) priority;
-    rs.r[1] = (int) defn;
-
-    e = _kernel_swi(Wimp_CreateIcon, &rs, &rs);
-
-    *handle = e ? 0 : rs.r[0];
-
-    return(e);
-}
-
-_kernel_oserror *
-tbl_wimp_delete_window(WimpDeleteWindowBlock *block)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) block;
-
-    return(_kernel_swi(Wimp_DeleteWindow, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_open_window(WimpOpenWindowBlock *show)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) show;
-
-    return(_kernel_swi(Wimp_OpenWindow, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_redraw_window(WimpRedrawWindowBlock *block, int *more)
-{
-    _kernel_oserror * e;
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) block;
-
-    e = _kernel_swi(Wimp_RedrawWindow, &rs, &rs);
-
-    *more = e ? 0 : rs.r[0];
-
-    return(e);
-}
-
-_kernel_oserror *
-tbl_wimp_update_window(WimpRedrawWindowBlock *block, int *more)
-{
-    return(wimp_update_wind((wimp_redrawstr *) block, more));
-}
-
-_kernel_oserror *
-tbl_wimp_get_rectangle(WimpRedrawWindowBlock *block, int *more)
-{
-    return(wimp_get_rectangle((wimp_redrawstr *) block, more));
-}
-
-_kernel_oserror *
-tbl_wimp_get_window_state(WimpGetWindowStateBlock *state)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) state;
-
-    return(_kernel_swi(Wimp_GetWindowState, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_set_icon_state(WimpSetIconStateBlock *block)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) block;
-
-    return(_kernel_swi(Wimp_SetIconState, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_get_icon_state(WimpGetIconStateBlock *block)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) block;
-
-    return(_kernel_swi(Wimp_GetIconState, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_force_redraw(
-    int window_handle,
-    int xmin,
-    int ymin,
-    int xmax,
-    int ymax)
-{
-    WimpForceRedrawBlock force_redraw_block;
-
-    force_redraw_block.window_handle = window_handle;
-    force_redraw_block.redraw_area.xmin = xmin;
-    force_redraw_block.redraw_area.ymin = ymin;
-    force_redraw_block.redraw_area.xmax = xmax;
-    force_redraw_block.redraw_area.ymax = ymax;
-
-    return(_kernel_swi(Wimp_ForceRedraw, (_kernel_swi_regs *) &force_redraw_block, (_kernel_swi_regs *) &force_redraw_block));
-}
-
-_kernel_oserror *
-tbl_wimp_set_caret_position(
-    int window_handle,
-    int icon_handle,
-    int xoffset,
-    int yoffset,
-    int height,
-    int index)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[0] = window_handle;
-    rs.r[1] = icon_handle;
-    rs.r[2] = xoffset;
-    rs.r[3] = yoffset;
-    rs.r[4] = height;
-    rs.r[5] = index;
-
-    return(_kernel_swi(Wimp_SetCaretPosition, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_get_caret_position(WimpGetCaretPositionBlock *block)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) block;
-
-    return(_kernel_swi(Wimp_GetCaretPosition, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_set_extent(int window_handle, BBox *area)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[0] = window_handle;
-    rs.r[1] = (int) area;
-
-    return(_kernel_swi(Wimp_SetExtent, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_plot_icon(WimpPlotIconBlock *block)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[1] = (int) block;
-
-    return(_kernel_swi(Wimp_PlotIcon, &rs, &rs));
-}
-
-_kernel_oserror *
-tbl_wimp_block_copy(
-    int handle,
-    int sxmin,
-    int symin,
-    int sxmax,
-    int symax,
-    int dxmin,
-    int dymin)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[0] = handle;
-    rs.r[1] = sxmin;
-    rs.r[2] = symin;
-    rs.r[3] = sxmax;
-    rs.r[4] = symax;
-    rs.r[5] = dxmin;
-    rs.r[6] = dymin;
-
-    return(_kernel_swi(Wimp_BlockCopy, &rs, &rs));
 }
 
 /* end of riscos.c */

@@ -1,0 +1,94 @@
+﻿<a href="/coltsoft/pipedream/getting_started/"><strong>Getting Started Guide</strong></a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+
+<h2>1   <a href="/coltsoft-docs/pipedream/StartGuide/content/aboutp.htm">About PipeDream</a></h2>
+
+<ul>
+	<li>What is PipeDream?</li>
+	<li>What Can PipeDream Do?</li>
+</ul>
+
+<h2>2   <a href="/coltsoft-docs/pipedream/StartGuide/content/aboutt.htm">About this Guide</a></h2>
+
+<h2>3   <a href="/coltsoft-docs/pipedream/StartGuide/content/conven.htm">Conventions</a></h2>
+
+<ul>
+	<li>Using the Mouse</li>
+	<li>The Pointer and the Caret</li>
+	<li>Keys</li>
+</ul>
+
+<h2>4   <a href="/coltsoft-docs/pipedream/StartGuide/content/instal.htm">Installation</a></h2>
+
+<h2>5   <a href="/coltsoft-docs/pipedream/StartGuide/content/pdwind.htm">The PipeDream Window</a></h2>
+
+<ul>
+	<li>Columns</li>
+	<li>Help</li>
+</ul>
+
+<h2>6   <a href="/coltsoft-docs/pipedream/StartGuide/content/cmds.htm">Commands</a></h2>
+
+<ul>
+	<li>Menus</li>
+	<li>Dialogue Boxes</li>
+	<li>The Icon Menu</li>
+	<li>Short Menus and Long Menus</li>
+	<li>Keys</li>
+</ul>
+
+<h2>7   <a href="/coltsoft-docs/pipedream/StartGuide/content/wrdpro.htm">Word Processing</a></h2>
+
+<ul>
+	<li>Typing the Letter</li>
+	<li>Checking your Spelling</li>
+	<li>Saving your Letter</li>
+	<li>Loading and Editing the Letter</li>
+	<li>Printing the Letter</li>
+</ul>
+
+<h2>8   <a href="/coltsoft-docs/pipedream/StartGuide/content/sheets.htm">Spreadsheets</a></h2>
+
+<ul>
+	<li>Building the Spreadsheet</li>
+	<li>Alignment</li>
+	<li>Totals</li>
+	<li>Recalculating Your Spreadsheet</li>
+	<li>Leading Characters</li>
+	<li>Column Widths</li>
+</ul>
+
+<h2>9   <a href="/coltsoft-docs/pipedream/StartGuide/content/db.htm">Databases</a></h2>
+
+<ul>
+	<li>Loading the Example Database</li>
+	<li>Fixing Rows</li>
+	<li>Sorting the Database</li>
+	<li>Searching for Records</li>
+	<li>Selecting Records</li>
+	<li>Entering Records</li>
+	<li>Deleting Records</li>
+	<li>Column Widths</li>
+	<li>Database Functions</li>
+</ul>
+
+<h2>10  <a href="/coltsoft-docs/pipedream/StartGuide/content/comdoc.htm">Combined Documents</a></h2>
+
+<ul>
+	<li>Fonts</li>
+	<li>Building the Spreadsheet</li>
+	<li>Producing the Chart</li>
+	<li>Making Changes to Your Data</li>
+	<li>Setting a Font for the Chart</li>
+	<li>Adding a Picture to Your Document</li>
+	<li>Printing the Document</li>
+</ul>
+
+<h2>11  <a href="/coltsoft-docs/pipedream/StartGuide/content/gloss.htm">Glossary</a></h2>
+
+<p>This <em>Getting Started Guide</em> was written by Colton Software.</p>
+
+<p>© 1991-2022 Colton Software</p>
+
+<strong>Additional credits</strong>
+
+<p>Stuart Swales - converting the printed manual to HTML, updating to reflect current behaviour.</p>

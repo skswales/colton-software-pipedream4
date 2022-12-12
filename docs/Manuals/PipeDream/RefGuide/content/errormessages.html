@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="editing.html">Prev</a> </td>
                 <td><a href="../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="externalreferences.html">Next</a></td>
             </tr>
@@ -125,33 +125,33 @@
     <h4 id="Badword">Bad word</h4>
     <p>You have specified a bad word in a spelling checker dialogue box.</p>
     <p>If you are using the English alphabet, words must begin with a letter and consist of only letters, apostrophes (&#39;) and hyphens (-) and may be only 31 characters long.</p>
-    <h4 id="Cantclose">Can&rsquo;t close</h4>
+    <h4 id="Cantclose">Can’t close</h4>
     <p>PipeDream cannot save the changes that you have made to a dictionary.</p>
     <p>The dictionary may have been closed without your explicitly telling PipeDream, by *SHUT, *BACKUP, *DISMOUNT or *BYE, for example.</p>
-    <h4 id="Cantfile">Can&rsquo;t close file</h4>
+    <h4 id="Cantfile">Can’t close file</h4>
     <p>PipeDream cannot close the file you are saving to disc.</p>
     <p>
         It is probably best to make a backup of the file on another disc immediately before returning to work out what is wrong on the first disc.
         It may be that the disc is full or that it is faulty.
     </p>
-    <h4 id="Cantdict">Can&rsquo;t enlarge dictionary</h4>
+    <h4 id="Cantdict">Can’t enlarge dictionary</h4>
     <p>You have added some words to a dictionary but there is not enough space on the disc to save the words.</p>
     <p>Either pack the dictionary, delete some files on the disc to make space or copy the dictionary to a new disc.</p>
-    <h4 id="Cantopen">Can&rsquo;t open</h4>
+    <h4 id="Cantopen">Can’t open</h4>
     <p>PipeDream cannot open the file or dictionary you have specified.</p>
     <p>Check the name carefully. There may be a disc error.</p>
-    <h4 id="Cantread">Can&rsquo;t read dictionary</h4>
+    <h4 id="Cantread">Can’t read dictionary</h4>
     <p>PipeDream cannot read the dictionary.</p>
     <p>There may be a disc error. Try verifying the disc.</p>
-    <h4 id="Cantsave">Can&rsquo;t save an entire file from PipeDream into itself</h4>
+    <h4 id="Cantsave">Can’t save an entire file from PipeDream into itself</h4>
     <p>You cannot drag a file icon from the <span class="csg-dbox">Save</span> dialogue box back into the original PipeDream document unless the <span class="csg-dbox-option">Selection</span> option is set.</p>
-    <h4 id="Canttrans">Can&rsquo;t transfer file (use *Set Wimp$Scrap &lt;filename&gt;)</h4>
+    <h4 id="Canttrans">Can’t transfer file (use *Set Wimp$Scrap &lt;filename&gt;)</h4>
     <p>RISC OS has not seen !Scrap, or Wimp$Scrap has been *Unset.</p>
     <p>Set up a !Scrap on your hard disc or your data disc.</p>
-    <h4 id="Cantupd">Can&rsquo;t update dictionary</h4>
+    <h4 id="Cantupd">Can’t update dictionary</h4>
     <p>PipeDream cannot update the dictionary.</p>
     <p>There may be a disc error. Try verifying the disc.</p>
-    <h4 id="Cantwrite">Can&rsquo;t write to file</h4>
+    <h4 id="Cantwrite">Can’t write to file</h4>
     <p>PipeDream is unable to finish writing to the file.</p>
     <p>
         It may be best to save your file onto another disc and then investigate what is wrong with the first disc.
@@ -185,7 +185,7 @@
     <h4 id="Filing">Filing system error</h4>
     <p>An error has occurred whilst trying to read from or write to the disc .</p>
     <h4 id="is">is a directory</h4>
-    <p>You have tried to drag a directory to the PipeDream icon.</p>
+    <p>You have tried to drag a directory to the PipeDream 4 icon.</p>
     <h4 id="Line">Line too long</h4>
     <ol>
         <li>
@@ -226,7 +226,7 @@
     <h4 id="Notmem">Not enough memory or not within Desktop world</h4>
     <ol>
         <li>You have tried to run PipeDream from outside the desktop.</li>
-        <li>You have altered PipeDream&rsquo;s memory allocation.</li>
+        <li>You have altered PipeDream’s memory allocation in <code>!PipeDream.!Run</code>.</li>
     </ol>
     <h4 id="Notcreate">Not enough memory to create window</h4>
     <p>You are very close to filling all the memory in the computer.</p>
@@ -265,7 +265,7 @@
 
     <h2 id="Errors">Errors in Number Cells</h2>
     <h4 id="Accuracy">Accuracy lost</h4>
-    <p>The parameter to a trigonometrical function was so large in magnitude that it could not be brought into range by subtracting &pi;&rsquo;s.</p>
+    <p>The parameter to a trigonometrical function was so large in magnitude that it could not be brought into range by subtracting multiples of &pi.</p>
     <h4 id="Array">Array not expected</h4>
     <p>You have passed an array to a function or custom function which was not expecting it.</p>
     <h4 id="Badcomp">Bad complex number</h4>
@@ -277,15 +277,15 @@
     <p>See <a href="names.html">Names</a> and <a href="functions/custom.html">Custom Functions</a>.</p>
     <h4 id="Badindex">Bad index</h4>
     <ol>
-        <li>One or both parameters in INDEX() is not numeric.</li>
-        <li>The value in CHOOSE() does not correspond to an element in the list.</li>
+        <li>One or both parameters in <span class="csg-function">INDEX()</span> is not numeric.</li>
+        <li>The value in <span class="csg-function">CHOOSE()</span> does not correspond to an element in the list.</li>
     </ol>
     <h4 id="Badlog">Bad logarithm</h4>
     <p>You have specified a negative or zero value to a log function.</p>
     <h4 id="Badtarg">Bad target for GOTO</h4>
-    <p>You have passed a cell to GOTO which is not in the custom function sheet, does not exist or is in a different column.</p>
+    <p>You have passed a cell to <span class="csg-function">GOTO()</span> which is not in the custom function sheet, does not exist or is in a different column.</p>
     <h4 id="Badtime">Bad time</h4>
-    <p>You have passed a bad time string to TIMEVALUE.</p>
+    <p>You have passed a bad time string to the <span class="csg-function">TIMEVALUE()</span> function.</p>
     <h4 id="Circular">Circular reference</h4>
     <p>You have a cycle of cell references.</p>
     <p>For example, A1 refers to C1 which refers to A1.</p>
@@ -310,14 +310,14 @@
     <p>The system floating point routines take exception to your number.</p>
     <p>The calculation may be too big or too small or you may have passed invalid negative values to routines which use log series.</p>
     <h4>Irr</h4>
-    <p>IRR() cannot converge in 20 iterations.</p>
+    <p><span class="csg-function">IRR()</span> cannot converge in 20 iterations.</p>
     <p>Try guesses between zero and one.</p>
     <h4 id="Local">Local parameter not declared</h4>
-    <p>You have passed a local parameter to a custom function for which no local parameter was declared in FUNCTION.</p>
+    <p>You have passed a local parameter to a custom function for which no local parameter was declared in <span class="csg-function">FUNCTION()</span>.</p>
     <h4>Lookup</h4>
     <ol>
-        <li>LOOKUP() has the wrong number of parameters or cannot find the value in the first range. </li>
-        <li>VLOOKUP() or HLOOKUP() cannot find a value which is smaller (more negative) than the value supplied.</li>
+        <li><span class="csg-function">LOOKUP()</span> has the wrong number of parameters or cannot find the value in the first range. </li>
+        <li><span class="csg-function">VLOOKUP()</span> or <span class="csg-function">HLOOKUP()</span> cannot find a value which is smaller (more negative) than the value supplied.</li>
     </ol>
     <h4 id="Matrix">Matrix not numeric</h4>
     <p>You have tried to multiply, invert or find the determinant of a matrix which is not completely numeric.</p>
@@ -329,7 +329,7 @@
     <p>You have made a mistake when typing in a formula.</p>
     <p>Check what you have typed.</p>
     <h4 id="Mixed">Mixed signs</h4>
-    <p>The y-values supplied to LOGEST were not all of the same sign, which is essential for LOGEST fitting.</p>
+    <p>The y-values supplied to <span class="csg-function">LOGEST()</span> were not all of the same sign, which is essential for <span class="csg-function">LOGEST()</span> fitting.</p>
     <h4 id="More">More than 1 file loaded</h4>
     <p>You have referred to a document in an external reference but there is more than one document with this name loaded.</p>
     <p>
@@ -346,7 +346,7 @@
     <p>Arrays cannot contain other arrays or ranges.</p>
     <h4 id="Nodate">No date value</h4>
     <p>You have used a date function on a time which contains only a time and not a date.</p>
-    <h4 id="Noresult">No RESULT in custom function</h4>
+    <h4 id="Noresult">No <span class="csg-function">RESULT</span> in custom function</h4>
     <p>PipeDream has reached the end of the custom function sheet without finding a RESULT.</p>
     <h4 id="Notime">No time value</h4>
     <p>You have used a time function on a date which contains only a date and not a time.</p>
@@ -369,12 +369,12 @@
     <h4 id="Value">Value not defined</h4>
     <p>This message appears in the elements of an array which has been automatically expanded by both columns and rows.</p>
     <h4 id="Wrongif">Wrongly nested IF ELSE ELSEIF ENDIF</h4>
-    <p>You have entered an ELSE, ELSEIF or ENDIF without a corresponding IF.</p>
-    <p>Note that you must have only one parameter to IF for IF to have an ELSE, ELSEIF or ENDIF.</p>
+    <p>You have entered an <span class="csg-function">ELSE</span>, <span class="csg-function">ELSEIF()</span> or <span class="csg-function">ENDIF</span> without a corresponding <span class="csg-function">IF()</span>.</p>
+    <p>Note that you must have only one parameter to <span class="csg-function">IF()</span> for <span class="csg-function">IF()</span> to have an <span class="csg-function">ELSE</span>, <span class="csg-function">ELSEIF()</span> or <span class="csg-function">ENDIF</span>.</p>
     <h4 id="Wrongly">Wrongly nested loop</h4>
     <ol>
-        <li>BREAK or CONTINUE are not inside a LOOP.</li>
-        <li>NEXT, ENDWHILE or UNTIL appear out of sequence.</li>
+        <li><span class="csg-function">BREAK</span> or <span class="csg-function">CONTINUE</span> are not inside a loop.</li>
+        <li><span class="csg-function">NEXT</span>, <span class="csg-function">ENDWHILE</span> or <span class="csg-function">UNTIL()</span> appear out of sequence.</li>
     </ol>
     <hr>
 
@@ -383,11 +383,11 @@
     <p>The file being processed is neither a PipeDream file nor a Lotus 1-2-3 file.</p>
     <p>You may not have selected the correct file or it may be corrupted.</p>
     <h4 id="ErrorReadingOrWritingFile">Error reading or writing file</h4>
-    <p>There has been an error reading or writing the file when using the Lotus - PipeDream converter.</p>
+    <p>There has been an error reading or writing the file when using the Lotus 1-2-3 - PipeDream converter.</p>
     <h4 id="TooManyRowsOrColumns">File has too many rows or columns</h4>
-    <p>The file you want to convert with the PipeDream - Lotus converter has too many rows or columns for Lotus.</p>
+    <p>The file you want to convert with the PipeDream - Lotus 1-2-3 converter has too many rows or columns for Lotus.</p>
     <h4 id="FormulaNotCompletelyConverted">Formula not completely converted</h4>
-    <p>A formula has not been completely converted when using the Lotus - PipeDream converter.</p>
+    <p>A formula has not been completely converted when using the Lotus 1-2-3 - PipeDream converter.</p>
     <p>
         The rest of the file has been converted successfully.
         The offending cell (or cells) will display an error message or the formula will be stored as text.

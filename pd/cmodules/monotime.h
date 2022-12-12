@@ -54,9 +54,31 @@ exported functions
  * (WINDOWS: milliseconds since Windows was started)
 */
 
+#if defined(NORCROFT_INLINE_ASM) || defined(NORCROFT_INLINE_SWIX_NOT_YET)
+//#include "swis.h"
+#define OS_ReadMonotonicTime 0x00000042
+#define _XOS(swi_no) ((swi_no) | (1U << 17))
+
+_Check_return_
+static inline MONOTIME
+monotime(void)
+{
+    MONOTIME result;
+    #if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+    (void) _swix(OS_ReadMonotonicTime, _OUT(0), &result);
+    #elif defined(NORCROFT_INLINE_ASM)
+    __asm {
+        SVC     #_XOS(OS_ReadMonotonicTime), /*in*/ {}, /*out*/ {R0}, /*corrupted*/ {PSR};
+        MOV     result, R0;
+    }
+    #endif
+    return(result);
+}
+#else
 _Check_return_
 extern MONOTIME
 monotime(void);
+#endif
 
 /* return the difference between the current monotonic time and a previous
  * value thereof.

@@ -14,7 +14,7 @@
 </head>
 <body>
     <h1 id="Mathematical">Mathematical functions</h1>
-    <p>The following mathematical functions are provided by PipeDream.</p>
+    <p>The following mathematical functions are provided by PipeDream 4.</p>
 
     <h2 class="csg-function" id="ABS">ABS</h2>
     <h5>Syntax:</h5>
@@ -99,7 +99,7 @@
     <p>The formula used is:</p>
     <p class="csg-function-formula"
         <i>n</i>!
-        = <span class="csg-math-symbol-upper-case">&Pi;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper"><i>i=n</i></sup> <i>i</i>
+        = <em><sub class="csg-math-symbol-limit-lower">i</sub></em><span class="csg-math-symbol-prod">&Product;</span><sub class="csg-math-symbol-limit-lower">1</sub><em><sup class="csg-math-symbol-limit-upper">n</sup></em> <i>i</i>
         = <i>n</i> &times; <i>(n - 1)</i> ... &times; 2 &times; 1
     </p>
     <p>For very large <span class="csg-function-parameter">n</span> this is an approximation achieved using logarithms.</p>
@@ -127,12 +127,12 @@
     </p>
     <p>
         The result is rounded towards zero.
-        This behaviour is consistent with earlier versions of PipeDream, Lotus 1-2-3, Resultz and Fireworkz.
+        This behaviour is consistent with earlier versions of PipeDream, and also Lotus 1-2-3, Resultz and Fireworkz.
     </p>
     <p>
         If <span class="csg-function-parameter">number</span> is negative,
         PipeDream does not give the result as LibreOffice and Microsoft Excel,
-        which round towards -infinity, like the FLOOR() spreadsheet function.
+        which round towards -infinity, like the <span class="csg-function">FLOOR()</span> spreadsheet function.
     </p>
 
     <h2 class="csg-function" id="LN">LN</h2>
@@ -173,7 +173,7 @@
         The returned value has the same sign as <span class="csg-function-parameter">dividend</span> and
         is less than <span class="csg-function-parameter">divisor</span> in magnitude.
         PipeDream computes the quotient, and hence the remainder, using truncated division.
-        This behaviour is consistent with earlier versions of PipeDream, Lotus 1-2-3, Resultz and Fireworkz.
+        This behaviour is consistent with earlier versions of PipeDream, and also Lotus 1-2-3, Resultz and Fireworkz.
     </p>
     <p>
         If <span class="csg-function-parameter">divisor</span> is negative,
@@ -202,7 +202,7 @@
     <p>returns 12345.68.</p>
     <p class="csg-sample-indent"><code>ROUND(12345.678,-2)</code></p>
     <p>returns 12300.</p>
-    <p>ROUND can be used to help the inaccuracy problems often encountered in accountancy.</p>
+    <p><span class="csg-function">ROUND()</span> can be used to help the inaccuracy problems often encountered in accountancy.</p>
     <h5>Example:</h5>
     <p>
         If you have 1.6 in cells A1 and A2, adding them together gives the result 3.2,
@@ -212,12 +212,12 @@
         therefore, what appears on the screen will look consistent even though it may not match the original data.
     </p>
     <p>
-        The <span class="csg-command">Snapshot</span> command is useful with ROUND.
+        The <span class="csg-command">Snapshot</span> command is useful with <span class="csg-function">ROUND()</span>.
         If you have a column of numbers and you want to have them rounded to a particular degree of precision:
     </p>
     <ol>
         <li>Insert a new column using <span class="csg-cmdseq">Cmd-EIC</span>.</li>
-        <li>Use ROUND and the <span class="csg-command">Replicate Down</span> command (<span class="csg-cmdseq">Cmd-BRD</span>) to create a new column of data.</li>
+        <li>Use <span class="csg-function">ROUND()</span> and the <span class="csg-command">Replicate Down</span> command (<span class="csg-cmdseq">Cmd-BRD</span>) to create a new column of data.</li>
         <li>Mark the block and use the <span class="csg-command">Snapshot</span> command (<span class="csg-cmdseq">Cmd-BSS</span>)to fix the numbers permanently in place.</li>
         <li>Use the new column in your calculations.</li>
     </ol>

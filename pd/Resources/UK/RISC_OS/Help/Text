@@ -1,39 +1,34 @@
-* PipeDream - Help *
+* PipeDream 4 - Help *
 
 You are seeing this text help file as no browser was
 available to display HTML help files. It may be
-helpful to run a browser and then display Help again.
+helpful to run a browser and then choose Help again.
 
 
 * Online Resources *
 
-Many resources for PipeDream are available online:
+Many resources for PipeDream 4 are available online:
 
-The PipeDream Getting Started Guide
-may be accessed online at
+è The PipeDream 4 Getting Started Guide
 https://croftnuisk.co.uk/coltsoft/pipedream/getting_started/
 
-The PipeDream Reference Guide
-may be accessed online at
+è The PipeDream 4 Reference Guide
 https://croftnuisk.co.uk/coltsoft/pipedream/reference_guide/
 
-Updated PipeDream packages, including manuals and
-example files used in the PipeDream Getting Started Guide,
-may be obtained from
+è Updated PipeDream 4 packages, including manuals and
+  example files used in the PipeDream 4 Getting Started Guide,
 https://croftnuisk.co.uk/coltsoft/pipedream/downloads/
 
-Hints and Tips on using PipeDream
-may be accessed online at
+è Hints and Tips on using PipeDream 4
 https://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips/
 
-Addenda and Errata to the printed documentation
-may be accessed online at
+è Addenda and Errata to the printed documentation
 https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/
 
 
 * Support *
 
-PipeDream is now open source and completely free to use,
+PipeDream 4 is now open source and completely free to use,
 so support is a self-help affair.
 There is a Google Group colton-software-pipedream
  Web site: https://groups.google.com/group/colton-software-pipedream
@@ -48,30 +43,29 @@ Please include files which demonstrate any problems
 Copyright © 1987-2022 Colton Software
 
 The HTML help files contain additional copyright information
-that pertains to certain portions of PipeDream.
+that pertains to certain portions of PipeDream 4.
 
-Thanks to Richard Colton, PipeDream is now
+Thanks to Richard Colton, PipeDream 4 is now
 open source and completely free to use!
 
-PipeDream is made available to you under the terms
+PipeDream 4 is made available to you under the terms
 of the Mozilla Public License, v. 2.0.
 You may obtain a copy of the MPL at:
 https://mozilla.org/MPL/2.0/ .
 
-This means you may use, copy and distribute PipeDream
+This means you may use, copy and distribute PipeDream 4
 to others. You are also welcome to modify the source
-code of PipeDream as you want to meet your needs
+code of PipeDream 4 as you want to meet your needs
 The Mozilla Public License also gives you the right
 to distribute your modified versions.
 
-The PipeDream source code may be downloaded from its
-Subversion repository, kindly hosted on riscos.info:
-svn://svn.riscos.info/pipedream . 
+The source code for PipeDream 4 may be downloaded from GitHub:
+https://github.com/skswales/colton-software-pipedream4
 
 
 * Release Notes *
 
-The release notes for this version of PipeDream may
+The release notes for this version of PipeDream 4 may
 be found in the application's directory. As they are
 in HTML format you will need to use a browser.
 

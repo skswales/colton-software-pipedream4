@@ -6,7 +6,7 @@
 
 /* Copyright (C) 2020-2022 Stuart Swales */
 
-/* Strings from PipeDream - compile to message file*/
+/* Strings from PipeDream - compile to message file */
 
 #include "common/gflags.h" /* leave here for PCH */
 

@@ -10,6 +10,10 @@
 #ifndef __cs_wimp_h
 #define __cs_wimp_h
 
+#ifndef __swis_h
+#include "swis.h"
+#endif
+
 /* The main purpose of this file is to try to force the
  * inclusion of ACW's patched wimp.h rather than tboxlibs' wimp.h
  * but we also define PipeDream specific messages here
@@ -88,12 +92,16 @@ typedef struct WIMP_MSGPD_DDE {                 /* structure used in all PD DDE 
 #error That is the wrong wimp.h - it is from tboxlibs not ACW. Methinks you have not done the rlib_patch/apply.
 #endif
 
-#define WimpOpenWindowBlock struct _WimpOpenWindowBlock /* opaque for headers where it's not needed */
-struct _WimpOpenWindowBlock;
-#define WimpWindow struct _WimpWindow
+/* ones that have the same actual structure but different member names/types */
+typedef wimp_box BBox;
+#define WimpWindow wimp_wind
+#define WimpCreateIconBlock wimp_icreate
+#define WimpOpenWindowBlock wimp_openstr
+
 #define WimpWindowWithBitset struct _WimpWindowWithBitset
 
-typedef wimp_box BBox;
+typedef struct { wimp_w window_handle; } WimpDeleteWindowBlock;
+typedef struct { wimp_w window_handle; wimp_i icon_handle; } WimpDeleteIconBlock;
 
 #else /* NOT COMPILING_WIMPLIB */
 
@@ -132,27 +140,89 @@ typedef wimp_box BBox;
 #define wimp_w HOST_WND /* NB overrides */
 #define wimp_i int
 
-_kernel_oserror *tbl_wimp_create_window     (WimpWindow *defn, int *handle);
+#if defined(NORCROFT_INLINE_SWIX)
 
-_kernel_oserror *tbl_wimp_create_icon       (int priority,
-                                            WimpCreateIconBlock *defn,
-                                            int *handle);
+static inline _kernel_oserror *
+tbl_wimp_open_window(WimpOpenWindowBlock *show)
+{
+    return(_swix(Wimp_OpenWindow, _IN(1), show));
+}
 
-_kernel_oserror *tbl_wimp_delete_window     (WimpDeleteWindowBlock *block);
+#else
 
 _kernel_oserror *tbl_wimp_open_window       (WimpOpenWindowBlock *show);
 
+#endif /* NORCROFT_INLINE_SWIX */
+
 _kernel_oserror *tbl_wimp_redraw_window     (WimpRedrawWindowBlock *block, int *more);
+
+static inline _kernel_oserror *
+tbl_wimp_redraw_window_x(_InVal_ wimp_w window_handle, _Out_ WimpRedrawWindowBlock *block, _Out_ int *more)
+{
+    block->window_handle = window_handle;
+
+    return(tbl_wimp_redraw_window(block, more));
+}
 
 _kernel_oserror *tbl_wimp_update_window     (WimpRedrawWindowBlock *block, int *more);
 
 _kernel_oserror *tbl_wimp_get_rectangle     (WimpRedrawWindowBlock *block, int *more);
 
+
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline _kernel_oserror *
+tbl_wimp_get_window_state(_Out_ WimpGetWindowStateBlock *state)
+{
+    return(_swix(Wimp_GetWindowState, _IN(1), state));
+}
+
+#else
+
 _kernel_oserror *tbl_wimp_get_window_state  (WimpGetWindowStateBlock *state);
+
+#endif /* NORCROFT_INLINE_SWIX */
+
+static inline _kernel_oserror *
+tbl_wimp_get_window_state_x(_InVal_ wimp_w window_handle, _Out_ WimpGetWindowStateBlock *state)
+{
+    state->window_handle = window_handle;
+
+    return(tbl_wimp_get_window_state(state));
+}
+
+
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline _kernel_oserror *
+tbl_wimp_set_icon_state(_In_ WimpSetIconStateBlock *block)
+{
+    return(_swix(Wimp_SetIconState, _IN(1), block));
+}
+
+static inline _kernel_oserror *
+tbl_wimp_get_icon_state(_Inout_ WimpGetIconStateBlock *block)
+{
+    return(_swix(Wimp_GetIconState, _IN(1), block));
+}
+
+#else
 
 _kernel_oserror *tbl_wimp_set_icon_state    (WimpSetIconStateBlock *block);
 
 _kernel_oserror *tbl_wimp_get_icon_state    (WimpGetIconStateBlock *block);
+
+#endif /* NORCROFT_INLINE_SWIX */
+
+static inline _kernel_oserror *
+tbl_wimp_get_icon_state_x(_InVal_ wimp_w window_handle, _InVal_ wimp_i icon_handle, _Out_ WimpGetIconStateBlock *block)
+{
+    block->window_handle = window_handle;
+    block->icon_handle = icon_handle;
+
+    return(tbl_wimp_get_icon_state(block));
+}
+
 
 _kernel_oserror *tbl_wimp_force_redraw      (int window_handle,
                                             int xmin,
@@ -167,11 +237,65 @@ _kernel_oserror *tbl_wimp_set_caret_position (int window_handle,
                                              int height,
                                              int index);
 
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline _kernel_oserror *
+tbl_wimp_get_caret_position(_Out_ WimpGetCaretPositionBlock *block)
+{
+    return(_swix(Wimp_GetCaretPosition, _IN(1), block));
+}
+
+#else
+
 _kernel_oserror *tbl_wimp_get_caret_position (WimpGetCaretPositionBlock *block);
+
+#endif /* NORCROFT_INLINE_SWIX */
+
+
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline _kernel_oserror *
+tbl_wimp_set_colour(_InVal_ int colour)
+{
+    return(_swix(Wimp_SetColour, _IN(0), colour));
+}
+
+#else
+
+_kernel_oserror *tbl_wimp_set_colour        (int colour);
+
+#endif /* NORCROFT_INLINE_SWIX */
+
+
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline _kernel_oserror *
+tbl_wimp_set_extent(_InVal_ int window_handle, _Inout_ BBox *area)
+{
+    return(_swix(Wimp_SetExtent, _INR(0,1), window_handle, area));
+}
+
+#else
 
 _kernel_oserror *tbl_wimp_set_extent        (int window_handle, BBox *area);
 
+#endif /* NORCROFT_INLINE_SWIX */
+
+
+#if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+
+static inline _kernel_oserror *
+tbl_wimp_plot_icon(_In_ WimpPlotIconBlock *block)
+{
+    return(_swix(Wimp_PlotIcon, _IN(1), block));
+}
+
+#else
+
 _kernel_oserror *tbl_wimp_plot_icon         (WimpPlotIconBlock *block);
+
+#endif /* NORCROFT_INLINE_SWIX_NOT_YET */
+
 
 _kernel_oserror *tbl_wimp_block_copy        (int handle,
                                             int sxmin,
@@ -189,11 +313,11 @@ _kernel_oserror *tbl_wimp_block_copy        (int handle,
 
 extern const _kernel_oserror *
 wimp_reporterror_rf(
-	_In_        const _kernel_oserror * e,
-	_InVal_     int errflags_in,
-	_Out_       int * p_button_clicked,
-	_In_opt_z_  const char * message,
-	_InVal_     int error_level);
+    _In_        const _kernel_oserror * e,
+    _InVal_     int errflags_in,
+    _Out_       int * p_button_clicked,
+    _In_opt_z_  const char * message,
+    _InVal_     int error_level);
 
 /* our additional helper structures and functions to go with tboxlibs */
 
@@ -414,6 +538,42 @@ typedef struct
 } WimpEvent;
 
 #endif /* COMPILING_WIMPLIB */
+
+/* expose to all now that these are used in WimpLib core code */
+
+_kernel_oserror *tbl_wimp_create_window     (WimpWindow *defn, int *handle);
+
+_kernel_oserror *tbl_wimp_create_icon       (int priority,
+                                            WimpCreateIconBlock *defn,
+                                            int *handle);
+
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline
+_kernel_oserror *tbl_wimp_delete_window(WimpDeleteWindowBlock *block)
+{
+    return(_swix(Wimp_DeleteWindow, _IN(1), block));
+}
+
+#else
+
+_kernel_oserror *tbl_wimp_delete_window     (WimpDeleteWindowBlock *block);
+
+#endif /* NORCROFT_INLINE_SWIX */
+
+#if defined(NORCROFT_INLINE_SWIX)
+
+static inline _kernel_oserror *
+tbl_wimp_delete_icon(WimpDeleteIconBlock *block)
+{
+    return(_swix(Wimp_DeleteIcon, _IN(1), block));
+}
+
+#else
+
+_kernel_oserror *tbl_wimp_delete_icon       (WimpDeleteIconBlock *block);
+
+#endif /* NORCROFT_INLINE_SWIX */
 
 #endif /* __cs_wimp_h */
 

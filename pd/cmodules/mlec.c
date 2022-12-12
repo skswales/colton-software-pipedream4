@@ -1263,8 +1263,7 @@ mlec__event_Mouse_Click(
 
     { /* calculate window origin */
     WimpGetWindowStateBlock window_state;
-    window_state.window_handle = mouse_click->window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(mouse_click->window_handle, &window_state)) )
         return(FALSE);
     gdi_org.x = window_state.visible_area.xmin - window_state.xscroll;
     gdi_org.y = window_state.visible_area.ymax - window_state.yscroll;
@@ -1489,12 +1488,16 @@ host_setfontcolours_for_mlec(
     rgb_bg.bytes.green = p_rgb_background->g;
     rgb_bg.bytes.blue  = p_rgb_background->b;
 
+#if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+    (void) _swix(ColourTrans_SetFontColours, _INR(0,3), 0, rgb_bg.word, rgb_fg.word, 14 /* max offset - some magic number, !Draw uses 14 */);
+#else
     rs.r[0] = 0;
     rs.r[1] = rgb_bg.word;
     rs.r[2] = rgb_fg.word;
     rs.r[3] = 14; /* max offset - some magic number, !Draw uses 14 */
 
     (void) _kernel_swi(ColourTrans_SetFontColours, &rs, &rs);
+#endif
 }
 
 /******************************************************************************
@@ -1553,11 +1556,9 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
     upper_end   = &mlec->buffptr[mlec->upper.end];                      /* 1 byte past last character              */
 
     /* Start the redraw */
-    redraw_window_block.window_handle = mlec->ml_pane_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_redraw_window_x(mlec->ml_pane_window_handle, &redraw_window_block, &more)); /* more := FALSE on error */
 
- trace_4(TRACE_MODULE_MLEC, "wimp_redraw_wind returns: (%d,%d,%d,%d) ",redraw_window_block.visible_area.xmin,redraw_window_block.visible_area.ymin,redraw_window_block.visible_area.xmax,redraw_window_block.visible_area.ymax);
+ trace_4(TRACE_MODULE_MLEC, "tbl_wimp_redraw_window returns: (%d,%d,%d,%d) ",redraw_window_block.visible_area.xmin,redraw_window_block.visible_area.ymin,redraw_window_block.visible_area.xmax,redraw_window_block.visible_area.ymax);
  trace_2(TRACE_MODULE_MLEC, "(%d,%d) ",redraw_window_block.xscroll,redraw_window_block.yscroll);
  trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)",redraw_window_block.redraw_area.xmin,redraw_window_block.redraw_area.ymin,redraw_window_block.redraw_area.xmax,redraw_window_block.redraw_area.ymax);
 
@@ -1710,8 +1711,7 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
         }
 #endif
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)); /* more := FALSE on error */
     }
 }
 
@@ -2482,7 +2482,7 @@ void mlec_claim_focus(MLEC_HANDLE mlec)
 
     trace_0(TRACE_MODULE_MLEC, "mlec_claim_focus - ");
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&current_caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&current_caret)) )
         return;
 
     build_new_caret(mlec, &new_caret);
@@ -2509,7 +2509,7 @@ void mlec_release_focus(MLEC_HANDLE mlec)
 
     trace_0(TRACE_MODULE_MLEC, "mlec_release_focus - ");
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&current_caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&current_caret)) )
         return;
 
     if(current_caret.window_handle != mlec->ml_pane_window_handle)
@@ -2566,8 +2566,7 @@ void scroll_until_cursor_visible(MLEC_HANDLE mlec)
     {
     WimpGetWindowStateBlock window_state;
 
-    window_state.window_handle = mlec->ml_pane_window_handle;
-    if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( !WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(mlec->ml_pane_window_handle, &window_state)) )
     {
         GDI_BOX curshape;
         const int visible_width  = BBox_width( &window_state.visible_area);
@@ -2642,7 +2641,7 @@ show_caret(MLEC_HANDLE mlec)
 
     return_if_no_pane(mlec);
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&current_caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&current_caret)) )
         return;
 
     if(current_caret.window_handle != mlec->ml_pane_window_handle)
@@ -3118,8 +3117,7 @@ mlec__drag_start(
     WimpGetWindowStateBlock window_state;
     wimp_dragstr dragstr;
 
-    window_state.window_handle = mlec->ml_pane_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(mlec->ml_pane_window_handle, &window_state)) )
         return;
 
     dragstr.window    = mlec->ml_pane_window_handle; /* Needed by winx_drag_box, so it can direct Wimp_EUserDrag to us */
@@ -3130,7 +3128,7 @@ mlec__drag_start(
     dragstr.parent.x1 = window_state.visible_area.xmax + mlec->charwidth;
     dragstr.parent.y1 = window_state.visible_area.ymax + mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
 
-    if(NULL == WrapOsErrorReporting(winx_drag_box(&dragstr))) /* NB winx_drag_box NOT wimp_drag_box */
+    if( !WrapOsErrorReporting_IsError(winx_drag_box(&dragstr)) ) /* NB winx_drag_box NOT wimp_drag_box */
     {
         status_assert(Null_EventHandlerAdd(mlec__drag_null_handler, mlec, 0));
     }
@@ -3162,8 +3160,7 @@ null_event_proto(static, mlec__drag_null_handler_null_event)
 
     { /* calculate window origin */
     WimpGetWindowStateBlock window_state;
-    window_state.window_handle = mlec->ml_pane_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(mlec->ml_pane_window_handle, &window_state)) )
         return(NULL_EVENT_COMPLETED);
     gdi_org.x = window_state.visible_area.xmin - window_state.xscroll;
     gdi_org.y = window_state.visible_area.ymax - window_state.yscroll;
@@ -3171,7 +3168,7 @@ null_event_proto(static, mlec__drag_null_handler_null_event)
 
     { /* obtain mouse position relative to window origin */
     wimp_mousestr mouse;
-    if(NULL != WrapOsErrorReporting(wimp_get_point_info(&mouse)))
+    if( WrapOsErrorReporting_IsError(wimp_get_point_info(&mouse)) )
         return(NULL_EVENT_COMPLETED);
     rel_x = mouse.x - gdi_org.x;
     rel_y = mouse.y - gdi_org.y;
@@ -3517,10 +3514,9 @@ mlec__update_loop(
         - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP]
         - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * (markend.row + 1);
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
 
- trace_4(TRACE_MODULE_MLEC, "wimp_update_wind returns: (%d,%d,%d,%d) ",update_and_redraw_window_block.redraw.visible_area.xmin,update_and_redraw_window_block.redraw.visible_area.ymin,update_and_redraw_window_block.redraw.visible_area.xmax,update_and_redraw_window_block.redraw.visible_area.ymax);
+ trace_4(TRACE_MODULE_MLEC, "tbl_wimp_update_window returns: (%d,%d,%d,%d) ",update_and_redraw_window_block.redraw.visible_area.xmin,update_and_redraw_window_block.redraw.visible_area.ymin,update_and_redraw_window_block.redraw.visible_area.xmax,update_and_redraw_window_block.redraw.visible_area.ymax);
  trace_2(TRACE_MODULE_MLEC, "(%d,%d) ",update_and_redraw_window_block.redraw.xscroll,update_and_redraw_window_block.redraw.yscroll);
  trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)",update_and_redraw_window_block.redraw.redraw_area.xmin,update_and_redraw_window_block.redraw.redraw_area.ymin,update_and_redraw_window_block.redraw.redraw_area.xmax,update_and_redraw_window_block.redraw.redraw_area.ymax);
 
@@ -3533,8 +3529,7 @@ mlec__update_loop(
 
         show_selection(mlec, markstart, markend, gdi_org.x, gdi_org.y, (PC_GDI_BOX) &update_and_redraw_window_block.redraw.redraw_area /*screenBB*/);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
     }
 }
 
@@ -3566,11 +3561,15 @@ host_set_EOR_for_mlec(void)
     { /* New machines can (and some demand) this mechanism */
     int colnum_foreground = mlec_colourtrans_ReturnColourNumber(os_rgb_foreground);
     int colnum_background = mlec_colourtrans_ReturnColourNumber(os_rgb_background);
+#if defined(NORCROFT_INLINE_SWIX)
+    (void) _swix(OS_SetColour, _INR(0,1), 3, colnum_foreground ^ colnum_background);
+#else
     _kernel_swi_regs rs;
 
     rs.r[0] = 3;
     rs.r[1] = colnum_foreground ^ colnum_background;
     (void) _kernel_swi(OS_SetColour, &rs, &rs);
+#endif
     } /*block*/
 }
 

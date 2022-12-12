@@ -1,5 +1,5 @@
---- _src	2021-12-31 14:59:29.840000000 +0000
-+++ _dst	2022-08-18 16:55:46.430000000 +0000
+--- _src	2022-10-26 16:47:18.220000000 +0000
++++ _dst	2022-10-27 18:43:18.810000000 +0000
 @@ -32,6 +32,8 @@
   * History: IDJ: 05-Feb-92: prepared for source release
   */
@@ -31,16 +31,22 @@
  int bbc_modevar (int mode, int varno)
  
  { int flags, result;
-@@ -217,6 +227,8 @@
- 
- /* ---------- Graphics ----------- */
+@@ -144,10 +154,13 @@
+    int result;
+    vars[0] = varno;
+    vars[1] = -1; /* terminator. */
+-   return os_swi2 (os_X | OS_ReadVduVariables, (int) &vars[0], (int) &result) != NULL?
++   return os_swix2(OS_ReadVduVariables, (int) &vars[0], (int) &result) != NULL?
+          -1: result; /*relies on -1 never being valid*/
++   /* SKS_ACW was os_swi2 (os_X | ) */
+ }
  
 +#ifndef SKS_ACW
 +
- /* Clear graphics window. */
- os_error *bbc_clg(void)
+ os_error *bbc_vduvars(int *vars, int *values)
  {
-@@ -245,15 +257,32 @@
+    return(os_swi2(os_X | OS_ReadVduVariables, (int) vars, (int) values));
+@@ -245,15 +258,32 @@
  }
  #endif
  
@@ -52,10 +58,10 @@
 +#ifdef SKS_ACW
 +    /* SKS get round VDU funnel/multiple SWI overhead */
 +    char buffer[3 /*length of VDU 18 sequence*/];
-+    char * p_u8 = buffer;
-+    *p_u8++ = 18;
-+    *p_u8++ = (a);
-+    *p_u8++ = (b);
++    /* char * p_u8 = buffer; */
++    buffer[0] = bbc_DefGraphColour /*18*/;
++    buffer[1] = a;
++    buffer[2] = b;
 +    return(os_writeN(buffer, sizeof(buffer)));
 +#else /* NOT SKS_ACW */
     os_error *e = bbc_vdu(bbc_DefGraphColour);
@@ -73,12 +79,12 @@
  
  /* Perform an operating system plot operation. Plot number, x, y. */
  os_error *bbc_plot(int n, int x, int y)
-@@ -546,6 +575,8 @@
+@@ -556,6 +586,8 @@
+   return x;
  }
- #endif
  
 +#endif /* SKS_ACW */
 +
- /* Return a character code from an input stream or the keyboard. */
- int bbc_inkey(int n)
- {
+ #pragma -s0
+ 
+ /* end of c.bbc */

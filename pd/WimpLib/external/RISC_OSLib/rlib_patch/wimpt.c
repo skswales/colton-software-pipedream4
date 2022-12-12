@@ -1,5 +1,5 @@
---- _src	2021-12-31 14:59:30.420000000 +0000
-+++ _dst	2022-08-18 16:55:46.960000000 +0000
+--- _src	2022-10-26 16:47:18.800000000 +0000
++++ _dst	2022-10-31 14:11:48.130000000 +0000
 @@ -69,13 +69,22 @@
  
  os_error * wimpt_poll(wimp_emask mask, wimp_eventstr * result)
@@ -135,7 +135,17 @@
  {
    wimp_redrawstr r;
    r.w = (wimp_w) -1;
-@@ -174,6 +243,11 @@
+@@ -170,10 +239,21 @@
+              (1 << bbc_vduvar(bbc_XEigFactor));
+   r.box.y1 = (1 + bbc_vduvar(bbc_YWindLimit)) *
+              (1 << bbc_vduvar(bbc_YEigFactor));
++#ifdef SKS_ACW
++  (void) tbl_wimp_force_redraw(r.w,
++                               r.box.x0, r.box.y0,
++                               r.box.x1, r.box.y1);
++#else
+   (void) wimp_force_redraw(&r);
++#endif /* SKS_ACW */
  }
  #endif
  
@@ -147,7 +157,7 @@
  int wimpt_mode(void)
  {
    return(wimpt__mode);
-@@ -208,6 +282,8 @@
+@@ -208,6 +288,8 @@
    return programname;
  }
  
@@ -156,7 +166,7 @@
  void wimpt_reporterror(os_error *e, wimp_errflags f)
  {
    if (!programname)
-@@ -221,9 +297,13 @@
+@@ -221,9 +303,13 @@
    return e;
  }
  
@@ -170,7 +180,7 @@
  
  static void escape_handler(int sig)
  {
-@@ -231,6 +311,7 @@
+@@ -231,6 +317,7 @@
    (void) signal(SIGINT, &escape_handler);
  }
  
@@ -178,7 +188,7 @@
  
  static void handler(int signal)
  {
-@@ -251,6 +332,8 @@
+@@ -251,6 +338,8 @@
      exit(1);
  }
  
@@ -187,7 +197,7 @@
  static int wimpversion = 0;
  
  
-@@ -278,6 +361,11 @@
+@@ -278,6 +367,11 @@
    signal(SIGINT, &escape_handler);
    signal(SIGSEGV, &handler);
    signal(SIGTERM, &handler);
@@ -199,7 +209,7 @@
    signal(SIGOSERROR, &errhandler);
    signal_handlers_installed = 1;
  }
-@@ -312,7 +400,9 @@
+@@ -312,7 +406,9 @@
  
    wimpt_checkmode();
    atexit(wimpt__exit);

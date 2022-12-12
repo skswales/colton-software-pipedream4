@@ -42,22 +42,10 @@ _Check_return_
 _Ret_z_
 extern PC_USTR
 user_id(void);
-
 _Check_return_
 _Ret_z_
 extern PC_USTR
 user_organ_id(void);
-
-/*
-from mcdiff.c
-*/
-
-extern void
-wrch_definefunny(
-    S32 ch);
-
-extern void
-wrch_undefinefunnies(void);
 
 /*
 from commlin.c

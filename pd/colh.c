@@ -150,9 +150,7 @@ redefine_icon(
 {
     WimpGetIconStateBlock icon_state;
 
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     if( (create->icon.bbox.xmin != icon_state.icon.bbox.xmin) ||
@@ -175,7 +173,7 @@ redefine_icon(
         void_WrapOsErrorReporting(tbl_wimp_force_redraw(window_handle, redraw_area.xmin, redraw_area.ymin, redraw_area.xmax, redraw_area.ymax));
         } /*block*/
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         {   /* ensure we don't restore to undefined window handle */
             caret.window_handle = -1;
             caret.icon_handle = -1;
@@ -189,8 +187,16 @@ redefine_icon(
             }
         }
 
-        /* delete current definition */
+#if 1
+        { /* delete current definition */
+        WimpDeleteIconBlock delete_block;
+        delete_block.window_handle = window_handle;
+        delete_block.icon_handle = icon_handle;
+        void_WrapOsErrorReporting(tbl_wimp_delete_icon(&delete_block));
+        } /*block*/
+#else
         void_WrapOsErrorReporting(wimp_delete_icon(window_handle, icon_handle));
+#endif
 
         /* and re-create icon with required size */
         create->window_handle = window_handle;
@@ -225,19 +231,14 @@ set_icon_colours(
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     change_value = ((icon_state.icon.flags & colour_mask) != colour_bits);
+    } /*block*/
 
     if(!change_value)
-    {
-        trace_0(TRACE_APP_PD4, "colours not changed");
         return;
-    }
-    } /*block*/
 
     winf_changedfield_full(window_handle, icon_handle, (int) colour_bits, (int) colour_mask);
 }
@@ -253,19 +254,14 @@ set_icon_flags(
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     change_value = ((icon_state.icon.flags & mask) != value);
+    } /*block*/
 
     if(!change_value)
-    {
-        trace_0(0/*TRACE_APP_PD4*/, "icon flags not changed");
         return;
-    }
-    } /*block*/
 
     winf_changedfield_full(window_handle, icon_handle, value, mask);
 }
@@ -280,19 +276,17 @@ set_icon_text(
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     change_text = (0 != strcmp(icon_state.icon.data.it.buffer, text));
 
     if(change_text)
-        strcpy(icon_state.icon.data.it.buffer, text);
+        xstrkpy(icon_state.icon.data.it.buffer, icon_state.icon.data.it.buffer_size, text);
+    } /*block*/
 
     if(!change_text)
         return;
-    } /*block*/
 
     winf_changedfield(window_handle, icon_handle); /* just poke it for redraw */
 }
@@ -310,21 +304,19 @@ set_icon_text_and_flags(
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     change_text = (0 != strcmp(icon_state.icon.data.it.buffer, text));
 
     if(change_text)
-        strcpy(icon_state.icon.data.it.buffer, text);
+        xstrkpy(icon_state.icon.data.it.buffer, icon_state.icon.data.it.buffer_size, text);
 
     change_value = ((icon_state.icon.flags & mask) != value);
+    } /*block*/
 
     if(!change_text && !change_value)
         return;
-    } /*block*/
 
     /* redraw iff changed */
     winf_changedfield_full(window_handle, icon_handle, value, mask);
@@ -349,11 +341,11 @@ colh_position_icons(void)
     /* This invisible icon exists to make click detection easier, */
     /* and acts as a guide for plotting the headings & margins.   */
 
+    heading.window_handle = colh_window_handle;
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = heading.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
-    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_COLUMN_HEADINGS, &icon_state)) )
+        return;
     heading.icon = icon_state.icon;
     } /*block*/
 
@@ -364,11 +356,11 @@ colh_position_icons(void)
     /* use       bbox.ymin   from template */
     heading.icon.flags = (int) (wimp_IBTYPE * wimp_BCLICKDRAGDOUBLE);
 
+    border.window_handle = colh_window_handle;
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = border.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_STATUS_BORDER;
-    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_STATUS_BORDER, &icon_state)) )
+        return;
     border.icon = icon_state.icon;
     } /*block*/
 
@@ -382,11 +374,11 @@ colh_position_icons(void)
         wimp_IFILLED | (WimpIcon_BGColour * wimp_colour_index_from_option(COI_BORDERBACK)) |
         wimp_IRJUST );
 
+    coordinate.window_handle = colh_window_handle;
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = coordinate.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_STATUS_TEXT;
-    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    if (WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_STATUS_TEXT, &icon_state)) )
+        return;
     coordinate.icon = icon_state.icon;
     } /*block*/
 
@@ -441,9 +433,7 @@ colh_draw_column_headings(void)
 
     trace_0(TRACE_APP_PD4, "\n*** colh_draw_column_headings()");
 
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_COLUMN_HEADINGS, &icon_state)) )
         return;
 
     please_update_window(colh_forced_draw_column_headings, colh_window_handle,
@@ -490,8 +480,7 @@ colh_really_draw_column_headings(void)
 
     { /* get the window width */
     WimpGetWindowStateBlock window_state;
-    window_state.window_handle = colh_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(colh_window_handle, &window_state)) )
         return;
     window_width = BBox_width(&window_state.visible_area);
     } /*block*/
@@ -500,9 +489,7 @@ colh_really_draw_column_headings(void)
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_COLUMN_HEADINGS, &icon_state)) )
         return;
     border = icon_state.icon;
     } /*block*/
@@ -552,10 +539,10 @@ colh_really_draw_column_headings(void)
 
         (void) write_col(number.data.t, elemof32(number.data.t), colno);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_plot_icon(&number)))
+        if( WrapOsErrorReporting_IsError(tbl_wimp_plot_icon(&number)) )
             break;
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_plot_icon(&border)))
+        if( WrapOsErrorReporting_IsError(tbl_wimp_plot_icon(&border)) )
             break;
 
         number.bbox.xmin = border.bbox.xmax;
@@ -738,12 +725,10 @@ colh_event_Redraw_Window_Request(
 
     trace_0(TRACE_APP_PD4, "colh_Redraw_Window_Request()");
 
-    redraw_window_block.window_handle = redraw_window_request->window_handle;
-    assert(redraw_window_block.window_handle == colh_window_handle);
+    assert(redraw_window_request->window_handle == colh_window_handle);
 
     /* wimp errors in redraw are fatal */
-    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_redraw_window_x(redraw_window_request->window_handle, &redraw_window_block, &more)); /* more := FALSE on error */
 
     while(more)
     {
@@ -751,8 +736,7 @@ colh_event_Redraw_Window_Request(
 
         colh_maybe_draw_column_headings();
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)); /* more := FALSE on error */
     }
 
     return(TRUE);
@@ -1665,7 +1649,7 @@ EditContentsLine(void)
 
     /* Start editing the formula, place caret where user clicked */
 
-    if(NULL == WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( !WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
     {
         if( (caret.window_handle == colh_window_handle) &&
             (caret.icon_handle == COLH_CONTENTS_LINE) &&
@@ -1991,8 +1975,7 @@ colh_where_in_column_headings(
 
     { /* calculate window origin */
     WimpGetWindowStateBlock window_state;
-    window_state.window_handle = mouse_click->window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(mouse_click->window_handle, &window_state)) )
         goto had_error;
     gdi_org.x = window_state.visible_area.xmin - window_state.xscroll;
     gdi_org.y = window_state.visible_area.ymax - window_state.yscroll;

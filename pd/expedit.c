@@ -354,41 +354,48 @@ expedit_recompile_current_cell_reporterrors(void)
     lecpos = lescrl = 0;
 }
 
+static BOOL /*TRUE->failed*/
+expedit_get_icon_state(WimpGetIconStateBlock * p_icon_state)
+{
+    return(WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_CONTENTS_LINE, p_icon_state)));
+}
+
 extern void
 expedit_transfer_line_to_box(
     BOOL newline)
 {
-    if(xf_inexpression_line)
+    char title[LIN_BUFSIZ];
+    /*const*/ char * formula_in_line;
+
+    if(!xf_inexpression_line)
+        return;
+
+    formwind_buildtitlestring(title, elemof32(title), edtslr_col, edtslr_row);  /* Build string, e.g. "Formula window: A1" */
+
     {
-        WimpGetIconStateBlock icon_state;
-        S32 caretpos;
-        char title[LIN_BUFSIZ];
-        S32 err;
+    WimpGetIconStateBlock icon_state;
+    if( expedit_get_icon_state(&icon_state) )
+        return;
+    formula_in_line = icon_state.icon.data.it.buffer;
+    } /*block*/
 
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    const S32 caretpos = formline_cursor_get_position(); /* either actual or last known caret position */
 
-        caretpos = formline_cursor_get_position();    /* either actual or last known caret position */
+    if((      formwind_create_fill_open(&editexpression_formwind,
+                                        current_docno(),
+                                        formula_in_line,
+                                        caretpos,   /* cursor col */
+                                        0,          /* cursor row */
+                                        newline,    /* performed AFTER cursor positioning */
+                                        title)
+       ) < 0
+      )
+        return;
 
-        formwind_buildtitlestring(title, elemof32(title), edtslr_col, edtslr_row);  /* Build string, e.g. "Formula window: A1" */
-
-        if((err = formwind_create_fill_open(&editexpression_formwind,
-                                            current_docno(),
-                                            icon_state.icon.data.it.buffer,
-                                            caretpos,   /* cursor col */
-                                            0,          /* cursor row */
-                                            newline,    /* performed AFTER cursor positioning */
-                                            title)
-           ) >= 0
-          )
-        {
-            xf_inexpression_line = FALSE;
-            colh_draw_contents_of_number_cell();
-            xf_inexpression_box  = TRUE;        /* All other flags remain the same */
-            colh_draw_edit_state_indicator();
-        }
-    }
+    xf_inexpression_line = FALSE;
+    colh_draw_contents_of_number_cell();
+    xf_inexpression_box  = TRUE;        /* All other flags remain the same */
+    colh_draw_edit_state_indicator();
 }
 
 #define expedit_force_redraw() \
@@ -398,37 +405,32 @@ static /*inline*/ BOOL
 expedit_insert_char_in_line(
     _InVal_     char ch)
 {
-    BOOL had_error = FALSE;
     WimpGetIconStateBlock icon_state;
-    S32 caretpos;
-    S32 length;
     char *currpos;
 
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_CONTENTS_LINE;
-    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    if( expedit_get_icon_state(&icon_state) )
+        return(TRUE);
 
-    caretpos = formline_cursor_get_position();
-    length   = strlen(icon_state.icon.data.it.buffer);
+    const S32 length = strlen(icon_state.icon.data.it.buffer);
+
+    S32 caretpos = formline_cursor_get_position();
 
     caretpos = MAX(caretpos, 0);
     caretpos = MIN(caretpos, length);
 
-    if((length + 1) < icon_state.icon.data.it.buffer_size)
-    {
-        currpos = icon_state.icon.data.it.buffer + caretpos;
-        memmove32(currpos+1, currpos, (length - caretpos + 1));
-        *currpos = ch;
+    if( (length + 1) >= icon_state.icon.data.it.buffer_size )
+        return(TRUE); /* can't insert */
 
-        /* Nudge caret position, and force a redraw */
-        ++caretpos;
-        formline_cursor_set_position(caretpos);
-        expedit_force_redraw();
-    }
-    else
-        had_error = TRUE;
+    currpos = icon_state.icon.data.it.buffer + caretpos;
+    memmove32(currpos+1, currpos, (length - caretpos + 1));
+    *currpos = ch;
 
-    return(had_error);
+    /* Nudge caret position, and force a redraw */
+    ++caretpos;
+    formline_cursor_set_position(caretpos);
+    expedit_force_redraw();
+
+    return(FALSE);
 }
 
 extern BOOL
@@ -454,37 +456,32 @@ expedit_insert_string_in_line(
     _In_z_      const char *insertstr,
     _InVal_     S32 insertlen)
 {
-    BOOL had_error = FALSE;
     WimpGetIconStateBlock icon_state;
-    S32 caretpos;
-    S32 length;
     char *currpos;
 
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_CONTENTS_LINE;
-    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    if( expedit_get_icon_state(&icon_state) )
+        return(TRUE);
 
-    caretpos = formline_cursor_get_position();
-    length   = strlen(icon_state.icon.data.it.buffer);
+    const S32 length = strlen(icon_state.icon.data.it.buffer);
+
+    S32 caretpos = formline_cursor_get_position();
 
     caretpos = MAX(caretpos, 0);
     caretpos = MIN(caretpos, length);
 
-    if((length + insertlen) < icon_state.icon.data.it.buffer_size)
-    {
-        currpos = icon_state.icon.data.it.buffer + caretpos;
-        memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
-        memmove32(currpos, insertstr, insertlen);                       /* splice text in */
+    if( (length + insertlen) >= icon_state.icon.data.it.buffer_size )
+        return(TRUE); /* can't insert */
 
-        /* Nudge caret position, and force a redraw */
-        caretpos += insertlen;
-        formline_cursor_set_position(caretpos);
-        expedit_force_redraw();
-    }
-    else
-        had_error = TRUE;
+    currpos = icon_state.icon.data.it.buffer + caretpos;
+    memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
+    memmove32(currpos, insertstr, insertlen);                       /* splice text in */
 
-    return(had_error);
+    /* Nudge caret position, and force a redraw */
+    caretpos += insertlen;
+    formline_cursor_set_position(caretpos);
+    expedit_force_redraw();
+
+    return(FALSE);
 }
 
 extern BOOL
@@ -549,16 +546,13 @@ expedit_delete_bit_of_line(
     if(xf_inexpression_line)
     {
         WimpGetIconStateBlock icon_state;
-        S32 start, end, length;
+        if( expedit_get_icon_state(&icon_state) )
+            return;
 
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+        const S32 length = strlen(icon_state.icon.data.it.buffer);
 
-        length = strlen(icon_state.icon.data.it.buffer);
-
-        start = MIN(col_start, col_end);
-        end   = MAX(col_start, col_end);
+        S32 start = MIN(col_start, col_end);
+        S32 end   = MAX(col_start, col_end);
 
         start = MAX(start, 0);
         end   = MIN(end  , length);
@@ -692,13 +686,8 @@ start_editor(
 #endif
         { /* Formula fits in one line, so edit it on the contents line */
         WimpGetIconStateBlock icon_state;
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        if(NULL == WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
-        {
-            assert(icon_state.icon.data.it.buffer_size == LIN_BUFSIZ);
-            strcpy(icon_state.icon.data.it.buffer, linbuf);
-        }
+        if( !expedit_get_icon_state(&icon_state) )
+            xstrkpy(icon_state.icon.data.it.buffer, icon_state.icon.data.it.buffer_size, linbuf);
         expedit_force_redraw();
         } /*block*/
 
@@ -736,7 +725,7 @@ formline_claim_focus(void)
 {
     WimpCaret caret;
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         return;
 
     if( (caret.window_handle != colh_window_handle) ||
@@ -761,7 +750,7 @@ formline_cursor_get_position(void)
     int pos;
     int length;
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         return(0);
 
     /* If the caret is within the icon, return its string index position,      */
@@ -777,9 +766,7 @@ formline_cursor_get_position(void)
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_CONTENTS_LINE;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( expedit_get_icon_state(&icon_state) )
         length = 0;
     else
         length = strlen(icon_state.icon.data.it.buffer);
@@ -797,20 +784,13 @@ static void
 formline_cursor_set_position(
     int pos)
 {
-    WimpCaret caret;
     int length;
-
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
-        return;
 
     {
     WimpGetIconStateBlock icon_state;
-    icon_state.window_handle = colh_window_handle;
-    icon_state.icon_handle = COLH_CONTENTS_LINE;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
-        length = 0;
-    else
-        length = strlen(icon_state.icon.data.it.buffer);
+    if( expedit_get_icon_state(&icon_state) )
+        return;
+    length = strlen(icon_state.icon.data.it.buffer);
     } /*block*/
 
     pos = MAX(pos, 0);
@@ -818,7 +798,11 @@ formline_cursor_set_position(
 
     formline_stashedcaret = pos;
 
-    /* If caret is within the icon, and is not at required place, reposition it. */
+    { /* If caret is within the icon, and is not at required place, reposition it. */
+    WimpCaret caret;
+
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
+        return;
 
     if( (caret.window_handle == colh_window_handle) &&
         (caret.icon_handle == COLH_CONTENTS_LINE) &&
@@ -829,6 +813,7 @@ formline_cursor_set_position(
                                         caret.xoffset, caret.yoffset,
                                         caret.height, pos));
     }
+    } /*block*/
 }
 
 extern BOOL
@@ -846,9 +831,7 @@ formline_mergebacktext(
 
         {
         WimpGetIconStateBlock icon_state;
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        if( expedit_get_icon_state(&icon_state) )
             linbuf[0] = CH_NULL;
         else
         {
@@ -1121,8 +1104,7 @@ formwind_open_infront_withfocus(
     WimpGetWindowStateBlock window_state;
 
     /* Get the state of the main window */
-    window_state.window_handle = formwind->fw_main_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(formwind->fw_main_window_handle, &window_state)) )
         return;
 
     assert(0 == window_state.xscroll);
@@ -1418,14 +1400,10 @@ formwind_open_window(
     _In_        const WimpOpenWindowBlock * const open_window)
 {
     WimpGetWindowStateBlock window_state;
-    int pane_xscroll;
-    int pane_yscroll;
 
-    window_state.window_handle = formwind->fw_pane_window_handle;
-    void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)); /* All we want here are the scroll offsets */
-
-    pane_xscroll = window_state.xscroll;
-    pane_yscroll = window_state.yscroll;
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state_x(formwind->fw_pane_window_handle, &window_state)); /* All we want here are the scroll offsets */
+    const int pane_xscroll = window_state.xscroll;
+    const int pane_yscroll = window_state.yscroll;
 
     { /* position pane window relative to the requested main window position */
     WimpOpenWindowBlock pane_open_window_block;
@@ -1450,8 +1428,7 @@ formwind_open_window(
 
     /* Pane work area extent may prevent it opening at requested size, so read actual pane dimensions */
     /* and calculate appropriate main window parameters                                               */
-    window_state.window_handle = formwind->fw_pane_window_handle;
-    void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state));
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state_x(formwind->fw_pane_window_handle, &window_state));
 
     {
     WimpOpenWindowBlock main_open_window_block;
@@ -1473,9 +1450,7 @@ formwind_open_window(
 
     /* if we were called because the pane is being resized, its possible the dimensions we tried to open main */
     /* with are naff (typically too small), so resize the pane!!!!                                            */
-
-    window_state.window_handle = formwind->fw_main_window_handle;
-    void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state));
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state_x(formwind->fw_main_window_handle, &window_state));
 
     /* note position of window, so all other formula windows are opened at the same place (Rob requested this) */
     formwind_visible_area = window_state.visible_area;

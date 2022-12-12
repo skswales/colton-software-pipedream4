@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="../labelprinting.html">Prev</a> </td>
                 <td><a href="../../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="../fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="../lotus123.html">Next</a></td>
             </tr>
@@ -61,7 +61,7 @@
     <h2 class="csg-function" id="COLS">COLS</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">COLS</p>
-    <p>COLS with no parameters returns the number of columns in the document.</p>
+    <p><span class="csg-function">COLS</span> with no parameters returns the number of columns in the document.</p>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">COLS(<span class="csg-function-parameter">array_or_range</span>)</p>
     <p>Returns the number of columns in <span class="csg-function-parameter">array_or_range</span>.</p>
@@ -76,10 +76,10 @@
         <span class="csg-function-parameter">range</span>,
         <span class="csg-function-parameter">offset_rows</span>)
     </p>
-    <p>This function differs from LOOKUP in three ways:</p>
+    <p>This function differs from <span class="csg-function">LOOKUP()</span> in three ways:</p>
     <ul>
         <li>
-            <span class="csg-function-parameter">range</span> in HLOOKUP is horizontal
+            <span class="csg-function-parameter">range</span> in <span class="csg-function">HLOOKUP()</span> is horizontal
             and must be a range, not an array, and must be sorted in ascending order.
         </li>
         <li>
@@ -111,7 +111,7 @@
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>INDEX((1,2;3,4},2,2)</code></p>
     <p>returns 4.</p>
-    <p>INDEX can be made to return an array itself by including the optional rows and cols parameters which tell INDEX how large an array to return.</p>
+    <p><span class="csg-function">INDEX()</span> can be made to return an array itself by including the optional rows and cols parameters which tell <span class="csg-function">INDEX()</span> how large an array to return.</p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>INDEX(A1C3,2,2,2,2)</code></p>
     <p>returns an array containing <code>{B2,C2;B3,C3}</code>.</p>
@@ -179,7 +179,7 @@
     <p>returns 2.</p>
     <p class="csg-sample-indent"><code>MATCH(2.5,A1A3,1)</code></p>
     <p>where A1 contains 1, A2 contains 2 and A3 contains 3, returns A2.</p>
-    <p>Use the COL and ROW functions to return the offset from the start of the range.</p>
+    <p>Use the <span class="csg-function">COL()</span> and <span class="csg-function">ROW()</span> functions to return the offset from the start of the range.</p>
 
     <h2 class="csg-function" id="ROW">ROW</h2>
     <h5>Syntax:</h5>
@@ -199,9 +199,10 @@
     <p>returns 3.</p>
 
     <h2 class="csg-function" id="ROWS">ROWS</h2>
-    <p>ROWS</p>
-    <p>ROWS with no parameters returns the number of rows in the document.</p>
-    <p>ROWS(<span class="csg-function-parameter">array_or_range</span>)</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">ROWS</p>
+    <p><span class="csg-function">ROWS</span> with no parameters returns the number of rows in the document.</p>
+    <p class="csg-function-declaration">ROWS(<span class="csg-function-parameter">array_or_range</span>)</p>
     <p>Returns the number of rows in <span class="csg-function-parameter">array_or_range</span>.</p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>ROWS(A1F1O)</code></p>
@@ -214,10 +215,10 @@
         <span class="csg-function-parameter">range</span>,
         <span class="csg-function-parameter">offset_cols</span>)
     </p>
-    <p>This function differs from LOOKUP in three ways:</p>
+    <p>This function differs from <span class="csg-function">LOOKUP()</span> in three ways:</p>
     <ul>
         <li>
-            <span class="csg-function-parameter">range</span> in VLOOKUP is vertical
+            <span class="csg-function-parameter">range</span> in <span class="csg-function">VLOOKUP()</span> is vertical
             and must be a range, not an array, and must be sorted in ascending order.
         </li>
         <li>

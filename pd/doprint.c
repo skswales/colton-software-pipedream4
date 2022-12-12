@@ -1154,7 +1154,19 @@ print_grid_line(
 
     print_setcolours(COI_FORE, COI_BACK);
 
+#if 1
+    _kernel_swi_regs rs;
+    rs.r[0] = (int) admit_defeat.wordp /* path sequence */;
+    rs.r[1] =       fill_Default       /* fill style    */;
+    rs.r[2] = (int) NULL               /* xform matrix  */;
+    rs.r[3] =       printing_draw_line_style.flatness;
+    rs.r[4] =       printing_draw_line_style.thickness;
+    rs.r[5] = (int) &printing_draw_line_style.spec;
+    rs.r[6] = (int) printing_draw_line_style.dash_pattern;
+    print_complain(_kernel_swi(Draw_Stroke, &rs, &rs));
+#else
     print_complain(drawmod_stroke(admit_defeat, fill_Default, NULL, &printing_draw_line_style));
+#endif
 }
 
 static void
@@ -2588,7 +2600,7 @@ setssp(void)
                         ? d_mspace[1].option : 1;
 }
 
-extern BOOL
+extern BOOL /*TRUE->is_error*/
 print_complain(
     os_error * err)
 {
@@ -2600,11 +2612,11 @@ print_complain(
         riscprint_suspend();
 
         reperr(ERR_PRINTER, err->errmess);
-    }
-    else
-        reperr_kernel_oserror(err);
 
-    return(TRUE);
+        return(TRUE);
+    }
+
+    return(report_if_kernel_oserror(err));
 }
 
 static coord

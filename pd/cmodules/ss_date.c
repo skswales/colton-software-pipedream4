@@ -625,10 +625,15 @@ ss_local_time_as_ymd_hms(
     _kernel_swi_regs rs;
     TCHARZ buffer[8];
 
+    buffer[0] = 3 /*OSWord_ReadUTC*//*1*/;
+
+#if defined(NORCROFT_INLINE_SWIX)
+    void_WrapOsErrorChecking(_swix(OS_Word, _INR(0,1), 14, buffer));
+#else
     rs.r[0] = 14;
     rs.r[1] = (int) buffer;
-    buffer[0] = 3 /*OSWord_ReadUTC*//*1*/;
     void_WrapOsErrorChecking(_kernel_swi(OS_Word, &rs, &rs));
+#endif
 
     rs.r[0] = -1; /* use current territory */
     rs.r[1] = (int) buffer;

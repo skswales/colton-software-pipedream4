@@ -67,6 +67,11 @@ internal functions
 static void
 application__atexit(void);
 
+#if defined(APCS_SOFTPCS)
+static void
+application__atexit_apcs_softpcs(void);
+#endif
+
 static void
 decode_command_line_options(
     _InVal_     int argc,
@@ -287,6 +292,13 @@ main(
     profile_taskchange();
 #endif
 
+#if defined(APCS_SOFTPCS)
+    apcs_softpcs_initialise(); /* not too early */
+
+    if(atexit(application__atexit_apcs_softpcs)) /* ensure closedown proc called on exit */
+        return(EXIT_FAILURE);
+#endif
+
 #if defined(__cs_flex_h)
     {
     _kernel_swi_regs rs;
@@ -397,9 +409,19 @@ main(
 *
 ******************************************************************************/
 
+#if defined(APCS_SOFTPCS)
+static void
+application__atexit_apcs_softpcs(void)
+{
+    apcs_softpcs_finalise();
+}
+#endif
+
 static void
 application__atexit(void)
 {
+    _kernel_setenv("PipeDream$Running", NULL); /* Unset early in case anything subsequent barfs */
+
     font_close_all(TRUE); /* shut down font system releasing handles */
 
     reset_mc();
@@ -409,8 +431,6 @@ application__atexit(void)
     file_finalise();
 
     riscos_hourglass_off();
-
-    _kernel_setenv("PipeDream$Running", NULL); /* Unset */
 
 /* On RISC OS don't bother to release the escape & event handlers
  * as the C runtime library restores the caller's handlers prior to exiting

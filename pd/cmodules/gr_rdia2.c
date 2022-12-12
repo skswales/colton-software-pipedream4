@@ -195,8 +195,8 @@ gr_riscdiag_path_recompute_bbox(
     P_ANY path_seq;
     drawmod_pathelemptr bodge_path_seq;
     drawmod_options options;
-    drawmod_line line;
-    drawmod_filltype fill;
+    drawmod_line line_style;
+    drawmod_filltype fill_style;
     DRAW_BOX path_box;
 
     /* compute bbox of path object by asking the Draw module */
@@ -220,27 +220,42 @@ gr_riscdiag_path_recompute_bbox(
     bodge_path_seq.bytep = path_seq;
 
     /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
-    line.flatness            = 2 * GR_RISCDRAW_PER_RISCOS;
-    line.thickness           =  pObject.path->pathwidth;
-    line.spec.join           = (pObject.path->pathstyle.flags & DRAW_PS_JOIN_PACK_MASK)     >> DRAW_PS_JOIN_PACK_SHIFT;
-    line.spec.leadcap        = (pObject.path->pathstyle.flags & DRAW_PS_STARTCAP_PACK_MASK) >> DRAW_PS_STARTCAP_PACK_SHIFT;
-    line.spec.trailcap       = (pObject.path->pathstyle.flags & DRAW_PS_ENDCAP_PACK_MASK)   >> DRAW_PS_ENDCAP_PACK_SHIFT;
-    line.spec.reserved8      = 0;
-    line.spec.mitrelimit     = 0x000A0000;     /* 10.0 "PostScript default" from DrawFiles doc'n */
-    line.spec.lead_tricap_w  =
-    line.spec.trail_tricap_w = (pObject.path->pathstyle.tricap_w * pObject.path->pathwidth) / 16;
-    line.spec.lead_tricap_h  =
-    line.spec.trail_tricap_h = (pObject.path->pathstyle.tricap_h * pObject.path->pathwidth) / 16;
-    line.dash_pattern        = (P_ANY) line_dash_pattern;
+    line_style.flatness            = 2 * GR_RISCDRAW_PER_RISCOS;
+    line_style.thickness           =  pObject.path->pathwidth;
+    line_style.spec.join           = (pObject.path->pathstyle.flags & DRAW_PS_JOIN_PACK_MASK)     >> DRAW_PS_JOIN_PACK_SHIFT;
+    line_style.spec.leadcap        = (pObject.path->pathstyle.flags & DRAW_PS_STARTCAP_PACK_MASK) >> DRAW_PS_STARTCAP_PACK_SHIFT;
+    line_style.spec.trailcap       = (pObject.path->pathstyle.flags & DRAW_PS_ENDCAP_PACK_MASK)   >> DRAW_PS_ENDCAP_PACK_SHIFT;
+    line_style.spec.reserved8      = 0;
+    line_style.spec.mitrelimit     = 0x000A0000;     /* 10.0 "PostScript default" from DrawFiles doc'n */
+    line_style.spec.lead_tricap_w  =
+    line_style.spec.trail_tricap_w = (pObject.path->pathstyle.tricap_w * pObject.path->pathwidth) / 16;
+    line_style.spec.lead_tricap_h  =
+    line_style.spec.trail_tricap_h = (pObject.path->pathstyle.tricap_h * pObject.path->pathwidth) / 16;
+    line_style.dash_pattern        = (P_ANY) line_dash_pattern;
 
-    fill = (drawmod_filltype) (fill_PReflatten | fill_PThicken | fill_PFlatten | fill_FBint | fill_FNonbint | fill_FBext);
+    fill_style = (drawmod_filltype) (fill_PReflatten | fill_PThicken | fill_PFlatten | fill_FBint | fill_FNonbint | fill_FBext);
 
+#if 1
+    _kernel_swi_regs rs;
+
+    rs.r[0] = (int)  path_seq;             /* path sequence */
+    rs.r[1] =        fill_style;           /* fill style */
+    rs.r[2] =        NULL;                 /* xform matrix */
+    rs.r[3] =        line_style.flatness;  /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
+    rs.r[4] = (int)  line_style.thickness; /* thickness */
+    rs.r[5] = (int) &line_style.spec;
+    rs.r[6] = (int)  line_style.dash_pattern;
+    rs.r[7] = (int) &path_box | 0x80000000; /* where to put bbox */
+
+    void_WrapOsErrorChecking(_kernel_swi(/*Draw_ProcessPath*/ 0x040700, &rs, &rs));
+#else
     (void) drawmod_processpath(bodge_path_seq, /* path sequence */
-                               fill,           /* fill style */
+                               fill_style,     /* fill style */
                                NULL,           /* xform matrix */
-                               &line,          /* line style */
+                               &line_style,    /* line style */
                                &options,       /* process options */
                                NULL);          /* output buffer length for count */
+#endif
 
     pObject.path->bbox = path_box;
 }

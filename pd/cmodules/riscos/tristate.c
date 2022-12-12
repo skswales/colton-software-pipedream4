@@ -62,9 +62,7 @@ riscos_tristate_query(
     char * tristate_name;
     const char * test_name;
 
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return(RISCOS_TRISTATE_DONT_CARE);
 
     tristate_name = icon_state.icon.data.it.validation;
@@ -95,9 +93,7 @@ riscos_tristate_set(
     if(state == riscos_tristate_query(window_handle, icon_handle))
         return;
 
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = icon_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, icon_handle, &icon_state)) )
         return;
 
     tristate_name = icon_state.icon.data.it.validation;

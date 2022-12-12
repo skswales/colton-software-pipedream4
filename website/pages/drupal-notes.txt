@@ -1,0 +1,24 @@
+pipedream.htm
+Page is Restricted HTML
+
+pipedream-getting-started.htm
+Page is Restricted HTML
+
+pipedream-reference-guide.htm
+Page is Restricted HTML
+
+pipedream-addenda.htm
+Page is Restricted HTML
+
+pipedream-hints.htm
+Page is Restricted HTML
+
+pipedream-release-history.htm
+Page is Restricted HTML
+
+pipedream-downloads.htm
+Page is Restricted HTML
+
+These pages can be copied to/from the Drupal page editing 'Body' editing control.
+
+Do NOT change pages to Full HTML - it will bork the page content.

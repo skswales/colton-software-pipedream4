@@ -7,12 +7,12 @@
 # Copyright © 1989-1998 Colton Software Limited
 # Copyright © 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.60
-TEXTUAL_VERSION_NUMBER=4.60.03
+TEXTUAL_VERSION_NUMBER=4.61
+#TEXTUAL_VERSION_NUMBER=4.61.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
-URD=$.pipedream4.trunk
+URD=$.pipedream4.pipedream__4_61__branch
 
 #PD=$(URD).pd
 PD=^.^
@@ -673,7 +673,7 @@ o.Modules.wlalloc :    $(CMODULES).riscos.h.wlalloc
 #
 # ####################################################################
 #
-# PipeDream objects
+# PipeDream 4 objects
 #
 o.blocks:   $(PD).c.blocks
         $(CC) -o $@ $(CCflags) $(PD).c.blocks

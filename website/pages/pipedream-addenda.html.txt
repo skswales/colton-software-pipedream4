@@ -1,0 +1,376 @@
+﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/"><strong>Addenda and Errata</strong></a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+
+<h2>Features added since documentation printed (which was in 1992)</h2>
+
+A larger Desktop font may be set for readability.
+
+PipeDream document windows can be iconised to the Pinboard.
+
+PipeDream responds to the Desktop save protocol and so can be reloaded automatically on restarting the machine.
+
+Adjust-clicking the Yes (or No) button in Yes / No choice dialogue boxes acts as if the No (or Yes) button had been clicked.
+
+Clicking Select on the PipeDream icon bar icon invites the user to create a document using a template; the old default document create is available by clicking Adjust on the icon bar icon.
+
+Save dialogue boxes use DragASprite to enhance the appearance of dragging the file icon.
+
+Double-click Select on column adjuster performs the Auto Width command.
+
+Do command file function enhanced to list command files which are in the same directory as the selected document Clear Block function added.
+
+Make number and Make text functions added.
+
+Kerning in outline fonts implemented. See the Options dialogue box.
+
+The Acorn Drawfile renderer module is used on systems where this is available and hence PipeDream can render JPEGs on RISC OS 3.7 systems and later.
+
+Dynamic area storage may be used for file data. This speeds up task swapping on RISC PCs considerably and allows the use of memory beyond 26MB on 26-bit systems. On RISC OS 5 32-bit systems, which have larger WimpSlot capabilities, this is disabled by default as it is not needed.
+
+<h3>Text @-fields</h3>
+
+The character used in text @-fields may now be set to other than ‘@’ in a document’s Options dialogue box. The chosen character is stored in files as %OP%TA<em>&lt;character&gt;</em>.
+
+Important notes: this does not change any existing text. When changing this character, all cells containing slot reference text @-fields will need to be ‘recompiled’ to reflect this – the easiest (and safest) way of doing this is to save the document and reload it immediately after closing the Options dialogue box. Other text @-fields will update immediately.
+
+Text @-fields containing cell references to other cells containing text @-fields containing cell references now render sensibly, allowing text to be concatenated. There is a fixed depth limit of nine (rather than the old effective limit of one).
+
+@C:<em>r</em>,<em>g</em>,<em>b</em>@ can be used to set the colour of the following text on a line (only when using fonts and RISC OS 3.5 or later) e.g. aaa@C:240,0,0 @bbb would display aaa followed by bbb in red. Use @C@ to restore normal (black).
+
+@F:<em>x</em>{,y}@ now accepted as way of performing font size change without changing font too.
+
+@G@ references can take the form:
+  @G:&lt;<em>draw file name</em>&gt;,&lt;<em>x scale factor</em>&gt;,&lt;<em>y scale factor</em>&gt;@</code>
+
+<h3>Spreadsheet functions behaviour and interface changes since documentation printed</h3>
+
+Please see the <em>Reference Guide</em> for full details of updated spreadsheet functions.
+
+<h3>General</h3>
+
+Formulae may be entered with an optional leading equals sign.
+
+<code>MIN()</code> and <code>MAX()</code> may be applied to ranges of cells containing dates.
+
+<h3>Financial functions</h3>
+
+<strong>CTERM</strong>
+
+Starting with 4.50/39, this function will accept negative fv and pv arguments to calculate debt accrual.
+
+<strong>DDB</strong>
+
+Starting with 4.56, this function will accept an extra parameter, <em>factor</em> (optional).
+
+Starting with 4.57, this function may now use a non-integer <em>period</em> for calculation.
+
+<h3>Lookup functions</h3> 
+
+Lookup functions
+
+<strong>INDEX</strong>
+
+Starting with 4.56, this function will now accept zero for the column and/or row number.
+If the column number is zero, the whole of the specified row(s) is returned.
+If the row number is zero, the whole of the specified column(s) is returned.
+
+Starting with 4.56, this function will now accept zero for the optional column and/or row size.
+If the column size is zero, the rest of the specified row(s) beginning at the given column number is returned.
+If the row size is zero, the whole of the specified column(s) beginning at the given row number is returned.
+
+<h3>Mathematical functions</h3> 
+
+<strong>BINOM</strong>
+
+This function was removed starting with 4.52/08 as this was just a synonym for <code>COMBIN()</code>.
+
+<strong>LOG</strong>
+
+Starting with 4.53, this function will accept an extra parameter, <em>b</em> (optional), which then returns the logarithm of <em>x</em> to base <em>b</em>.
+
+If <em>b</em> is omitted, the logarithm of <em>x</em> to base 10 is returned as before.
+
+<h3>String functions</h3>
+
+<strong>LEFT</strong>
+
+Starting with 4.52/04, this function will accept a <em>length</em> of zero, or if the <em>length</em> parameter is omitted, <em>length</em> of 1 (one) is assumed.
+
+<strong>RIGHT</strong>
+
+Starting with 4.52/04, this function will accept a <em>length</em> of zero, or if the <em>length</em> parameter is omitted, <em>length</em> of 1 (one) is assumed.
+
+<h3>Date spreadsheet functions added since documentation printed</h3>
+
+<strong>AGE(date1, date2)</strong>
+
+Works out the difference between two dates in years and months.
+
+<em>date1</em> should be the more recent date, and <em>date2</em> the earlier date.
+
+Example:
+
+  <code>AGE(26.6.1994, 25.8.1982)</code>
+
+returns the age as a number, expressed as 12.10, that is, someone aged 12 years and 10 months.
+
+Use <code>INT()</code> to extract the number of years from the result and <code>100*(n-INT(n))</code> to extract the number of months.
+
+Added in 4.50.
+
+<strong>DAYNAME(<em>number</em>|<em>date</em>)</strong>
+
+Returns a day name string corresponding to the <em>number</em> or <em>date</em> (where Sunday is day one).
+
+Added in 4.50.
+
+<strong>MONTHNAME(<em>number</em>|<em>date</em>)</strong>
+
+Returns a month name string corresponding to the <em>number</em> or <em>date</em> (where January is month one).
+
+Added in 4.50.
+
+<strong>WEEKNUMBER(<em>date</em>)</strong>
+
+This function returns the week number corresponding to the <em>date</em>.
+
+The current territory is used to determine what the week number is.
+
+Added in 4.50/06.
+
+<h3>Mathematical spreadsheet functions added since documentation printed</h3>
+
+<strong>BASE(<em>number<em>, <em>radix</em>:<em>Number</em> {, <em>minimum_length</em>:<em>number</em>})</strong></p>
+
+Converts a <em>number</em> using the given <em>radix</em> (base).</p>
+
+If <em>radix</em> is greater than ten, letters in the range A to Z are used to represent ten upwards.</p>
+
+If <em>minimum_length</em> is specified, zeros are used to pad the conversion at the left.</p>
+
+<p>Added in 4.57.
+
+<strong>CEILING(<em>number</em> {, <em>multiple</em>:<em>Number</em>})</strong>
+
+Rounds <em>number</em> to the given <em>multiple</em> towards +infinity (or away from zero, if both are negative).
+
+If <em>multiple</em> is omitted, 1 (one) is used.
+
+Added in 4.53.
+
+<strong>DECIMAL(<em>number<em>, <em>radix</em>:<em>Number</em>)</strong>
+
+Converts a number in a given base to its corresponding decimal value.
+
+<em>number</em> is a text string of digits in the given <em>radix</em>. Alternatively, a number may be supplied which is similarly treated as a string of digits - these must be in the given <em>radix</em>.
+
+<em>radix</em> must be greater than or equal to two and less than or equal to thirty six.
+
+If <em>radix</em> is greater than ten, letters in the range A to Z (or a to z) are used to represent ten upwards.
+
+If <em>radix</em> is two (binary), an optional suffix B (or b) may be supplied.
+
+If <em>radix</em> is sixteen (hexadecimal), an optional prefix 0x or an optional suffix H (or h) may be supplied.
+
+Examples:
+
+  <code>DECIMAL("00001000", 16)</code> returns the number <code>4096</code>.
+
+  <code>DECIMAL("1010B", 2)</code> returns the number <code>10</code>.
+
+  <code>DECIMAL(377, 8)</code> returns the number <code>255</code>.
+
+Added in 4.57.
+
+<strong>FACT(<em>n</em>)</strong>
+
+This function yields the factorial of <em>n</em> (most commonly shortened to <em>n</em>!).
+
+<em>n</em> must be an integer greater than or equal to zero.
+
+If the result is too big to fit in an integer it becomes floating point.
+
+For very large <em>n</em> this is an approximation.
+
+Added in 4.50.
+
+<strong>FLOOR(<em>number</em> {, <em>multiple</em>:<em>Number</em>})</strong>
+
+Rounds <em>number</em> to the given <em>multiple</em> towards -infinity (or towards zero, if both are negative).
+
+If <em>multiple</em> is omitted, 1 (one) is used.
+
+Added in 4.53.
+
+<strong>SERIESSUM(<em>x</em>:<em>Number</em>, <em>n</em>:<em>Number</em>, <em>m</em>:<em>Number</em>, <em>coefficients</em>:<em>Array</em>)</strong>
+
+Returns the sum of the given power series for <em>x</em>.
+
+<em>n</em> is the initial power to which <em>x</em> is raised, this being multiplied by the first <em>coefficient</em> in the array.
+
+For each subsequent <em>coefficient</em>, <em>m</em> is added to the power.
+
+  = a<sub>1</sub> &middot; <em>x</em>^<sup>n</sup> + a<sub>2</sub> &middot; <em>x</em>^<sup>(n + m)</sup> + a<sub>3</sub> &middot; <em>x</em>^<sup>(n + 2m)</sup> + &hellip;
+
+Added in 4.56.
+
+<strong>Miscellaneous spreadsheet functions added since documentation printed</strong>
+
+<strong>FLIP(<em>array</em>)</strong>
+
+Swaps rows about the middle row of an <em>array</em>.
+
+Example:
+
+  <code>FLIP({1;2;3})</code>
+
+returns the array <code>{3;2;1}</code>
+
+Added in 4.50/39.
+
+<strong>SORT(<em>array</em>, <em>number</em>)</strong>
+
+Sorts the rows in the <em>array</em> in ascending order based on the values in column <em>number</em>.
+
+For example, <code>SORT(B1E100,2)</code> sorts rows 1..100 based on the contents of column C.
+
+Use with <code>FLIP()</code> to sort in descending order.
+
+Use with <code>TRANSPOSE()</code> to sort by column based on values in rows.
+
+Added in 4.50/39.
+
+<h3>Statistical spreadsheet functions added since documentation printed</h3>
+
+<strong>BETA(<em>a</em>, <em>b</em>)</strong>
+
+One definition of the Beta function is</p>
+
+  Β(a, b) = Γ(a) · Γ(b) ÷ Γ(a + b)
+
+This special function is actually evaluated by PipeDream using the formula
+
+  Β(a, b) = exp( gammaln(a) + gammaln(b) - gammaln(a + b) )
+
+Added in 4.50.
+
+<strong>BIN(<em>array1</em>, <em>array2</em>)</strong>
+
+<em>array2</em> defines a set of 'bins' into which the data of <em>array1</em> is counted.
+
+For example, if array2 is {20,40,60,80}, the returned array gives the number of elements of array1 whose value satisfies value&lt;=20, 20&lt;value&lt;=40, 40&lt;value&lt;=60, 60&lt;=value&lt;=80 and finally value&gt;80.
+
+The returned array will therefore always have one more element than array2.
+
+Neither array need be sorted.
+
+One use of this function is to organise data for making a histogram. For example, with data in A1A100, and bin categories in B1B5, the following formula would provide the basis for a bar chart:
+
+  <code>SET_VALUE(C1C6, BIN(A1A100, B1B5))</code>
+
+You would then make a bar chart from the range B1 to C6, using column B as labels.
+
+Added in 4.50/39.
+
+<strong>COMBIN(<em>n</em>, <em>k</em>)</strong>
+
+This function yields the number of combinations of <em>n</em> unlike things taken <em>k</em> at a time.
+
+  <em>n</em>C<em>k</em> = <em>n</em>! / ((<em>n</em>-<em>k</em>)! <em>k</em>!) = (<em>n k</em>)
+
+For very large <em>n</em> this is an approximation achieved using logarithms.
+
+Added in 4.50.
+
+<strong>COUNTA(<em>list</em>)</strong>
+
+Returns the number of all the values in the <em>list</em> regardless of their type.
+
+This function was added in 4.54.
+
+<strong>GAMMALN(<em>x</em>)</strong>
+
+This special function yields the natural logarithm of the gamma function of x.
+
+Added in 4.50.
+
+<strong>LISTCOUNT(<em>array</em>)</strong>
+
+Returns a two-column array with the first column being a sorted list of unique entries from the first column of <em>array</em>, and the second column giving the number of occurrences of each entry.
+
+If <em>array</em> has two columns the second column will be treated as a corresponding set of numbers to be added in to the total.
+
+Example:
+
+You have a list of customer names in column <code>A</code> and in column <code>C</code> you have a list of sales figures for individual sales to those customers, then
+
+  <code>SET_VALUE(D1E20,LISTCOUNT({A1A100,C1C100}))</code>
+
+would write out 20 rows of customers names and total sales figures in <code>D1E20</code>.
+
+<code>{A1A100,C1C100}</code> makes a two column array of 100 rows.
+
+You could use <code>SORT()</code> and <code>FLIP()</code> to sort the result of <code>LISTCOUNT()</code> into order before listing it out.
+
+Added in 4.52/06.
+
+<strong>MEDIAN(<em>array</em>)</strong>
+
+Returns the median value in the (not necessarily sorted) range.
+
+If there are an even number of values in the range, the mean of the two middle values is returned.
+
+Added in 4.50/39.
+
+<strong>PERMUT(<em>n</em>, <em>k</em>)</strong>
+
+This function yields the number of permutations of <em>n</em> unlike things taken <em>k</em> at a time.
+
+  <em>n</em>P<em>k</em> = <em>n</em>! / (<em>n</em>-<em>k</em>)!
+
+For very large <em>n</em> this is an approximation. Added in 4.50.
+
+<strong>RANK(<em>array</em>{,<em>spearflag</em>})</strong>
+
+Takes an <em>array</em> and ranks the values it contains, producing as an output an array with two columns { <em>rank</em>, <em>entries</em> }, where <em>Rank</em> is the rank of each value (from highest to lowest). <em>
+
+Entries</em> contains the number of entries of that value in the input array.
+
+If <em>spearflag</em> is present and is non-zero, equally ranked entries are adjusted so that the output is suitable for passing to the SPEARMAN() rank correlation function.
+
+Added in 4.50/39.
+
+<strong>SPEARMAN(<em>array1</em>, <em>array2</em>)</strong>
+
+Returns the Spearman's rank correlation coefficient for the two arrays.
+
+The input <em>array</em>s can be taken from the RANK() function.
+
+Added in 4.50/39.
+
+<h3>String spreadsheet functions added since documentation printed</h3>
+
+<strong>FORMULA_TEXT(<em>cell_reference</em>)</strong>
+
+Returns as a string the formula in the cell referenced, so that it can be displayed in the worksheet.
+
+This is useful for annotating worksheets, and printing out the formula which created the results shown in the worksheet.
+
+Added in 4.50/39.
+
+<strong>TEXT(<em>number</em>, <em>string</em>)</strong>
+
+Returns a string of the <em>number</em> in the style specified.
+
+This allows formatted results other than those provided by PipeDream's basic style system.
+
+<em>number</em> may be a number or a date.
+
+<em>string</em> is a format string in Fireworkz number format style.
+
+Please refer to the Fireworkz User Guide for details. For example,
+
+  <code>TEXT(1234.567, "#,###.00 \€")</code> returns 1,234.57 €
+
+  <code>TEXT(1234.567, "g0.###\m")</code> returns 1.235km
+
+Added in 4.50/39.

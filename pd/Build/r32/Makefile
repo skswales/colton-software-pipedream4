@@ -7,12 +7,12 @@
 # Copyright © 1989-1998 Colton Software Limited
 # Copyright © 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.60
-TEXTUAL_VERSION_NUMBER=4.60.03
+TEXTUAL_VERSION_NUMBER=4.61
+#TEXTUAL_VERSION_NUMBER=4.61.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
-URD=$.pipedream4.pipedream__4_60__branch
+URD=$.pipedream4.pipedream__4_61__branch
 
 #PD=$(URD).pd
 PD=^.^
@@ -84,6 +84,7 @@ PipeDream:   \
     @.!PipeDream.!Sprites11 \
     @.!PipeDream.!Sprites22 \
     @.!PipeDream.!SpritesR4 \
+    @.!PipeDream.Relnotes \
     @.!PipeDream.Resources.Neutral.RISC_OS.!Sprite \
     @.!PipeDream.Resources.Neutral.RISC_OS.BuildVer \
     @.!PipeDream.Resources.Neutral.RISC_OS.ImageSlot \
@@ -386,6 +387,11 @@ o.aof: \
              utils.UK.Messages
         Copy @.utils.UK.Messages $@ ~C FV
 
+@.!PipeDream.Relnotes:   \
+             $(PD).Relnotes/html
+        Copy $(PD).Relnotes/html $@ ~C FV
+        SetType $@ HTML
+
 @.!PipeDream.!Boot: \
         $(PD).Build.Tools.BootRunGen \
         @.Makefile
@@ -682,7 +688,7 @@ o.Modules.wlalloc :    $(CMODULES).riscos.h.wlalloc
 #
 # ####################################################################
 #
-# PipeDream objects
+# PipeDream 4 objects
 #
 o.blocks:   $(PD).c.blocks
         $(CC) -o $@ $(CCflags) $(PD).c.blocks

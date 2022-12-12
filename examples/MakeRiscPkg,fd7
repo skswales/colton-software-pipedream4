@@ -1,13 +1,13 @@
 | MakeRiscPkg for PipeDream-Examples
 |
-| PipeDream Examples by Colton Software is licensed under a
+| PipeDream 4 Examples by Colton Software is licensed under a
 | Creative Commons Attribution-ShareAlike 4.0 International License.
 | To view a copy of this license, visit:
 | https://creativecommons.org/licenses/by-sa/4.0/deed.en_GB
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
-Set pd$Release 20221023
+Set pd$Release 2022xxyy
 | Remember to update RiscPkg.Control too
 
 Set pd$Disc                                $.Temp.PD4.RiscPkg.PDExamples_<pd$Release>

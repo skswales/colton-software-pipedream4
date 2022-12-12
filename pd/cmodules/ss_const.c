@@ -1188,6 +1188,32 @@ two_nums_type_match(
 *
 ******************************************************************************/
 
+#pragma -s1
+
+#if 0
+
+_Check_return_
+extern int32_t /*INT32_MIN->overflowed*/
+int32_add_overflowed(
+    _In_        const int32_t addend_a,
+    _In_        const int32_t addend_b)
+{
+#if RISCOS
+    /* NB contorted order to save register juggling on ARM Norcroft for arithmetic op */
+    const int64_t int64 = (int64_t) addend_b + addend_a;
+#else
+    const int64_t int64 = (int64_t) addend_a + addend_b;
+#endif
+
+    /* NB no clamping to [INT32_MIN,INT32_MAX] in this variant */
+
+    return(int64_would_overflow_int32(int64) ? INT32_MIN : (int32_t) int64);
+}
+
+#endif
+
+#if defined(UNUSED_KEEP_ALIVE)
+
 _Check_return_
 static inline int32_t
 int32_from_int64_possible_overflow(
@@ -1195,43 +1221,10 @@ int32_from_int64_possible_overflow(
 {
     const int64_t int64 = p_int64_with_int32_overflow->int64_result;
 
-    /* if both the top word and the MSB of the low word of the result
-     * are all zeros (+ve) or all ones (-ve) then
-     * the result still fits in 32-bit integer
-     */
-
-#if WINDOWS && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-    /* try to stop Microsoft compiler generating a redundant generic shift by 32 call */
-    if(false == (p_int64_with_int32_overflow->f_overflow = (
-                (((const int32_t *) &int64)[1])  -  (((int32_t) int64) >> 31)
-                ) ) )
-    {
+    if(false == (p_int64_with_int32_overflow->f_overflow = int64_would_overflow_int32(int64)))
         return((int32_t) int64);
-    }
 
-    return((int64 < 0) ? INT32_MIN : INT32_MAX);
-#elif RISCOS
-    /* two instructions on ARM Norcroft - SUBS r0, r_hi, r_lo ASR #31; MOVNE r0, #1 */
-    if(false == (p_int64_with_int32_overflow->f_overflow = (
-                ((int32_t) (int64 >> 32))  -  (((int32_t) int64) >> 31)
-                ) ) )
-    {
-        return((int32_t) int64);
-    }
-  
-    /* just test sign bit of 64-bit result - single instruction TST r_hi on ARM Norcroft (compare does full subtraction) */
-    return(((uint32_t) (int64 >> 32) & 0x80000000U) ? INT32_MIN : INT32_MAX);
-#else
-    /* portable version */
-    if(false == (p_int64_with_int32_overflow->f_overflow = (
-                ((int32_t) (int64 >> 32))  !=  (((int32_t) int64) >> 31)
-                ) ) )
-    {
-        return((int32_t) int64);
-    }
-
-    return((int64 < 0) ? INT32_MIN : INT32_MAX);
-#endif
+    return(int64_is_negative(int64) ? INT32_MIN : INT32_MAX);
 }
 
 _Check_return_
@@ -1252,8 +1245,6 @@ int32_add_check_overflow(
 
     return(int32_from_int64_possible_overflow(p_int64_with_int32_overflow));
 }
-
-#if defined(UNUSED_KEEP_ALIVE)
 
 _Check_return_
 extern int32_t

@@ -1,7 +1,7 @@
 |
 | Copy the contents of this directory to <Choices$Write>.PipeDream
 |
-If "z<Choices$Write>"="z" Then Error 0 PipeDream needs Choices$Write to be set
+If "z<Choices$Write>"="z" Then Error 0 PipeDream 4 needs Choices$Write to be set
 |
 CDir <Choices$Write>.PipeDream
 |

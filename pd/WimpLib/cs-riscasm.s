@@ -110,6 +110,7 @@ ctrlflagp
         MOVS    pc, lr          ; 26-bit return, preserving flags
  ]
  
+ [ {TRUE} ; :LNOT: NORCROFT_INLINE_SWIX
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; typedef U32 MONOTIME;
 
@@ -155,6 +156,9 @@ ctrlflagp
 
         Return "","LinkNotStacked"
 
+ ] ; :LNOT: NORCROFT_INLINE_SWIX
+
+ [ :LNOT: NORCROFT_INLINE_ASM
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         BeginExternal riscos_hourglass_off ; (void)
@@ -175,17 +179,13 @@ ctrlflagp
 
 ; ++++++++++++++++++++++++
 
-        BeginExternal riscos_hourglass_percent ; (a1 = p)
+        BeginExternal riscos_hourglass_percentage ; (a1 = p)
 
         ; LinkNotStacked - no FunctionEntry here
 
         SVC     #XHourglass_Percentage
 
         Return "","LinkNotStacked"
-
-        BeginExternal visdelay_percent ; (a1 = p) keep PDM happy
-
-        B       riscos_hourglass_percent
 
 ; ++++++++++++++++++++++++
 
@@ -208,6 +208,7 @@ ctrlflagp
         Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
+ ] ; :LNOT: NORCROFT_INLINE_ASM
 
  [ PROFILING
         BeginInternal hourglass_ends_here

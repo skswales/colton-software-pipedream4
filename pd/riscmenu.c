@@ -1342,9 +1342,7 @@ get_leading_from_selector(
     char *icon_string;
     double dleading;
 
-    icon_state.window_handle = window_handle;
-    icon_state.icon_handle = FONT_LEADING;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(window_handle, FONT_LEADING, &icon_state)) )
         return(0.0);
 
     icon_string = icon_state.icon.data.it.buffer;

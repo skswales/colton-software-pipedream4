@@ -673,20 +673,6 @@ extern void
 set_fg_colour_from_option(
     _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index);
 
-extern void
-wrch_definefunny(
-    S32 ch);
-
-extern void
-wrch_funny(
-    S32 ch);
-
-extern void
-wrch_undefinefunnies(void);
-
-/* can always undefine the lot in current use */
-#define wrch_undefinefunny(ch)  wrch_undefinefunnies()
-
 /*ncr*/
 extern S32
 fx_x(
@@ -711,18 +697,6 @@ macro definitions
 #define invoff()                if(currently_inverted) invert()
 #define rdch(x, y)              rdch_riscos()
 #define wrch(x)                 bbc_vdu((int) x)
-
-/* deal with refinition of characters */
-
-#define font_selected   129
-#define FIRST_FUNNY     (font_selected)
-
-/* these must always be printed using wrch_definefunny(ch),wrchrep(ch,n)
- * or wrch_funny(ch)
-*/
-
-#define COLUMN_DOTS     (font_selected)
-#define DOWN_ARROW      (font_selected + 1)
 
 /******************************************************************************
 * savload.c

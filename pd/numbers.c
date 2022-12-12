@@ -70,9 +70,8 @@ actind(
 {
     static S32 last_number = -1;
 
-    /* don't bother with 0% change */
-    if(number == last_number)
-        return;
+    if( number > 99)
+        number = 99;
 
     if(number < 0)
     {
@@ -89,9 +88,6 @@ actind(
         return;
     }
 
-    if( number > 99)
-        number = 99;
-
     #if defined(DO_VISDELAY_BY_STEAM)
     if(last_number < 0)
     {
@@ -100,14 +96,18 @@ actind(
     }
     #endif
 
+    /* don't bother with 0% change */
+    if(number == last_number)
+        return;
+
     last_number = number;
 
     /* is there anything to output after the heading */
 
     if(number > 0)
     {
-        trace_1(TRACE_APP_PD4, "riscos_hourglass_percent(%d)", number);
-        riscos_hourglass_percent(number);
+        trace_1(TRACE_APP_PD4, "riscos_hourglass_percentage(%d)", number);
+        riscos_hourglass_percentage(number);
     }
 }
 

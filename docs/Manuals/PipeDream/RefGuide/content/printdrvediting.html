@@ -29,7 +29,7 @@
             <tr>
                 <td><a accesskey="p" href="pipedreamfileformat.html">Prev</a> </td>
                 <td><a href="../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="printerdrivers.html">Next</a></td>
             </tr>
@@ -49,7 +49,7 @@
     </p>
     <p>
         PipeDream caters for these differences by reading a printer driver from disc.
-        The printer driver then converts standard PipeDream highlights to a particular text-based printer&rsquo;s codes so that you need not be concerned with them.
+        The printer driver then converts standard PipeDream highlights to a particular text-based printer’s codes so that you need not be concerned with them.
         PipeDream is supplied with printer drivers for dot matrix, daisy wheel and HP PCL printers.
     </p>
     <p>
@@ -108,11 +108,11 @@
     <p>
         To enter the codes required by your printer into a printer driver, you will need to extract the code sequences from your printer documentation.
         Unfortunately, the standard of printer documentation varies from the excellent to the diabolical.
-        If you cannot understand your printer documentation, do not be disheartened&mdash;it is not your fault.
+        If you cannot understand your printer documentation, do not be disheartened — it is not your fault.
         But you will need to find someone who is even more conversant with the inner workings of computers than yourself to help you.
     </p>
     <p>Codes can be entered in several ways:</p>
-    <p><code>"M"</code> indicates the upper-case &lsquo;m&rsquo; character</p>
+    <p><code>"M"</code> indicates the upper-case ‘m’ character</p>
     <p><code>8</code>&nbsp;&nbsp;&nbsp;indicates 8, which is the ASCII backspace character.</p>
     <p><code>&amp;20</code>&nbsp;&nbsp;indicates hexadecimal <code>20</code>, which is the ASCII space character</p>
     <p>$20&nbsp;&nbsp;$ is a synonym for hexadecimal</p>
@@ -158,7 +158,7 @@
     </p>
     <p><code>H1&nbsp;&nbsp;&nbsp;?,8,"_"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;underline</code></p>
     <p>
-        The ? is a special symbol which means &lsquo;each character&rsquo; to PipeDream.
+        The ? is a special symbol which means ‘each character’ to PipeDream.
         If you include a string containing a ?, PipeDream prints the string for every character, replacing the ? with each character.
         Notice that if you want to send a real question mark from the printer driver you must put double quotation marks around the question mark, i.e. " ? ".
     </p>
@@ -303,7 +303,7 @@
     </p>
     <p>
         Note that the page length the printer assumes may be different from the one that you have set in PipeDream is assuming.
-        Sending a formfeed to the printer will wind the paper to the end of the printer&rsquo;s page length, no matter what page length you have set in the document.
+        Sending a formfeed to the printer will wind the paper to the end of the printer’s page length, no matter what page length you have set in the document.
     </p>
 
     <h3 id="Microspacing">Microspacing</h3>
@@ -338,26 +338,26 @@
     <p><code>HMIS&nbsp;&nbsp;&nbsp;HMI&nbsp;&nbsp;&nbsp;suffix</code></p>
     <p><code>HMIO&nbsp;&nbsp;&nbsp;HMI&nbsp;&nbsp;&nbsp;offset</code></p>
     <p>
-        You can also specify the number of &lsquo;units per character&rsquo;.
+        You can also specify the number of <em>units per character</em>.
         Note that this is not the pitch.
         To get the pitch, divide the units per character into the spacing unit.
         If the spacing unit is 1/120", and there are 10 units per character
         (this is the default in PipeDream, set by the <span class="csg-dbox">Microspace</span> dialogue box),
         then the pitch is 120/10 which equals 12 pitch.
-        So the default pitch is 12, unless you alter this by giving a different &lsquo;units per character&rsquo; value
+        So the default pitch is 12, unless you alter this by giving a different <em>units per character</em> value
         in the <span class="csg-dbox">Microspace</span> dialogue box.
     </p>
     <p>
-        HMI stands for &lsquo;horizontal motion increment&rsquo;, which is jargon for the amount the printer is instructed to position its print-head.
+        HMI stands for <em>horizontal motion increment</em>, which is jargon for the amount the printer is instructed to position its print-head.
         HMI is a printing term not to be confused with the printer driver options, <code>HMIP</code>, <code>HMIS</code>, and <code>HMIO</code>.
-        HMI is sometimes called CSI (&lsquo;column spacing index&rsquo;) or &lsquo;intercharacter space&rsquo;.
+        HMI is sometimes called CSI (<em>column spacing index</em>) or ‘intercharacter space’.
     </p>
     <p>
         To summarise, if your printer can move its carriage in small increments, probably 1/120ths of an inch,
         then you can probably get PipeDream and your printer to microspace justified text.
     </p>
     <p>
-        If you have trouble understanding the following explanation, don&rsquo;t worry.
+        If you have trouble understanding the following explanation, don’t worry.
         Microspacing is very confusing!
         However, it is very likely that your printer adheres to either the Diablo standard
         or the Epson standard and you can enter the examples shown here without having to reason it out.
@@ -389,7 +389,7 @@
     </p>
     <p>
         The best solution to this is to force the Epson to print in a particular pitch when microspacing.
-        You can do this by including a &lsquo;pitch set&rsquo; command in the HMIP option.
+        You can do this by including a <em>pitch set</em> command in the HMIP option.
         Then you can safely put the constant value into the HMIO field,
         knowing that the printer will be forced to a particular pitch.
     </p>
@@ -446,7 +446,7 @@
     <p>
         Remember to save the printer driver once you have finished editing it by clicking the
         <span class="csg-menu-option">Save</span> option on the <span class="csg-menu">Files</span> menu.
-        If you don&rsquo;t save it, PipeDream will continue to use the unedited version.
+        If you don’t save it, PipeDream will continue to use the unedited version.
     </p>
 
     <nav class="navfooter">

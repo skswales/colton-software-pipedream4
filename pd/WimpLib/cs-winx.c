@@ -34,8 +34,15 @@ winx_changedtitle(
 
     if(wstate.flags & wimp_WOPEN)
     {
+        const int dy = wimpt_dy();
+#if 1
+        trace_0(TRACE_RISCOS_HOST, TEXT("queuing global redraw of inside of title bar area"));
+        (void) wimpt_complain(
+                tbl_wimp_force_redraw((wimp_w) -1 /* entire screen */,
+                                      wstate.o.box.x0, wstate.o.box.y1 + dy /* title bar contents starts one raster up */,
+                                      wstate.o.box.x1, wstate.o.box.y0 + wimp_win_title_height(dy) - 2*dy));
+#else
         wimp_redrawstr redraw;
-        int dy = wimpt_dy();
         redraw.w      = (wimp_w) -1; /* entire screen */
         redraw.box.x0 = wstate.o.box.x0;
         redraw.box.y0 = wstate.o.box.y1 + dy; /* title bar contents starts one raster up */
@@ -43,6 +50,7 @@ winx_changedtitle(
         redraw.box.y1 = redraw.box.y0 + wimp_win_title_height(dy) - 2*dy;
         trace_0(TRACE_RISCOS_HOST, TEXT("queuing global redraw of inside of title bar area"));
         (void) wimpt_complain(wimp_force_redraw(&redraw));
+#endif
     }
 }
 
@@ -450,7 +458,7 @@ winx_create_window(
 {
     os_error * e;
 
-    e = wimp_create_wind((wimp_wind *) p_window_template, (wimp_w *) p_window_handle);
+    e = tbl_wimp_create_window((WimpWindow *) p_window_template, (int *) p_window_handle);
 
     if(NULL == e)
         if(!winx__register_new(*p_window_handle, proc, handle, 1))

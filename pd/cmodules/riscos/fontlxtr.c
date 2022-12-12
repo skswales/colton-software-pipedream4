@@ -107,8 +107,7 @@ fontselect_check_open(
     if(*p_window_handle)
     {
         WimpGetWindowStateBlock window_state;
-        window_state.window_handle = *p_window_handle;
-        if(NULL == tbl_wimp_get_window_state(&window_state))
+        if(NULL == tbl_wimp_get_window_state_x(*p_window_handle, &window_state))
             if((window_state.flags & WimpWindow_Open) != 0)
                 return(TRUE);
 

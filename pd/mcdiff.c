@@ -81,7 +81,7 @@ wrch_h(
     char *from;
 
     array[0] = ch;
-    (void) os_word(10, array);                              /* read char definition */
+    (void) _kernel_osword(10, (int *) array); /* read char definition */
 
     if(highlights_on & N_ITALIC)
     {
@@ -112,6 +112,26 @@ wrch_h(
         do { *ptr-- = CH_NULL; } while(ptr >= toprow);
     }
 
+#if 1
+    static U8 redefine_space_output_restore_space[10 + 1 + 10] =
+    {
+        bbc_MultiPurpose, SPACE, 0,0,0,0,0,0,0,0,
+        SPACE,
+        bbc_MultiPurpose, SPACE, 0,0,0,0,0,0,0,0
+    };
+    P_U8 o_ptr = redefine_space_output_restore_space + 2;
+
+    ptr = toprow;
+    do { *o_ptr++ = *ptr++; } while(ptr <= baseline);
+
+    if(highlights_on & N_UNDERLINE)
+        *ptr ^= 0xFF;                                       /* EOR underline in */
+
+    *o_ptr = *ptr;                                          /* complete char redefinition */
+
+    /* redefine, output, and restore all in one go */
+    print_complain(os_writeN(redefine_space_output_restore_space, elemof32(redefine_space_output_restore_space)));
+#else
     print_complain(bbc_vdu(bbc_MultiPurpose));              /* start to redefine char */
     print_complain(bbc_vdu(victimchar));
 
@@ -127,7 +147,10 @@ wrch_h(
     print_complain(bbc_vdu(victimchar));
 
     /* redefine SPACE after abusing it so */
-    print_complain(bbc_vduq(bbc_MultiPurpose, SPACE, 0,0,0,0,0,0,0,0));
+    static const U8 restore_space[10] = { bbc_MultiPurpose, SPACE, 0,0,0,0,0,0,0,0 };
+    print_complain(os_writeN(restore_space, elemof32(restore_space)));
+    //print_complain(bbc_vduq(bbc_MultiPurpose, SPACE, 0,0,0,0,0,0,0,0));
+#endif
 }
 
 /* --------------------------- RISCOS only ------------------------------- */
@@ -202,246 +225,6 @@ setcolours(
     set_fg_colour_from_option(fg_colours_option_index);
 }
 
-#ifdef HAS_FUNNY_CHARACTERS_FOR_WRCH
-
-static U32 chardefined = 0;
-
-/* shift factors to get bits in the chardefined bitset */
-
-enum CHARSHIFTFACTORS
-{
-    shf_COLUMN_DOTS,
-    shf_DOWN_ARROW,
-#if FALSE
-    shf_UP_ARROW,
-    shf_LEFT_ARROW,
-    shf_RIGHT_ARROW,
-    shf_VERTBAR,
-    shf_HORIZBAR,
-    shf_TOPLEFT,
-    shf_TOPRIGHT,
-    shf_BOTLEFT,
-    shf_BOTRIGHT,
-    shf_DROP_LEFT,
-    shf_DROP_MIDDLE,
-    shf_DROP_RIGHT,
-#endif
-    shf_last
-};
-
-static uchar oldchardef[shf_last][10];  /* bbc_MultiPurpose, ch, def[8] */
-
-/******************************************************************************
-*
-* define funny character:
-*
-* read current definition to oldchardef[][],
-* redefine desired character and mark as defined
-* note that we can't read all chardefs at start
-* as punter may change alphabet (font) at any time
-*
-******************************************************************************/
-
-static void
-wrch__reallydefinefunny(
-    S32 ch,
-    uchar bitshift)
-{
-    oldchardef[bitshift][0] = (uchar) bbc_MultiPurpose;
-    oldchardef[bitshift][1] = (uchar) ch;
-    (void) os_word(10, &oldchardef[bitshift][1]);   /* read old definition */
-
-    switch(ch)
-    {
-    case COLUMN_DOTS:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,  0,  0,  0, 128+32+8+2));
-        break;
-
-    case DOWN_ARROW:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 24, 24, 24, 24, 24, 90, 60, 24));
-        break;
-
-#if FALSE
-    case UP_ARROW:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 24, 60, 90, 24, 24, 24, 24, 24));
-        break;
-
-    case LEFT_ARROW:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0, 32, 96,255, 96, 32,  0));
-        break;
-
-    case RIGHT_ARROW:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  4,  6,255,  6,  4,  0));
-        break;
-
-    case VERTBAR:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 16, 16, 16, 16));
-        break;
-
-    case HORIZBAR:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,255,  0,  0,  0));
-        break;
-
-    case TOPLEFT:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0, 31, 16, 16, 16));
-        break;
-
-    case TOPRIGHT:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,240, 16, 16, 16));
-        break;
-
-    case BOTLEFT:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 31,  0,  0,  0));
-        break;
-
-    case BOTRIGHT:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,240,  0,  0,  0));
-        break;
-
-    case DROP_LEFT:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 31, 16, 16, 16));
-        break;
-
-    case DROP_MIDDLE:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,255,  0,  0,  0));
-        break;
-
-    case DROP_RIGHT:
-        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,240, 16, 16, 16));
-        break;
-#endif
-    }
-
-    chardefined |= (((U32) 1) << bitshift);
-}
-
-/******************************************************************************
-*
-*  ensure funny character defined and print it
-*
-******************************************************************************/
-
-extern void
-wrch_funny(
-    S32 ch)
-{
-    wrch_definefunny(ch);
-    wimpt_safe(bbc_vdu(ch));
-}
-
-/******************************************************************************
-*
-*  define funny character for subsequent print
-*
-*  if character is not yet defined then
-*  define it and mark it as defined
-*
-******************************************************************************/
-
-extern void
-wrch_definefunny(
-    S32 ch)
-{
-    char bitshift;
-
-    switch(ch)
-    {
-    case COLUMN_DOTS:
-        bitshift = shf_COLUMN_DOTS;
-        break;
-
-    case DOWN_ARROW:
-        bitshift = shf_DOWN_ARROW;
-        break;
-
-#if FALSE
-    case UP_ARROW:
-        bitshift = shf_UP_ARROW;
-        break;
-
-    case LEFT_ARROW:
-        bitshift = shf_LEFT_ARROW;
-        break;
-
-    case RIGHT_ARROW:
-        bitshift = shf_RIGHT_ARROW;
-        break;
-
-    case VERTBAR:
-        bitshift = shf_VERTBAR;
-        break;
-
-    case HORIZBAR:
-        bitshift = shf_HORIZBAR;
-        break;
-
-    case TOPLEFT:
-        bitshift = shf_TOPLEFT;
-        break;
-
-    case TOPRIGHT:
-        bitshift = shf_TOPRIGHT;
-        break;
-
-    case BOTLEFT:
-        bitshift = shf_BOTLEFT;
-        break;
-
-    case BOTRIGHT:
-        bitshift = shf_BOTRIGHT;
-        break;
-
-    case DROP_LEFT:
-        bitshift = shf_DROP_LEFT;
-        break;
-
-    case DROP_MIDDLE:
-        bitshift = shf_DROP_MIDDLE;
-        break;
-
-    case DROP_RIGHT:
-        bitshift = shf_DROP_RIGHT;
-        break;
-#endif
-
-    default:
-        return; /* non-funny char, so exit */
-    }
-
-    if(!(chardefined & (((U32) 1) << bitshift)))
-        wrch__reallydefinefunny(ch, bitshift);
-}
-
-/******************************************************************************
-*
-* undefine funny characters that have been
-* defined this time round and mark as undefined
-*
-******************************************************************************/
-
-extern void
-wrch_undefinefunnies(void)
-{
-    U32 bitshift = 0;
-    U32 bitmask;
-
-    while((chardefined != 0)  &&  (bitshift < 32))
-    {
-        bitmask  = ((U32) 1) << bitshift;
-
-        if(chardefined & bitmask)
-        {
-            trace_1(TRACE_APP_PD4, "undefining char %d", oldchardef[bitshift][1]);
-            void_WrapOsErrorReporting(os_writeN, &oldchardef[bitshift][0], 10));
-            chardefined ^= bitmask;
-        }
-
-        bitshift++;
-    }
-}
-
-#endif
-
 /* ------------------- Ones that are basically similar ------------------- */
 
 extern void
@@ -451,11 +234,8 @@ ack_esc(void)
 
     if(ctrlflag)
     {
-        #if RISCOS
         fx_x2(126, 0);
-        #else
-        rdch(FALSE, FALSE);
-        #endif
+
         ctrlflag = 0;
     }
 }

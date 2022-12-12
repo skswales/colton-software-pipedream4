@@ -19,7 +19,7 @@
             <tr>
                 <td><a accesskey="p" href="alignment.html">Prev</a> </td>
                 <td><a href="../index.html">Contents</a> </td>
-                <th>PipeDream Reference Guide</th>
+                <th>PipeDream 4 Reference Guide</th>
                 <td> <a href="fullindex.html">Index</a></td>
                 <td> <a accesskey="n" href="ascii.html">Next</a></td>
             </tr>
@@ -46,10 +46,10 @@
     <p>Arrays cannot contain ranges or other arrays or formulae.</p>
     <p>You can mix different types of data in the same array.</p>
     <h5>Example:</h5>
-    <p class="csg-sample-indent"><code>{"fred",10,A1}</code> three columns, one row&mdash;containing a text string, a number and a cell reference</p>
+    <p class="csg-sample-indent"><code>{"fred",10,A1}</code> three columns, one row — containing a text string, a number and a cell reference</p>
     <p>
         If you enter an array into a number cell, PipeDream displays the first element in the array, i.e. the element in column one, row one.
-        To see what else is in the array, you must use the INDEX function to select a different element or pass the array to another function to calculate a result.
+        To see what else is in the array, you must use the <span class="csg-function">INDEX()</span> function to select a different element or pass the array to another function to calculate a result.
     </p>
 
     <h2 id="Passing">Passing Arrays To Functions</h2>
@@ -59,8 +59,8 @@
         If a function has an array parameter, the array is processed explicitly within the function.
     </p>
     <p>
-        One function which does expect an array is INDEX.
-        Its first parameter must be an array; the INDEX function picks out one or more elements from the array that you pass to it.
+        One function which does expect an array is <span class="csg-function">INDEX()</span>.
+        Its first parameter must be an array; the <span class="csg-function">INDEX()</span> function picks out one or more elements from the array that you pass to it.
     </p>
     <p>
         When you pass an array to a function or operation which does not expect one,
@@ -68,7 +68,7 @@
         The result of the function is an array of values of the same size.
     </p>
     <p>
-        An example of such an operation is &lsquo;<code>+</code>&rsquo;.
+        An example of such an operation is ‘<code>+</code>’.
         If you enter the following formula:
     </p>
     <p class="csg-sample-indent">
@@ -126,7 +126,7 @@
 
     <h2 id="Lists">Arrays and Ranges in Lists</h2>
     <p>
-        If you give arrays and ranges of cells as the parameters to functions which expect lists, like SUM,
+        If you give arrays and ranges of cells as the parameters to functions which expect lists, like <span class="csg-function">SUM()</span>,
         PipeDream includes every element in each array and every cell in each range of cells in the list.
     </p>
     <h5>Example:</h5>

@@ -1324,7 +1324,7 @@ find_document_with_input_focus(void)
 
     trace_0(TRACE_APP_PD4, "find_document_with_input_focus ");
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_caret_position(&caret)) )
         return(NO_DOCUMENT);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))

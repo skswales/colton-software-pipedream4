@@ -1159,7 +1159,7 @@ start_drag(
     dragstr.parent.x1   = g_os_display_size.cx;
     dragstr.parent.y1   = g_os_display_size.cy;
 
-    if(NULL != WrapOsErrorReporting(wimp_drag_box(&dragstr)))
+    if( WrapOsErrorReporting_IsError(wimp_drag_box(&dragstr)) )
         return;
 
 #if defined(TRY_AUTOSCROLL) /* try using Wimp_AutoScroll if available and appropriate, falling back to the existing mechanism if not */
@@ -1189,12 +1189,9 @@ start_drag(
 
         if(displaying_borders) /* main window displaced from rear window for colh window */
         {
-            int borderline;
             WimpGetIconStateBlock icon_state;
-            icon_state.window_handle = colh_window_handle;
-            icon_state.icon_handle = COLH_COLUMN_HEADINGS;
-            void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
-            borderline = icon_state.icon.bbox.ymin; /* approx -132 */
+            void_WrapOsErrorReporting(tbl_wimp_get_icon_state_x(colh_window_handle, COLH_COLUMN_HEADINGS, &icon_state));
+            const int borderline = icon_state.icon.bbox.ymin; /* approx -132 */
             wasb.top_pause_zone_width += (-borderline);
         }
 
@@ -2000,8 +1997,7 @@ process_autoscroll_before_drag(
 
     WimpGetWindowStateBlock window_state;
 
-    window_state.window_handle = main_window_handle;
-    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    if( WrapOsErrorReporting_IsError(tbl_wimp_get_window_state_x(main_window_handle, &window_state)) )
         return;
 
     UNREFERENCED_LOCAL_VARIABLE(f_ctrl_pressed); /* NB Ctrl state ignored here */

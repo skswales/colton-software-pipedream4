@@ -637,6 +637,7 @@
     <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
     <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
     <None Include="..\..\..\..\RelHistPrev.html" />
+    <None Include="..\..\..\..\Relnotes.html" />
     <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\cmds.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -699,9 +700,6 @@
     <None Include="..\..\..\..\WimpLib\r32\Makefile" />
     <None Include="..\..\..\..\WimpLib\swi.s" />
     <None Include="..\..\..\r32\!PipeDream\!Help,feb" />
-    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="..\..\..\r32\as_flags_h" />
     <None Include="..\..\..\r32\CopyToTemp,feb" />
     <None Include="..\..\..\r32\Makefile" />

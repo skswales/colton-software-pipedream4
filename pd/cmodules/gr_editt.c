@@ -461,7 +461,7 @@ mlsubmenu_process(
     {
         wimp_mousestr m;
 
-        if(NULL != WrapOsErrorReporting(wimp_get_point_info(&m)))
+        if( WrapOsErrorReporting_IsError(wimp_get_point_info(&m)) )
         {
             m.x = m.y = 0;
         }
@@ -1055,29 +1055,22 @@ fillstyle_event_Redraw_Window_Request(
 {
     LIST_ITEMNO * keyp = handle;
     PC_FILLSTYLE_ENTRY entryp;
-    IMAGE_CACHE_HANDLE cah;
+    IMAGE_CACHE_HANDLE cah = 0;
     WimpRedrawWindowBlock redraw_window_block;
     BOOL more;
-
-    redraw_window_block.window_handle = redraw_window_request->window_handle;
-
-    cah = 0;
 
     if((entryp = fillstyle_list_search_key(*keyp)) != NULL)
         cah = entryp->cah;
 
     /* only redrawing required is of the 'picture' (a draw file identified by cah), */
     /* which must be scaled to fit within the limits of its icon                    */
-    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_redraw_window_x(redraw_window_request->window_handle, &redraw_window_block, &more)); /* more := FALSE on error */
 
     while(more)
     {
         /* get the window relative bbox of the picture icon */
         WimpGetIconStateBlock icon_state;
-        icon_state.window_handle = redraw_window_block.window_handle;
-        icon_state.icon_handle = GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT;
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        if( WrapOsErrorReporting_IsError(tbl_wimp_get_icon_state_x(redraw_window_block.window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT, &icon_state)) )
         {
             more = FALSE;
             break;
@@ -1085,8 +1078,7 @@ fillstyle_event_Redraw_Window_Request(
 
         fillstyle_redraw_core(cah, &redraw_window_block, &icon_state.icon.bbox);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)); /* more := FALSE on error */
     }
 
     return(TRUE);
@@ -1669,8 +1661,7 @@ object_dragging_eor_bbox(
     update_and_redraw_window_block.update.update_area.xmax =  0x1FFFFFFF;
     update_and_redraw_window_block.update.update_area.ymax = 0; /* 0x1FFFFFFF; */     /* RCM says that SKS claimed zero was a good upper limit */
 
-    if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
-        more = FALSE;
+    void_WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
 
     while(more)
     {
@@ -1678,8 +1669,7 @@ object_dragging_eor_bbox(
 
         displ_box(gdi_outline.xmin, gdi_outline.ymin, gdi_outline.xmax, gdi_outline.ymax);
 
-        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
-            more = FALSE;
+        void_WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)); /* more := FALSE on error */
     }
     } /*block*/
 }

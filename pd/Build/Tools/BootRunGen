@@ -50,7 +50,7 @@ ELSE
   ENDIF
 ENDIF
 :
-colour_picker% = TRUE: REM PipeDream now needs to use ColourPicker module
+colour_picker% = TRUE: REM PipeDream 4 now needs to use ColourPicker module
 :
 reg_extra$ = ""
 :
@@ -170,9 +170,9 @@ PROCo(f%,"|")
 PROCfiletypes(f%,boot%)
 :
 IF boot% THEN
-  REM Leave all the complaining until user tries to run PipeDream
+  REM Leave all the complaining until user tries to run PipeDream 4
   PROCo(f%,"|")
-  REM No alternate sprites for PipeDream so we can do this
+  REM No alternate sprites for PipeDream 4 so we can do this
   PROCo(f%,FNif_z_then("Boot$OSVersion")+"Else If (Boot$OSVersion>=500 AND Boot$OSVersion<600) Then IconSprites "+var_product_dir$+".!Sprites Else IconSprites "+var_product_dir$+".!SpritesR4")
 ELSE
   PROCo(f%,"|")

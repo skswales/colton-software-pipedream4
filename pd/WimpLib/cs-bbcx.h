@@ -10,7 +10,7 @@
 #ifndef __cs_bbcx_h
 #define __cs_bbcx_h
 
-#if defined(INLINE_SWIX)
+#if defined(NORCROFT_INLINE_SWIX)
 #include "C:swis.h"
 #endif
 
@@ -22,7 +22,7 @@
 cs-riscasm.s
 */
 
-#if defined(INLINE_SWIX)
+#if defined(NORCROFT_INLINE_SWIX)
 _Check_return_
 _Ret_maybenull_
 static inline _kernel_oserror *
@@ -41,9 +41,9 @@ extern _kernel_oserror *
 os_writeN(
     _In_reads_(count) const char * s,
     _InVal_     U32 count);
-#endif
+#endif /* NORCROFT_INLINE_SWIX */
 
-#if defined(INLINE_SWIX)
+#if defined(NORCROFT_INLINE_SWIX)
 _Check_return_
 _Ret_maybenull_
 static inline _kernel_oserror *
@@ -64,9 +64,9 @@ os_plot(
     _InVal_     int code,
     _InVal_     int x,
     _InVal_     int y);
-#endif
+#endif /* NORCROFT_INLINE_SWIX */
 
-#if !defined(COMPILING_WIMPLIB)
+#if 1 || !defined(COMPILING_WIMPLIB)
 
 #define bbc_draw(x, y) \
     os_plot(bbc_SolidBoth + bbc_DrawAbsFore, x, y)

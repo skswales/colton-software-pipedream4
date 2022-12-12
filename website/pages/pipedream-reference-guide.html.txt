@@ -1,0 +1,22 @@
+﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/"><strong>Reference Guide</strong></a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+
+<h2><a href="/coltsoft-docs/pipedream/RefGuide/content/intro.html">Introduction</a></h2>
+<h2><a href="/coltsoft-docs/pipedream/RefGuide/content/commands.html">Commands</a></h2>
+<h2><a href="/coltsoft-docs/pipedream/RefGuide/index.html">Contents</a></h2>
+<h2><a href="/coltsoft-docs/pipedream/RefGuide/content/glossary.html">Glossary</a></h2>
+<h2><a href="/coltsoft-docs/pipedream/RefGuide/content/fullindex.html">Index</a></h2>
+
+<h2><a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a></h2>
+
+<p> </p>
+<p>This <em>Reference Guide</em> was written by Colton Software.</p>
+
+<p>© 1991-2022 Colton Software</p>
+
+<strong>Additional credits</strong>
+
+<p>
+Stuart Swales - converting the printed manual to HTML, updating to reflect current behaviour;
+<br>
+Richard Torrens - creating the fully-linked Index. 
+</p>

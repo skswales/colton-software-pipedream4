@@ -31,33 +31,33 @@ Set pd$RefGuide                                 <pd$Disc>.Manuals.PipeDream.UK.R
 %Rename <pd$Disc>.Manuals.PipeDream.RefGuide    <pd$RefGuide>
 
 | HTML files
-SetMacro Alias$coltsoft_settype_HTM SetType %%0 &FAF
-Repeat         coltsoft_settype_HTM <pd$RefGuide> -files
-Repeat         coltsoft_settype_HTM <pd$RefGuide>.content -files
-Repeat         coltsoft_settype_HTM <pd$RefGuide>.content.functions -files
-Repeat         coltsoft_settype_HTM <pd$StartGuide> -files
-Repeat         coltsoft_settype_HTM <pd$StartGuide>.content -files
-Unset    Alias$coltsoft_settype_HTM
+SetMacro Alias$coltsoft_SetType_HTM SetType %%0 &FAF
+Repeat         coltsoft_SetType_HTM <pd$RefGuide> -files
+Repeat         coltsoft_SetType_HTM <pd$RefGuide>.content -files
+Repeat         coltsoft_SetType_HTM <pd$RefGuide>.content.functions -files
+Repeat         coltsoft_SetType_HTM <pd$StartGuide> -files
+Repeat         coltsoft_SetType_HTM <pd$StartGuide>.content -files
+Unset    Alias$coltsoft_SetType_HTM
 
 | CSS files
-SetMacro Alias$coltsoft_settype_CSS SetType %%0 &F79
-               coltsoft_settype_CSS <pd$RefGuide>.content.guide/css
-               coltsoft_settype_CSS <pd$StartGuide>.content.tutor/css
-Unset    Alias$coltsoft_settype_CSS
+SetMacro Alias$coltsoft_SetType_CSS SetType %%0 &F79
+               coltsoft_SetType_CSS <pd$RefGuide>.content.guide/css
+               coltsoft_SetType_CSS <pd$StartGuide>.content.tutor/css
+Unset    Alias$coltsoft_SetType_CSS
 
 | PNG files
-SetMacro Alias$coltsoft_settype_PNG SetType %%0 &B60
-Repeat         coltsoft_settype_PNG <pd$RefGuide>.content.images -files
-Repeat         coltsoft_settype_PNG <pd$RefGuide>.content.images.toolbar -files
-Repeat         coltsoft_settype_PNG <pd$StartGuide>.content.images -files
-Repeat         coltsoft_settype_PNG <pd$StartGuide>.content.images.toolbar -files
-Unset    Alias$coltsoft_settype_PNG
+SetMacro Alias$coltsoft_SetType_PNG SetType %%0 &B60
+Repeat         coltsoft_SetType_PNG <pd$RefGuide>.content.images -files
+Repeat         coltsoft_SetType_PNG <pd$RefGuide>.content.images.toolbar -files
+Repeat         coltsoft_SetType_PNG <pd$StartGuide>.content.images -files
+Repeat         coltsoft_SetType_PNG <pd$StartGuide>.content.images.toolbar -files
+Unset    Alias$coltsoft_SetType_PNG
 
 | TEXT files
-SetMacro Alias$coltsoft_settype_TXT SetType %%0 &FFF
-               coltsoft_settype_TXT <pd$RefGuide>.content.images.LICENCE
-               coltsoft_settype_TXT <pd$StartGuide>.content.images.LICENCE
-Unset    Alias$coltsoft_settype_TXT
+SetMacro Alias$coltsoft_SetType_TXT SetType %%0 &FFF
+               coltsoft_SetType_TXT <pd$RefGuide>.content.images.LICENCE
+               coltsoft_SetType_TXT <pd$StartGuide>.content.images.LICENCE
+Unset    Alias$coltsoft_SetType_TXT
 
 %Remove <pd$Disc>.Manuals.PipeDream./editorconfig
 | The one in RiscPkg.Copyright is the useful one for the packaged docs
