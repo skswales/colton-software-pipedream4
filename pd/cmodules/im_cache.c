@@ -1276,7 +1276,7 @@ image_cache_load(
                 rs.r[0] = 1; /* return dimensions */
                 rs.r[1] = (int) (pJpegObject+ 1); /* point to JPEG image */
                 rs.r[2] = (int) filelength;
-                if(NULL == _kernel_swi(/*JPEG_Info*/ 0x49980, &rs, &rs))
+                if(NULL == cs_kernel_swi(/*JPEG_Info*/ 0x49980, &rs))
                 {
                   /*if(rs.r[0] & (1<<2))
                         reportf(TEXT("JPEG_Info: simple ratio"));*/

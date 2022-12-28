@@ -7,7 +7,7 @@
 # Copyright © 1989-1999 Colton Software
 # Copyright © 1998-2015 R W Colton
 
-#URD=$.pipedream4.pipedream__4_61__branch
+#URD=$.pipedream4.pipedream__4_62__branch
 
 WimpLib=^
 
@@ -27,7 +27,7 @@ ASflags=$(ASflags_BASE)
 CC=cc
 CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback
 # -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
-#CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback -arch 2 -cpu 3
+CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback -arch 2 -cpu 3
 # -arch 3M to allow use of S/UMULL with -Otime
 #CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback -arch 3M -cpu 7 -DNORCROFT_ARCH_M
 CCflags=$(CCflags_BASE) -Otime
@@ -195,7 +195,6 @@ o.werr :       $(WimpLib).c.werr $(WimpLib).c.nd-werr
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-werr
 
 WRAPPED=\
-o.drawmod \
 o.font \
 o.os \
 o.pointer \

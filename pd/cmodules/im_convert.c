@@ -230,8 +230,7 @@ image_convert_do_convert_file(
     *p_converted_name = NULL;
 
     /* generate tempname for converted file */
-    tstr_xstrkpy(command_line_buffer, elemof32(command_line_buffer), "<Wimp$ScrapDir>.");
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), product_id());
+    consume_int(xsnprintf(command_line_buffer, elemof32(command_line_buffer), "<Wimp$ScrapDir>.%s", product_id()));
     if(!file_is_dir(command_line_buffer))
         status_return(file_create_directory(command_line_buffer));
     len = tstrlen32(command_line_buffer);
@@ -247,12 +246,12 @@ image_convert_do_convert_file(
     _kernel_swi_regs rs;
     rs.r[0] = -1; /* read */
     rs.r[1] = -1; /* read next slot */
-    (void) _kernel_swi(Wimp_SlotSize, &rs, &rs);
+    (void) cs_kernel_swi(Wimp_SlotSize, &rs);
     if(rs.r[1] < MIN_NEXT_SLOT)
     {
         rs.r[0] = -1; /* read */
         rs.r[1] = MIN_NEXT_SLOT; /* write next slot */
-        (void) _kernel_swi(Wimp_SlotSize, &rs, &rs); /* sorry for the override, but it does need some space to run! */
+        (void) cs_kernel_swi(Wimp_SlotSize, &rs); /* sorry for the override, but it does need some space to run! */
     }
     } /*block*/
 #else
@@ -262,6 +261,18 @@ image_convert_do_convert_file(
     if(wimptx_os_version_query() <= RISC_OS_3_5)
         mode = "28r";
 
+#if 1
+    (void) xsnprintf(command_line_buffer, elemof32(command_line_buffer),
+                TEXT("WimpTask Run %s %s %s %s -nomode -noscale") /* <options> */,
+#if defined(REMEMBER_CFSI_APP)
+                ChangeFSI_application,
+#else
+                TEXT("PipeDream:RISC_OS.ImgConvert"), /* that sets WimpSlot and calls ChangeFSI */
+#endif
+                source_file_name  /* <in file>  */,
+                *p_converted_name /* <out file> */,
+                mode              /* <mode>     */);
+#else
     tstr_xstrkpy(command_line_buffer, elemof32(command_line_buffer), TEXT("WimpTask Run "));
 #if defined(REMEMBER_CFSI_APP)
     tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), ChangeFSI_application);
@@ -275,6 +286,7 @@ image_convert_do_convert_file(
     tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), TEXT(" "));
     tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), mode              /* <mode>     */ );
     tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), TEXT(" -nomode -noscale") /* <options> */ );
+#endif
 
     reportf(command_line_buffer);
     _kernel_oscli(command_line_buffer);

@@ -37,6 +37,11 @@ Most of these files are critical to PipeDream's operation and so should not be d
 <p>Compressed sprite file displayed as the background image on the splash screen.</p>
 
 
+<h4>Neutral.BuildVer</h4>
+
+<p>File which contains data showing the build version (first word of data) and the compiler used to build it.</p>
+
+
 <h4>Neutral.ImageSlot</h4>
 
 <p>
@@ -45,9 +50,29 @@ Replaces *WimpSlot in the application's !Run file.
 </p>
 
 
+<h4>Neutral.ImgConvert</h4>
+
+<p>Script used to invoke ChangeFSI to convert images to a format which PipeDream can load.</p>
+
+
 <h4>Neutral.Loader</h4>
 
-<p>BASIC program that displays a splash screen and sets some PipeDream$xxx variables.</p>
+<p>BASIC program that sets some PipeDream$xxx variables and invokes the splash screen display.</p>
+
+
+<h4>Neutral.Splash</h4>
+
+<p>BASIC program that displays a splash screen.</p>
+
+
+<h4>Neutral.SprCht</h4>
+
+<p>Lower resolution (rectangular pixel) chart UI sprites.</p>
+
+
+<h4>Neutral.SprCht22</h4>
+
+<p>Higher resolution (square pixel) chart UI sprites.</p>
 
 
 <h4>UK</h4>

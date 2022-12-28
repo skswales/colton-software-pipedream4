@@ -16,14 +16,41 @@
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
+#ifndef __res_h
+#include "res.h"
+#endif
+
+#include "cs-msgs.h"
+
 #if defined(NORCROFT_INLINE_SWIX)
 #include "swis.h"
 #endif
 
+static char * help_messages___block;
+
 static void
-help_starttask(PCTSTR command)
+help_messages_init(void)
 {
-    reportf("StartTask %s", command);
+    if(NULL != help_messages___block) return;
+
+    char filename[256];
+    int tmp_length = res_findname("HelpMess", filename);
+    if(tmp_length > 0)
+        messages_readfile(&help_messages___block, filename);
+}
+
+extern const char *
+help_messages_lookup(const char * tag_and_default)
+{
+    help_messages_init();
+
+    return(messages_lookup(&help_messages___block, tag_and_default, FALSE /*->lookup is case-sensitive*/));
+}
+
+static void
+help_starttask(_In_z_ PCTSTR command)
+{
+    // reportf("StartTask %s", command);
 
 #if defined(NORCROFT_INLINE_SWIX)
     void_WrapOsErrorReporting(_swix(Wimp_StartTask, _IN(0), command));
@@ -66,9 +93,7 @@ ho_help_url(
     if( (NULL == _kernel_getenv("Alias$Open_URI_http", tempstr, elemof32(tempstr))) &&
         (CH_NULL != tempstr[0]) )
     {
-        _kernel_swi_regs rs;
-        rs.r[0] = 0;
-        if( (NULL == _kernel_swi(0x4E380 /*URI_Version*/, &rs, &rs)) )
+        if( (NULL == _swix(0x4E380 /*URI_Version*/, _IN(0), 0)) )
         {
             consume_int(snprintf(tempstr, elemof32(tempstr), "URIdispatch %s", url));
 

@@ -1,0 +1,93 @@
+REM SetBuildEnv - !!!Boot environment setter for Colton Software development
+REM
+REM This Source Code Form is subject to the terms of the Mozilla Public
+REM License, v. 2.0. If a copy of the MPL was not distributed with this
+REM file, You can obtain one at https://mozilla.org/MPL/2.0/.
+REM
+REM Copyright (C) 2022 Stuart Swales
+:
+PROCmain
+END
+:
+:
+DEF PROCraise
+IF NOT raised% THEN raised% = TRUE: ERROR ERR,REPORT$+" at line "+STR$ERL+" in SetBuildEnv"
+ERROR ERR,REPORT$
+ENDPROC
+:
+:
+DEF PROCmain
+raised% = FALSE
+LOCAL ERROR: ON ERROR LOCAL: RESTORE ERROR: PROCraise
+REM ERROR 1,"Here": REM Move this about for debugging line numbers
+:
+PROCread_args
+:
+PROCstrip_and_set_var(filename$, variable$, strip$)
+ENDPROC
+:
+:
+REM read & decode command line args
+DEF PROCread_args
+LOCAL env%, ptr%, buflen%
+SYS "OS_GetEnv" TO env%: REM PRINT ~env%: OSCLI("Memory B "+STR$~env%)
+:
+buflen% = 1023
+DIM buffer% buflen%
+:
+SYS "XOS_ReadArgs","BASIC,quit/K/G,variable/A,strip/A",env%,buffer%,buflen% TO ;PSR%
+IF PSR% AND 1 THEN ERROR 0,"Bad parameters to SetBuildEnv"
+REM PRINT ~buffer%: OSCLI("Memory "+STR$~buffer%)
+:
+ptr% = buffer%: ptr% += 1*4: REM Skip BASIC
+:
+REM filename is associated with -quit
+REM PRINT "filename arg: ";~ptr%;" ";~!ptr%
+filename$ = FNstringize_arg_GSTrans(!ptr%): ptr% += 4: REM PRINT "filename: ";filename$
+:
+REM PRINT "variable arg: ";~ptr%;" ";~!ptr%
+variable$ = FNstringize_arg(!ptr%): ptr% += 4: REM PRINT "variable: ";variable$
+:
+REM PRINT "strip arg: ";~ptr%;" ";~!ptr%
+strip$ = FNstringize_arg(!ptr%): ptr% += 4: REM PRINT "strip: ";strip$
+ENDPROC
+:
+:
+DEF PROCstrip_and_set_var(filename$, variable$, strip$)
+LOCAL L%: L% = LEN(strip$)
+IF RIGHT$(filename$, L%) <> strip$ THEN ERROR 0,strip$+" not at the end of "+filename$
+IF LEFT$(RIGHT$(filename$, L%+1), 1) <> "." THEN ERROR 0,"No directory delimiter before "+strip$
+PROCset_var(variable$, LEFT$(filename$, LEN(filename$)-(L%+1)))
+ENDPROC
+:
+:
+DEF PROCset_var(var$, val$)
+LOCAL L%: L%=LEN(val$)
+IF L%=0 THEN L%=-1: REM Unset empty variable
+SYS "XOS_SetVarVal", var$, val$, L%, 0, 0
+ENDPROC
+:
+:
+DEF FNstringize_arg(ptr%)
+LOCAL A%
+A% = 0
+WHILE ptr%?A%
+  A% += 1
+ENDWHILE
+ptr%?A% = 13
+= $ptr%
+:
+:
+DEF FNstringize_arg_GSTrans(ptr%)
+LOCAL A%, L%
+L% = ?ptr%
+A% = 0
+WHILE A% < L%
+  ptr%?(A%) = ptr%?(A%+2)
+  A% += 1
+ENDWHILE
+ptr%?A% = 13
+= $ptr%
+:
+:
+REM end of SetBuildEnv

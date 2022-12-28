@@ -13,38 +13,71 @@
  * as that had (i) too much overhead, was (ii) too slow in loading
  * and (iii) used file i/o without bothering about buffering
  *
+ * Adapted for use with external clients e.g. interactive help messages
+ *
  * See msgs.h for explanation of functions / file format
  */
 
 #include "include.h"
 
-#include "msgs.h"
+#include "cs-msgs.h"
 
 #include "cmodules/file.h"
 
-static char * msgs__block;
-
-static void
-__msgs_readfile(
-    _In_z_      const char *filename);
+static char * std_msgs___block;
 
 /*
 compare two strings backwards
 */
 
-static int inline
-__strrncmp(const char * a, const char * b, size_t n)
+static int
+__strrncmp_nocase(
+    const char * a,
+    const char * b,
+    size_t n)
 {
-    if(n)
-    {
-        a += n;
-        b += n;
+    if(!n)
+        return(n);
 
-        do
-            if(*--a != *--b)
-                break; /* returns number of leading characters different */
-        while(--n);
+    a += n;
+    b += n;
+
+    do  {
+        int c_a = *--a;
+        int c_b = *--b;
+        if(c_a == c_b)
+            continue;
+        c_a = tolower(c_a);
+        c_b = tolower(c_b);
+        if(c_a != c_b)
+            break; /* returns number of leading characters different */
     }
+    while(--n);
+
+    return(n);
+}
+
+static inline int
+__strrncmp(
+    const char * a,
+    const char * b,
+    size_t n,
+    _InVal_     BOOL case_insensitive)
+{
+    if(case_insensitive)
+        return(__strrncmp_nocase(a, b, n));
+
+    if(!n)
+        return(n);
+
+    a += n;
+    b += n;
+
+    do  {
+        if(*--a != *--b)
+            break; /* returns number of leading characters different */
+    }
+    while(--n);
 
     return(n);
 }
@@ -57,22 +90,28 @@ __strrncmp(const char * a, const char * b, size_t n)
 extern void
 msgs_init(void)
 {
+    if(NULL != std_msgs___block) return;
+
     char filename[256];
     int tmp_length = res_findname("Messages", filename);
     if(tmp_length > 0)
-        __msgs_readfile(filename);
+        messages_readfile(&std_msgs___block, filename);
 }
 
-static const char * lookup_ptr = NULL;
-
-extern /*const*/ char *
-msgs_lookup(/*const*/ char *tag_and_default)
+extern const char *
+messages_lookup(
+    _InRef_     P_P_U8 p_msgs,
+    _In_z_      const char * tag_and_default,
+    _InVal_     BOOL case_insensitive)
 {
+    static const char * g_lookup_ptr = NULL;
+
     const char * tag = tag_and_default;
     char tag_buffer[msgs_TAG_MAX + 1];
     const char * default_ptr;
     U32 tag_length;
-    const char * init_lookup_ptr;
+    const char * lookup_ptr = (p_msgs == &std_msgs___block) ? g_lookup_ptr : NULL;
+    const char * init_lookup_ptr = lookup_ptr;
 
     if(NULL == (default_ptr = strchr(tag_and_default, TAG_DELIMITER)))
         tag_length = strlen(tag);
@@ -94,15 +133,13 @@ msgs_lookup(/*const*/ char *tag_and_default)
     }
 
     /* if there ain't a message block or it's bad then we can't do lookup */
-    if((NULL != msgs__block)  &&  (msgs__block != INVALID_MSGS_BLOCK))
+    if((NULL != *p_msgs)  &&  (*p_msgs != INVALID_MSGS_BLOCK))
     {
-        init_lookup_ptr = lookup_ptr;
-
         for(;;)
         {
             /* try resuming search at last position or at start */
             if(NULL == lookup_ptr)
-                lookup_ptr = msgs__block;
+                lookup_ptr = *p_msgs;
 
             while(CH_NULL != *lookup_ptr)
             {
@@ -110,8 +147,13 @@ msgs_lookup(/*const*/ char *tag_and_default)
 
                 if(lookup_length > tag_length)
                     if(*(lookup_ptr + tag_length) == TAG_DELIMITER)
-                        if(0 == __strrncmp(tag, lookup_ptr, tag_length))
+                        if(0 == __strrncmp(tag, lookup_ptr, tag_length, case_insensitive))
+                        {
+                            if(p_msgs == &std_msgs___block)
+                                g_lookup_ptr = lookup_ptr; /* lookup is only restartable within normal messages */
+
                             return((char *) (lookup_ptr + tag_length + 1));
+                        }
 
                 /* step to next message */
                 lookup_ptr += lookup_length + 1;
@@ -132,6 +174,12 @@ msgs_lookup(/*const*/ char *tag_and_default)
 
     /* return the default, or if that fails, the tag */
     return((char *) ((NULL != default_ptr) ? default_ptr : tag_and_default));
+}
+
+extern /*const*/ char *
+msgs_lookup(/*const*/ char * tag_and_default)
+{
+    return(de_const_cast(char *, messages_lookup(&std_msgs___block, tag_and_default, FALSE /*->lookup is case-sensitive*/)));
 }
 
 static STATUS
@@ -234,9 +282,10 @@ __msgs_process_loaded_data(
     msgs[out++] = CH_NULL; /* need this last byte as end marker */
 }
 
-static void
-__msgs_readfile(
-    _In_z_      const char *filename)
+extern void
+messages_readfile(
+    _OutRef_    P_P_U8 p_msgs,
+    _In_z_      const char * filename)
 {
     size_t real_length;
 
@@ -246,20 +295,20 @@ __msgs_readfile(
     if(status_fail(file_open(filename, file_open_read, &file_handle)))
         return;
 
-    real_length = __msgs_load_messages_file(&msgs__block, file_handle);
+    real_length = __msgs_load_messages_file(p_msgs, file_handle);
 
     file_close(&file_handle);
     } /*block*/
 
-    if(NULL == msgs__block)
+    if(NULL == *p_msgs)
     {
         /* stop msgs trying to translate during application death */
-        msgs__block = INVALID_MSGS_BLOCK;
+        *p_msgs = INVALID_MSGS_BLOCK;
         message_output("Memory full: unable to load messages");
         return;
     }
 
-    __msgs_process_loaded_data(msgs__block, real_length);
+    __msgs_process_loaded_data(*p_msgs, real_length);
 }
 
 /* end of cs-msgs.c */

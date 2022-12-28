@@ -35,6 +35,10 @@ local header
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
+#ifndef __cs_template_h
+#include "cs-template.h"/* includes template.h */
+#endif
+
 #ifndef                 __tristate_h
 #include "cmodules/riscos/tristate.h" /* no includes */
 #endif
@@ -1272,7 +1276,7 @@ gr_chartedit_gallery_barlinescatch_init(
         return(0);
     }
 
-    *p_dbox = d = dbox_new_new(dboxname, &errorp);
+    *p_dbox = d = chart_dbox_new_new(dboxname, &errorp);
 
     if(!d)
     {
@@ -2336,6 +2340,22 @@ gr_chartedit_gallery_undo_pie_bodges(
             serp->bits.point_vary_manual = 0;
         }
     }
+}
+
+/******************************************************************************
+*
+* create a chart dialogue box, first ensuring the template file is loaded
+*
+******************************************************************************/
+
+extern void * /*dbox*/
+chart_dbox_new_new(const char * name, char ** errorp /*out*/)
+{
+    // reportf("chart_template_ensure()");
+    if(chart_template_ensure())
+        return(dbox_new_new(name, errorp));
+
+    return(NULL);
 }
 
 /* end of gr_blgal.c */

@@ -1023,7 +1023,7 @@ ENDPOINT:
     escape_disable();
 
     /* RCM and RJM try the following on 13.1.92 to clear the persistent escape condition */
-    fx_x2(126, 0);
+    (void) _kernel_osbyte(126, 0, 0);
 #endif
 
     actind_end();

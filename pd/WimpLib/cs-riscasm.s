@@ -140,6 +140,9 @@ ctrlflagp
 
         Return "","LinkNotStacked"
 
+ ] ; :LNOT: NORCROFT_INLINE_SWIX
+
+ [ {TRUE} ; compiler barfs :LNOT: NORCROFT_INLINE_SWIX
 ; ++++++++++++++++++++++++
 ; extern _kernel_oserror *
 ; os_plot(

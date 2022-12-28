@@ -539,7 +539,7 @@ typedef BITMAPINFO * P_BITMAPINFO;
 
 #ifdef __kernel_h
 #elif RISCOS
-#include "kernel.h" /* C: */
+#include "cs-kernel.h" /* C: */
 #define far
 #endif
 

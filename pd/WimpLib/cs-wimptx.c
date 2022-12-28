@@ -51,7 +51,7 @@ wimp_ReportError_wrapped(
     const char * spritearea,
     const char * buttons)
 {
-    int button_clicked = 1;
+    int button_clicked;
 
     static _kernel_swi_regs rs; /* flatter for stack overflow handler */
 
@@ -64,8 +64,7 @@ wimp_ReportError_wrapped(
 
     riscos_hourglass_off();
 
-    if(NULL == _kernel_swi(Wimp_ReportError, &rs, &rs))
-        button_clicked = rs.r[1];
+    button_clicked = (NULL == cs_kernel_swi(Wimp_ReportError, &rs)) ? rs.r[1] : 1;
 
     riscos_hourglass_on();
 
@@ -152,19 +151,23 @@ wimp_reporterror_rf(
 
 static int wimptx__os_version;
 
+#ifdef UNUSED
 static int wimptx__platform_features; /* 19aug96 */
+#endif
 
 extern void
 wimptx_os_version_determine(void)
 {
     wimptx__os_version = (_kernel_osbyte(0x81, 0, 0xFF) & 0xFF);
 
+#ifdef UNUSED
     { /* 19aug96 */
     _kernel_swi_regs rs;
     rs.r[0] = 0; /*Read code features*/
-    if(NULL == _kernel_swi(/*OS_PlatformFeatures*/ 0x6D, &rs, &rs))
+    if(NULL == cs_kernel_swi(/*OS_PlatformFeatures*/ 0x6D, &rs))
         wimptx__platform_features = rs.r[0];
     } /*block*/
+#endif
 }
 
 extern int
@@ -173,11 +176,13 @@ wimptx_os_version_query(void)
     return(wimptx__os_version);
 }
 
+#ifdef UNUSED
 extern int
 wimptx_platform_features_query(void)
 {
     return(wimptx__platform_features);
 }
+#endif
 
 /*****************************************
 *
@@ -188,10 +193,7 @@ wimptx_platform_features_query(void)
 extern void
 wimptx_checkpalette(void)
 {  
-    {
-    _kernel_swi_regs rs;
-    (void) wimpt_complain(_kernel_swi(ColourTrans_InvalidateCache, &rs, &rs));
-    } /*block*/
+    (void) _swix(ColourTrans_InvalidateCache, 0);
 
     (void) wimpt_complain(wimp_readpalette(&wimptx__palette));
 

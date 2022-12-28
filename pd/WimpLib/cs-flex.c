@@ -215,28 +215,34 @@ report_flex_size(
 
 #endif /* REPORT_FLEX */
 
-int flex_granularity = 0x8000;     /* must be a power-of-two size or zero (exported) */
+int flex_granularity = 0; /* must be a power-of-two size or zero (exported) */
+
+/*ncr*/
+extern int
+flex_granularity_read(void)
+{
+    if(0 == flex_granularity)
+    {
+        flex_granularity = _swi(OS_ReadMemMapInfo, _RETURN(0)); /* page size */
+        // if(flex_granularity <= 0x1000)
+        //     flex_granularity = 0x4000; /* SKS says don't page violently on RISC PC */
+        reportf(TEXT("flex_granularity = %d"), flex_granularity);
+    }
+    return(flex_granularity);
+}
 
 static inline int
 flex_granularity_ceil(int n)
 {
-  if(flex_granularity)
-  {
-    int mask = flex_granularity - 1; /* flex_granularity must be a power-of-two */
-    n = (n + mask) & ~mask;
-  }
-  return n;
+    const int mask = flex_granularity - 1; /* flex_granularity must be a power-of-two or zero */
+    return((mask < 0) ? n : ((n + mask) & ~mask));
 }
 
 static inline int
 flex_granularity_floor(int n)
 {
-  if(flex_granularity)
-  {
-    int mask = flex_granularity - 1; /* flex_granularity must ve a power-of-two */
-    n = n & ~mask;
-  }
-  return n;
+    const int mask = flex_granularity - 1; /* flex_granularity must ve a power-of-two or zero */
+    return((mask < 0) ? n : (n & ~mask));
 }
 
 /* wrapper for TBOXLIBS_FLEX */

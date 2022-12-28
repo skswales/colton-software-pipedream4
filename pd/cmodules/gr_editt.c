@@ -372,7 +372,7 @@ mlsubmenu_create(
 
         mlsubmenu->mlec = mlec;
 
-        template_handle_pane = template_find_new(template_name);
+        template_handle_pane = (chart_template_ensure() ? template_find_new(template_name) : NULL);
 
         if(template_handle_pane)
         {
@@ -459,21 +459,16 @@ mlsubmenu_process(
     }
     else
     {
-        wimp_mousestr m;
+        wimp_mousestr mouse;
 
-        if( WrapOsErrorReporting_IsError(wimp_get_point_info(&m)) )
-        {
-            m.x = m.y = 0;
-        }
-        else
-        {
-            m.x -= 32; /* try to be a bit into the window */
-            m.y += 32;
-        }
+        (void) _swix(Wimp_GetPointerInfo, _IN(1), &mouse);
 
-        trace_2(TRACE_MODULE_GR_CHART, "mlsubmenu_process, opening menu at (%d,%d)", m.x, m.y);
+        mouse.x -= 32; /* try to be a bit into the window */
+        mouse.y += 32;
 
-        winx_create_menu(mlsubmenu->mls_pane_window_handle, m.x, m.y);
+        trace_2(TRACE_MODULE_GR_CHART, "mlsubmenu_process, opening menu at (%d,%d)", mouse.x, mouse.y);
+
+        winx_create_menu(mlsubmenu->mls_pane_window_handle, mouse.x, mouse.y);
     }
 
     mlec_claim_focus(mlsubmenu->mlec);
@@ -955,7 +950,7 @@ gr_editm_colourtrans_SetGCOL(
     rs.r[3] = flags;
     rs.r[4] = gcol_action;
     assert((rs.r[3] & 0xfffffe7f) == 0); /* just bits 7 and 8 are valid */
-    return(_kernel_swi(ColourTrans_SetGCOL, &rs, &rs)); /* ignore gcol_out */
+    return(cs_kernel_swi(ColourTrans_SetGCOL, &rs)); /* ignore gcol_out */
 }
 
 static void
@@ -1123,7 +1118,7 @@ gr_chartedit_selection_fillstyle_edit(
 
     assert(cep);
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_FILLSTYLE, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_FILLSTYLE, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
@@ -1875,7 +1870,7 @@ null_event_proto(static, gr_chartedit_selected_object_drag_null_handler)
         cp = gr_chart_cp_from_ch(ch);
         assert(cp);
 
-        (void) wimp_get_point_info(&mouse);
+        (void) _swix(Wimp_GetPointerInfo, _IN(1), &mouse);
 
         gr_chartedit_riscos_point_from_abs(cp, &point, mouse.x, mouse.y);
 

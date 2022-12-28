@@ -56,7 +56,9 @@ exported functions
 
 #if defined(NORCROFT_INLINE_ASM) || defined(NORCROFT_INLINE_SWIX_NOT_YET)
 //#include "swis.h"
+#ifndef OS_ReadMonotonicTime
 #define OS_ReadMonotonicTime 0x00000042
+#endif
 #define _XOS(swi_no) ((swi_no) | (1U << 17))
 
 _Check_return_

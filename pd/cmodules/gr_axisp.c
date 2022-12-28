@@ -1814,7 +1814,7 @@ gr_chartedit_selection_cat_axis_process(
 
     modifying_axis_idx = gr_axes_idx_from_external(cp, id.no, &modifying_axes_idx);
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
@@ -2233,7 +2233,7 @@ gr_chartedit_selection_axis_process(
             return;
         }
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_AXIS, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_AXIS, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));

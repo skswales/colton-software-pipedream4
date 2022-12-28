@@ -2874,14 +2874,14 @@ result_to_string(
 
 #define currency_symbol_char '\xA4'
 
-static const char *
+static inline const char *
 get_subtitute_currency_string(void)
 {
     _kernel_oserror * e;
     _kernel_swi_regs rs;
     rs.r[0] = -1; /* current territory */
     rs.r[1] =  4; /* read currency symbol in local alphabet */
-    if(NULL != (e = _kernel_swi(Territory_ReadSymbols, &rs, &rs)))
+    if(NULL != (e = cs_kernel_swi(Territory_ReadSymbols, &rs)))
         return(NULL);
     return((const char *) (intptr_t) rs.r[0]);
 }

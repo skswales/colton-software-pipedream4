@@ -215,6 +215,7 @@
     <ClCompile Include="..\..\..\..\expedit.c" />
     <ClCompile Include="..\..\..\..\external\OtherFree\wn_pnpoly.c" />
     <ClCompile Include="..\..\..\..\help.c" />
+    <ClCompile Include="..\..\..\..\helpmess.c" />
     <ClCompile Include="..\..\..\..\link_ev.c" />
     <ClCompile Include="..\..\..\..\lists.c" />
     <ClCompile Include="..\..\..\..\markers.c" />
@@ -254,6 +255,9 @@
     <ClCompile Include="..\..\..\..\WimpLib\cs-event.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-fileicon.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\cs-flex.c">
@@ -321,9 +325,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\nd-drawmod.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\WimpLib\nd-fileicon.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\nd-font.c">
@@ -474,12 +475,12 @@
     <ClInclude Include="..\..\..\..\WimpLib\baricon.h" />
     <ClInclude Include="..\..\..\..\WimpLib\bbc.h" />
     <ClInclude Include="..\..\..\..\WimpLib\colourpick.h" />
-    <ClInclude Include="..\..\..\..\WimpLib\colourtran.h" />
     <ClInclude Include="..\..\..\..\WimpLib\coords.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-akbd.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-bbcx.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-dbox.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-event.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-fileicon.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-flex.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-font.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-menu.h" />
@@ -694,11 +695,11 @@
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\Text" />
-    <None Include="..\..\..\..\WimpLib\cs-pollfpm.s" />
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
-    <None Include="..\..\..\..\WimpLib\GB\msg_risc" />
     <None Include="..\..\..\..\WimpLib\r32\Makefile" />
     <None Include="..\..\..\..\WimpLib\swi.s" />
+    <None Include="..\..\..\..\WimpLib\utils\en_GB\hlp_risc" />
+    <None Include="..\..\..\..\WimpLib\utils\en_GB\msg_risc" />
     <None Include="..\..\..\r32\!PipeDream\!Help,feb" />
     <None Include="..\..\..\r32\as_flags_h" />
     <None Include="..\..\..\r32\CopyToTemp,feb" />

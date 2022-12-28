@@ -44,6 +44,9 @@ extern int report_flex_size(flex_ptr anchor);
 
 extern int flex_granularity;
 
+extern int
+flex_granularity_read(void);
+
 /* like flex_free(), but caters for already freed / not yet allocated */
 
 extern void

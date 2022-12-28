@@ -29,11 +29,3 @@ FNTSELM00:Failed to find FontSelect template
 FNTSELM01:Memory full (FS01)
 FNTSELM02:Memory full (FS02)
 FNTSELM03:Memory full (FS03)
-FNTSELI00:Click here to apply the above data
-FNTSELI01:Click here to go back to the last applied or chosen values
-# NB SKS has renumbered the icons in PipeDream's font selector dialogue box!
-FNTSELIZZ:This is the font selector window
-FNTSELPNT:Click here to set the height and the width to %d point.
-FNTSELW0:Click here to choose '%s' as the font.
-FNTSELW1:Click here to choose '%s' as the weight.
-FNTSELW2:Click here to choose '%s' as the style.

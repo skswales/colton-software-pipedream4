@@ -15,7 +15,7 @@
 
 #if RISCOS
 #include <locale.h>
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h"
 #include "swis.h" /*C:*/
 
 #ifndef __cs_bbcx_h
@@ -36,29 +36,6 @@
 
 #include "riscos_x.h"
 #include "riscdraw.h"
-
-/******************************************************************************
-*
-*  Perform an OS_Byte call, returning the R1 value
-*
-******************************************************************************/
-
-/*ncr*/
-extern S32
-fx_x(
-    _InVal_     S32 a,
-    _InVal_     S32 x,
-    _InVal_     S32 y)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[0] = a;
-    rs.r[1] = x;
-    rs.r[2] = y;
-    (void) _kernel_swi(OS_Byte, &rs, &rs);
-
-    return(rs.r[1]);
-}
 
 /******************************************************************************
 *
@@ -162,7 +139,7 @@ wrch_h(
 extern void
 clearmousebuffer(void)
 {
-    fx_x2(21, MOUSE_BUFFER_NUMBER);
+    (void) _kernel_osbyte(21, MOUSE_BUFFER_NUMBER, 0);
 }
 
 /******************************************************************************
@@ -234,7 +211,7 @@ ack_esc(void)
 
     if(ctrlflag)
     {
-        fx_x2(126, 0);
+        (void) _kernel_osbyte(126, 0, 0);
 
         ctrlflag = 0;
     }
@@ -249,7 +226,7 @@ bleep(void)
 extern void
 clearkeyboardbuffer(void)
 {
-    fx_x2(15, 1);
+    (void) _kernel_osbyte(15, 1, 0);
 
     clearmousebuffer();
 }
@@ -262,7 +239,7 @@ static inline BOOL
 depressed(
     S32 key)
 {
-    return(fx_x(129, key, 0xFF) == (S32) 0xFF);
+    return((0xFF & _kernel_osbyte(129, key, 0xFF)) == (S32) 0xFF);
 }
 
 extern BOOL
@@ -283,7 +260,7 @@ extern BOOL /*ctrl_pressed*/
 host_keyboard_status(
     _OutRef_    P_BOOL p_shift_pressed)
 {
-    const int r = fx_x(202, 0, 0xFF);
+    const int r = (0xFF & _kernel_osbyte(202, 0, 0xFF));
     *p_shift_pressed = (0 != (r & (1 << 3)));
     return(0 != (r & (1 << 6))); /*ctrl_pressed*/
 }
@@ -323,7 +300,7 @@ escape_disable_nowinge(void)
 
     if(--escape_level == 0)
     {
-        fx_x2(229, 1);          /* Ensure ESCAPE disabled */
+        (void) _kernel_osbyte(229, 1, 0); /* Ensure ESCAPE disabled */
 
         was_ctrlflag = ctrlflag;
 
@@ -349,7 +326,7 @@ extern void
 escape_enable(void)
 {
     if(escape_level++ == 0)
-        fx_x2(229, 0);          /* Ensure ESCAPE enabled */
+        (void) _kernel_osbyte(229, 0, 0); /* Ensure ESCAPE enabled */
 }
 
 /******************************************************************************
@@ -416,7 +393,7 @@ init_mc(void)
 
     /* set locale appropriately */
     if(NULL != setlocale(LC_ALL, DefaultLocale_STR))
-       reportf("setlocale(%s) => %s", DefaultLocale_STR, setlocale(LC_ALL, NULL));
+        reportf("setlocale(%s) => %s", DefaultLocale_STR, setlocale(LC_ALL, NULL));
     else
         consume_ptr(setlocale(LC_ALL, "C"));
 

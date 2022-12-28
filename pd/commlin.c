@@ -1818,7 +1818,7 @@ menu_state_changed(void)
     classic_menu_option.flags = opt;
     myassert0x(opt & MF_TICKABLE, "classic menu state change failed");
 
-    //reportf("Menus: classic %s, short %s", report_boolstring(classic_menus()), report_boolstring(short_menus()));
+    // reportf("Menus: classic %s, short %s", report_boolstring(classic_menus()), report_boolstring(short_menus()));
     resize_menus(classic_menus(), short_menus());
     riscmenu_buildmenutree(classic_menus(), short_menus());
 }
@@ -2185,7 +2185,7 @@ start_macro_recorder_core(void)
         (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), name, MACROS_SUBDIR_STR);
     }
 
-    reportf("Recording command file to %s", buffer);
+    // reportf("Recording command file to %s", buffer);
 
     if(!mystr_set(&macro_file_name, buffer))
         return(FALSE);

@@ -335,13 +335,7 @@ Print_fn(void)
         print_document();
 }
 
-static _kernel_oserror *
-swi_wimp_textcolour(int colour)
-{
-    _kernel_swi_regs rs;
-    rs.r[0] = colour;
-    return(_kernel_swi(/*TextColour*/ 0x000400F0, &rs, &rs));
-}
+#define swi_wimp_textcolour(colour) (_swix(/*TextColour*/ 0x000400F0, _IN(0), colour))
 
 /******************************************************************************
 *
@@ -1163,7 +1157,7 @@ print_grid_line(
     rs.r[4] =       printing_draw_line_style.thickness;
     rs.r[5] = (int) &printing_draw_line_style.spec;
     rs.r[6] = (int) printing_draw_line_style.dash_pattern;
-    print_complain(_kernel_swi(Draw_Stroke, &rs, &rs));
+    print_complain(cs_kernel_swi(Draw_Stroke, &rs));
 #else
     print_complain(drawmod_stroke(admit_defeat, fill_Default, NULL, &printing_draw_line_style));
 #endif
@@ -2225,7 +2219,7 @@ drvoff(
     if(d_driver_PT == driver_serial)
     {
         /* flush RS423 buffers */
-        fx_x2(21, 1);
+        (void) _kernel_osbyte(21, 1, 0);
     }
 
     return(!escape_disable());

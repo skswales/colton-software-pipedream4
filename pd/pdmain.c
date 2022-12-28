@@ -245,7 +245,7 @@ main(
 {
     #if defined(NO_SURRENDER)
     /* ensure ESCAPE enabled for trapping */
-    fx_x2(229, 0);
+    (void) _kernel_osbyte(229, 0, 0);
     #else
     /* Trap ESCAPE as soon as possible */
     EscH(&ctrlflag);
@@ -269,6 +269,8 @@ main(
     decode_command_line_options(argc, argv, 1);
 
     decode_run_options();
+
+    // for 4.62 ev_set_C99_mode(TRUE);
 
     /* startup Window Manager interface */
     wimptx_set_spritename(product_spritename); /* For RISC OS 3.5 and later error reporting */
@@ -297,17 +299,6 @@ main(
 
     if(atexit(application__atexit_apcs_softpcs)) /* ensure closedown proc called on exit */
         return(EXIT_FAILURE);
-#endif
-
-#if defined(__cs_flex_h)
-    {
-    _kernel_swi_regs rs;
-    if(NULL == _kernel_swi(OS_ReadMemMapInfo, &rs, &rs))
-    {
-        flex_granularity = rs.r[0];
-        reportf("flex_granularity is now %u", flex_granularity);
-    }
-    } /*block*/
 #endif
 
     if(status_fail(aligator_init()))
@@ -649,8 +640,8 @@ decode_command_line_options(
         char ch   = *arg;
         char array[BUF_MAX_PATHSTRING];
 
-        if(pass == 2)
-            reportf("main: *** got arg %d, '%s'", i, arg);
+        // if(pass == 2)
+        //    reportf("main: *** got arg %d, '%s'", i, arg);
 
         switch(ch)
         {
@@ -659,6 +650,14 @@ decode_command_line_options(
             ch = (char) tolower(ch);
             switch(ch)
             {
+            case 'c': /* Command */
+            case 'm': /* Macro (for compatibility) */
+                arg = argv[++i];
+                if(pass == 2)
+                    if(status_done(add_path_using_dir(array, elemof32(array), arg, MACROS_SUBDIR_STR)))
+                        exec_file(arg);
+                break;
+
             case 'h': /* Help */
                 if(pass == 2)
                     application_process_command(N_Help);
@@ -679,14 +678,6 @@ decode_command_line_options(
                     else
                         consume_ptr(setlocale(LC_ALL, "C"));
                 }
-                break;
-
-            case 'c': /* Command */
-            case 'm': /* Macro (for compatibility) */
-                arg = argv[++i];
-                if(pass == 2)
-                    if(status_done(add_path_using_dir(array, elemof32(array), arg, MACROS_SUBDIR_STR)))
-                        exec_file(arg);
                 break;
 
             case 'n': /* New */
@@ -743,14 +734,12 @@ decode_run_options(void)
     {
         const char * arg = p_u8;
 
-        /* skip leading spaces */
-        while(SPACE == *arg)
-            ++arg;
+        StrSkipSpaces(arg); /* skip leading spaces */
 
         if(CH_NULL == *arg)
             break;
 
-        reportf("main: *** got run option arg '%s'", arg);
+        // reportf("main: *** got run option arg '%s'", arg);
 
         if((*arg == '-')  && (arg[1] == '-'))
         {

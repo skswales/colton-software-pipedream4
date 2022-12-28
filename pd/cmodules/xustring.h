@@ -154,11 +154,17 @@ strcpy / _s() etc. replacements that ensure CH_NULL-termination
 #define ustr_xvsnprintf xvsnprintf
 
 /* 32-bit (rather than size_t) sized strlen() */
-#define ustrlen32(tstr) \
-    ((U32) strlen(tstr))
+#define ustrlen32(ustr) \
+    ((U32) strlen(ustr))
 
-#define ustrlen32p1(s) \
-    (1U /*CH_NULL*/ + ustrlen32(s))
+#define ustrlen32p1(ustr) \
+    (1U /*CH_NULL*/ + ustrlen32(ustr))
+
+#define _inl_ustrlen32(ustr) \
+    ((U32) _inl_strlen32(ustr))
+
+#define _inl_ustrlen32p1(ustr) \
+    ((U32) _inl_strlen32p1(ustr))
 
 #else /* USTR_IS_SBSTR */
 

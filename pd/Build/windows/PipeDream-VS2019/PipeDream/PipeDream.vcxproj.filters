@@ -362,9 +362,6 @@
     <ClCompile Include="..\..\..\..\WimpLib\nd-drawmod.c">
       <Filter>Source Files\WimpLib\RISC_OSLib_wrappers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\WimpLib\nd-fileicon.c">
-      <Filter>Source Files\WimpLib\RISC_OSLib_wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\nd-font.c">
       <Filter>Source Files\WimpLib\RISC_OSLib_wrappers</Filter>
     </ClCompile>
@@ -586,6 +583,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\cmodules\muldiv.c">
       <Filter>Source Files\pd_cmodules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\helpmess.c">
+      <Filter>Source Files\pd\building</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-fileicon.c">
+      <Filter>Source Files\WimpLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -811,9 +814,6 @@
     <ClInclude Include="..\..\..\..\WimpLib\colourpick.h">
       <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\WimpLib\colourtran.h">
-      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\WimpLib\coords.h">
       <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
     </ClInclude>
@@ -997,13 +997,13 @@
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_clang.h">
       <Filter>Header Files\coltsoft</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\WimpLib\cs-fileicon.h">
+      <Filter>Source Files\WimpLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\r32\as_flags_h">
       <Filter>Source Files\pd_cmodules_riscos</Filter>
-    </None>
-    <None Include="..\..\..\..\WimpLib\cs-pollfpm.s">
-      <Filter>Source Files\WimpLib</Filter>
     </None>
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s">
       <Filter>Source Files\WimpLib</Filter>
@@ -1254,9 +1254,6 @@
     <None Include="..\..\..\..\..\docs\LICENCE">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\..\..\WimpLib\GB\msg_risc">
-      <Filter>Source Files\WimpLib</Filter>
-    </None>
     <None Include="..\..\..\..\cmodules\GB\msg\gr_chart">
       <Filter>Source Files\chart_cmodules</Filter>
     </None>
@@ -1448,6 +1445,12 @@
     </None>
     <None Include="..\..\..\..\Relnotes.html">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\utils\en_GB\hlp_risc">
+      <Filter>Source Files\WimpLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\utils\en_GB\msg_risc">
+      <Filter>Source Files\WimpLib</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -531,6 +531,41 @@ ev_report_ERROR_CUSTOM(
 
 /******************************************************************************
 *
+* set evaluator C99 mode
+*
+******************************************************************************/
+
+#include <fenv.h>
+
+extern int g_ev_C99_mode = -1;
+
+extern void
+ev_set_C99_mode(BOOL C99_mode)
+{
+    static fenv_t fe;
+
+    if(g_ev_C99_mode == (int) C99_mode)
+        return;
+
+    if(-1 == g_ev_C99_mode)
+    {   /* first time - stash initial env */
+        (void) fegetenv(&fe);
+    }
+
+    if(0 == C99_mode)
+    {   /* 1->0: restore previous env */
+        (void) fesetenv(&fe);
+    }
+    else
+    {   /* 0->1: enter non-stop mode - remember previous env */
+        (void) feholdexcept(&fe);
+    }
+
+    g_ev_C99_mode = C99_mode;
+}
+
+/******************************************************************************
+*
 * set evaluator options block from PD options
 *
 ******************************************************************************/

@@ -15,7 +15,7 @@
 
 #include "cmodules/ev_evali.h"
 
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 
 #include "swis.h" /*C:*/
 
@@ -632,14 +632,14 @@ ss_local_time_as_ymd_hms(
 #else
     rs.r[0] = 14;
     rs.r[1] = (int) buffer;
-    void_WrapOsErrorChecking(_kernel_swi(OS_Word, &rs, &rs));
+    void_WrapOsErrorChecking(cs_kernel_swi(OS_Word, &rs));
 #endif
 
     rs.r[0] = -1; /* use current territory */
     rs.r[1] = (int) buffer;
     rs.r[2] = (int) &time_ordinals;
 
-    if(NULL == WrapOsErrorChecking(_kernel_swi(Territory_ConvertTimeToOrdinals, &rs, &rs)))
+    if(NULL == WrapOsErrorChecking(cs_kernel_swi(Territory_ConvertTimeToOrdinals, &rs)))
     {
         *p_year = time_ordinals.year;
         *p_month = time_ordinals.month;

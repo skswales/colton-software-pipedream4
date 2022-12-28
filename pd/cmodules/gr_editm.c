@@ -1060,7 +1060,7 @@ gr_chartedit_options_process(
     BOOL ok, persist, pending_reflect_modify;
     GR_CHARTEDIT_LAYOUT layout;
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_OPTIONS, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_OPTIONS, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
@@ -1288,7 +1288,7 @@ gr_chartedit_selection_series_process(
     BOOL ok, persist, pending_reflect_modify;
     GR_CHARTEDIT_SERIES_STATE state;
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_SERIES, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_SERIES, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
@@ -2017,7 +2017,7 @@ gr_chartedit_selection_linepattern_edit(
 
     assert(cep);
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_LINEPATTERN, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_LINEPATTERN, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
@@ -2216,7 +2216,7 @@ gr_chartedit_selection_linewidth_edit(
 
     assert(cep);
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_LINEWIDTH, &errorp);
+    d = chart_dbox_new_new(GR_CHARTEDIT_TEM_LINEWIDTH, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));

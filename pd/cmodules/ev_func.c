@@ -23,7 +23,7 @@
 
 #include "version_x.h"
 
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 
 #include "swis.h" /*C:*/
 

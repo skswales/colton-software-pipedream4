@@ -1,4 +1,4 @@
-/* u_strings.c */
+/* u_helpmess.c */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,9 +13,9 @@
 #define MAKE_MESSAGE_FILE 1
 
 #if CROSS_COMPILE
-#define strings_init u_strings_init
+#define helpmess_init u_helpmess_init
 #endif
 
-#include "strings.c"
+#include "helpmess.c"
 
-/* end of u_strings.c */
+/* end of u_helpmess.c */

@@ -140,6 +140,41 @@ away_construct(
     return(away_string_simple(contab[contab_idx].str, output));
 }
 
+/* this is also used by pdchart.c */
+
+extern void
+common_save_version_string(
+    _Out_writes_(elemof_array) P_U8 array,
+    _InVal_     U32 elemof_array)
+{
+#if 1
+    const BOOL empty_organ = str_isblank(user_organ_id());
+
+    (void) xsnprintf(
+                array, elemof_array,
+                "%s, %s%s%s, R%s",
+                applicationversion,
+                user_id(),
+                (empty_organ ? "" : " - "),
+                (empty_organ ? "" : user_organ_id()),
+                registration_number());
+#else
+    xstrkpy(array, elemof_array, applicationversion);
+    xstrkat(array, elemof_array, ", ");
+
+    xstrkat(array, elemof_array, !str_isblank(user_id()) ? user_id() : "Colton Software");
+    if(!str_isblank(user_organ_id()))
+    {
+        xstrkat(array, elemof_array, " - ");
+        xstrkat(array, elemof_array, user_organ_id());
+    }
+
+    xstrkat(array, elemof_array, ", R");
+
+    xstrkat(array, elemof_array, registration_number());
+#endif
+}
+
 static void
 save_version_string(
     FILE_HANDLE output)
@@ -147,18 +182,7 @@ save_version_string(
     uchar array[LIN_BUFSIZ];
     char *tmp;
 
-    xstrkpy(array, elemof32(array), applicationversion);
-    xstrkat(array, elemof32(array), ", ");
-
-    xstrkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
-    if(!str_isblank(user_organ_id()))
-    {
-        xstrkat(array, elemof32(array), " - ");
-        xstrkat(array, elemof32(array), user_organ_id());
-    }
-    xstrkat(array, elemof32(array), ", R");
-
-    xstrkat(array, elemof32(array), registration_number());
+    common_save_version_string(array, elemof32(array));
 
     /* SKS 15nov91 - temporarily borrow the data */
     tmp = d_version[0].textfield;
@@ -2208,40 +2232,75 @@ LoadTemplate_fn(void)
 *
 ******************************************************************************/
 
-static TCHARZ
-u_ltp_name_buffer[256];
+static PTSTR u_ltp_name_buffer = NULL; /* allocate iff needed */
 
 _Check_return_
 static BOOL
 u_ltp_available(void)
 {
-    static int available = -1;
+    const U32 elemof_u_ltp_name_buffer = BUF_MAX_PATHSTRING;
 
-    if(available < 0)
-    {
-        const char * var_name = "123PD$Dir";
+    STATUS status;
 
-        available = 0;
+    if(NULL == u_ltp_name_buffer)
+        if(NULL == (u_ltp_name_buffer = al_ptr_alloc_elem(TCHAR, elemof_u_ltp_name_buffer, &status)))
+            return(FALSE);
 
-        if(NULL == _kernel_getenv(var_name, u_ltp_name_buffer, elemof32(u_ltp_name_buffer)))
-        {
-            tstr_xstrkat(u_ltp_name_buffer, elemof32(u_ltp_name_buffer), ".u_ltp");
+    if(NULL != _kernel_getenv("123PD$Dir", u_ltp_name_buffer, elemof_u_ltp_name_buffer))
+        return(FALSE);
 
-            if(file_is_file(u_ltp_name_buffer))
-                available = 1;
-        }
-    }
+    tstr_xstrkat(u_ltp_name_buffer, elemof_u_ltp_name_buffer, ".u_ltp");
 
-    return(available);
+    return(file_is_file(u_ltp_name_buffer));
+}
+
+_Check_return_
+static inline U32 /*next slot size*/
+wimp_get_next_slot_size(void)
+{
+#if defined(NORCROFT_INLINE_SWIX)
+    return(
+        _swi(Wimp_SlotSize, _INR(0,1)|_RETURN(1),
+        /*in*/  -1      /* just read */,
+                -1      /* read */));
+#else
+    _kernel_swi_regs rs;
+    rs.r[0] = -1; /* just read */
+    rs.r[1] = -1; /* read */
+    (void) cs_kernel_swi(Wimp_SlotSize, &rs);
+    return(rs.r[1]);
+#endif
+}
+
+static inline void
+wimp_set_next_slot_size(
+    _InVal_     U32 next_slot)
+{
+#if defined(NORCROFT_INLINE_SWIX)
+    (void) _swix(Wimp_SlotSize, _INR(0,1),
+                 -1        /* just read */,
+                 next_slot /* next slot */);
+#else
+    _kernel_swi_regs rs;
+    rs.r[0] = -1; /* just read */
+    rs.r[1] = next_slot; /* next slot */
+    (void) cs_kernel_swi(Wimp_SlotSize, &rs);
+#endif
 }
 
 _Check_return_
 static BOOL
 loadfile_convert_lotus123(
-    _Out_       PTSTR new_filename,
+    _Out_       P_PTSTR p_new_filename,
     _In_z_      PCTSTR filename)
 {
-    static TCHARZ command_line_buffer[BUF_MAX_PATHSTRING * 3];
+    static PTSTR command_line_buffer = NULL; /* allocate iff needed */
+
+    TCHARZ new_filename[BUF_MAX_PATHSTRING];
+
+    const U32 elemof_command_line_buffer = BUF_MAX_PATHSTRING * 3;
+
+    STATUS status;
 
     if(!u_ltp_available())
         return(FALSE);
@@ -2254,27 +2313,32 @@ loadfile_convert_lotus123(
     }
     tstr_xstrkat(new_filename, BUF_MAX_PATHSTRING, "/pd");
 
-    tstr_xstrkpy(command_line_buffer, elemof32(command_line_buffer), "WimpTask Run ");
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), u_ltp_name_buffer);
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), " ");
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), filename     /* <in file>  */ );
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), " ");
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), new_filename /* <out file> */ );
-    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), " > null:");
+    return(str_set(p_new_filename, new_filename));
 
-    { /* check that there will be enough memory in the Window Manager next slot to run this converter */
-#define MIN_NEXT_SLOT 512 * 1024
-    _kernel_swi_regs rs;
-    rs.r[0] = -1; /* read */
-    rs.r[1] = -1; /* read next slot */
-    (void) _kernel_swi(Wimp_SlotSize, &rs, &rs);
-    if(rs.r[1] < MIN_NEXT_SLOT)
-    {
-        rs.r[0] = -1; /* read */
-        rs.r[1] = MIN_NEXT_SLOT; /* write next slot */
-        (void) _kernel_swi(Wimp_SlotSize, &rs, &rs); /* sorry for the override, but it does need some space to run! */
-    }
-    } /*block*/
+    if(NULL == command_line_buffer)
+        if(NULL == (command_line_buffer = al_ptr_alloc_elem(TCHAR, elemof_command_line_buffer, &status)))
+            return(reperr_null(status));
+
+#if 1
+    consume_int(xsnprintf(command_line_buffer, elemof_command_line_buffer,
+                "WimpTask Run %s %s %s > null:",
+                u_ltp_name_buffer,
+                filename,
+                new_filename));
+#else
+    tstr_xstrkpy(command_line_buffer, elemof_command_line_buffer, "WimpTask Run ");
+    tstr_xstrkat(command_line_buffer, elemof_command_line_buffer, u_ltp_name_buffer);
+    tstr_xstrkat(command_line_buffer, elemof_command_line_buffer, " ");
+    tstr_xstrkat(command_line_buffer, elemof_command_line_buffer, filename     /* <in file>  */ );
+    tstr_xstrkat(command_line_buffer, elemof_command_line_buffer, " ");
+    tstr_xstrkat(command_line_buffer, elemof_command_line_buffer, new_filename /* <out file> */ );
+    tstr_xstrkat(command_line_buffer, elemof_command_line_buffer, " > null:");
+#endif
+
+    /* check that there will be enough memory in the Window Manager next slot to run this converter */
+#define MIN_NEXT_SLOT 512 * 1024U
+    if(wimp_get_next_slot_size() < MIN_NEXT_SLOT)
+        wimp_set_next_slot_size(MIN_NEXT_SLOT /* write next slot */); /* sorry for the override, but it does need some space to run! */
 
     reportf(command_line_buffer);
     _kernel_oscli(command_line_buffer);
@@ -2323,12 +2387,12 @@ loadfile(
 
     if(LOTUS123_CHAR == p_load_file_options->filetype_option)
     {
-        static TCHARZ new_filename[BUF_MAX_PATHSTRING];
+        PTSTR new_filename = NULL;
 
-        if(!loadfile_convert_lotus123(new_filename, filename))
+        if(!loadfile_convert_lotus123(&new_filename, filename))
             return(reperr(ERR_CANT_LOAD_FILETYPE, filename));
 
-        /* mutate this load to use the converted file */
+        /* mutate this load to use the converted file (yup, it's a memory leak, but small and rare) */
         p_load_file_options->document_name = filename = new_filename;
         p_load_file_options->filetype_option = PD4_CHAR;
     }

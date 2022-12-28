@@ -3413,6 +3413,15 @@ scatter gallery
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_CANCEL         (22)
 
 /*
+common UI
+*/
+
+extern void * /*dbox*/
+chart_dbox_new_new(const char * name, char ** errorp /*out*/);
+
+#define chart_template_ensure() template_ensure(7) /* see pdmain.c */
+
+/*
 some useful macros
 */
 

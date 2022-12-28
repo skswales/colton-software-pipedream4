@@ -28,9 +28,17 @@
 
 /* skip spaces on characted-oriented string (either U8 or TSTR, but not UTF-8) */
 
+#if RISCOS && 0
+#define StrSkipSpaces(ptr__ref) /*void*/ \
+    do  { \
+        do { /*EMPTY*/ } while(CH_SPACE == *((ptr__ref)++)); \
+        --(ptr__ref); \
+    } while(0)
+#else
 #define StrSkipSpaces(ptr__ref) /*void*/ \
     while(CH_SPACE == *(ptr__ref)) \
         ++(ptr__ref)
+#endif
 
 /*
 exported functions
@@ -145,11 +153,44 @@ C_strnicmp(
 #endif
 
 /* 32-bit (rather than size_t) sized strlen() */
-#define strlen32(s) \
+#define strlen32(s) /*U32*/ \
     ((U32) strlen(s))
 
-#define strlen32p1(s) \
+#define strlen32p1(s) /*U32*/ \
     (1U /*CH_NULL*/ + strlen32(s))
+
+/* these are optimised for ARM Norcroft C */
+
+_Check_return_
+static inline U32
+_inl_strlen32(
+    _In_z_      PC_U8Z s)
+{
+    U32 len = 0;
+    for(;;)
+    {
+        if(0 == s[len])
+           break;
+        ++len;
+    }
+    return(len);
+}
+
+#if 1
+_Check_return_
+static inline U32
+_inl_strlen32p1(
+    _In_z_      PC_U8Z s)
+{
+    PC_U8Z p = s;
+    while(*p++)
+       /*EMPTY*/;
+    return(p - s); /* length includes terminator */
+}
+#else
+#define _inl_strlen32p1(s) \
+    (1U /*CH_NULL*/ + _inl_strlen32(s))
+#endif
 
 /*
 strcpy / _s() etc. replacements that ensure CH_NULL-termination

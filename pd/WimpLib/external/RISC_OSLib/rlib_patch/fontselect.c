@@ -1,5 +1,5 @@
---- _src	2021-12-31 14:59:30.060000000 +0000
-+++ _dst	2022-08-18 16:55:46.700000000 +0000
+--- _src	2022-12-16 16:54:43.700000000 +0000
++++ _dst	2022-12-17 13:49:21.440000000 +0000
 @@ -32,6 +32,7 @@
   * History: IDJ: 06-Feb-92: prepared for source release
   */
@@ -306,22 +306,22 @@
                     }
 +#else /* SKS_ACW */
 +                   if(e->data.msg.data.helprequest.m.i == -1)
-+                       chr_ptr = msgs_lookup("FNTSELIZZ");
++                       chr_ptr = help_msgs_lookup("FNTSELIZZ");
 +                   else
 +                       {
 +                       wimp_get_icon_info( globals->font_window_handle, e->data.msg.data.helprequest.m.i, &icon_block );
 +                       if ( (icon_block.flags & (wimp_IESG*0x1f) ) == (wimp_IESG * 0x3) )
 +                           {
 +                           i = read_int( e->data.msg.data.helprequest.m.i );
-+                           sprintf(buf,msgs_lookup("FNTSELPNT"),i);
++                           sprintf(buf,help_msgs_lookup("FNTSELPNT"),i);
 +                           chr_ptr = buf;
 +                           }
 +                       else
 +                           {
 +                           sprintf(buf,"FNTSELI%02d",e->data.msg.data.helprequest.m.i);
-+                           chr_ptr = msgs_lookup(buf);
++                           chr_ptr = help_msgs_lookup(buf);
 +                           if(chr_ptr == buf)
-+                               chr_ptr = msgs_lookup("FNTSELIZZ");
++                               chr_ptr = help_msgs_lookup("FNTSELIZZ");
 +                           }
 +                       }
 +                   help_reply(e, chr_ptr);
@@ -336,7 +336,7 @@
                 fontselect_closewindows();
             break;
     }
-@@ -895,6 +1022,10 @@
+@@ -895,9 +1022,17 @@
            switch (e->data.msg.hdr.action)
            {
                case wimp_MHELPREQUEST:
@@ -346,8 +346,15 @@
 +#endif /* SKS_ACW */
                    wimp_get_icon_info( e->data.msg.data.helprequest.m.w, e->data.msg.data.helprequest.m.i, &icon_block );
                    sprintf(buf, "FNTSELW%d", pane_handle->level );
++#ifdef SKS_ACW
++                  sprintf(buf2, help_msgs_lookup(buf), icon_block.data.indirecttext.buffer );
++#else
                    sprintf(buf2, msgs_lookup(buf), icon_block.data.indirecttext.buffer );
-@@ -1057,12 +1188,17 @@
++#endif
+                   help_reply( e, buf2 );
+                   break;
+           }
+@@ -1057,12 +1192,17 @@
  
     /* List the fonts. If we get an error then return */
     if (fontlist_list_all_fonts(TRUE) == NULL)
@@ -367,7 +374,7 @@
         return FALSE;
     }
  
-@@ -1072,9 +1208,9 @@
+@@ -1072,9 +1212,9 @@
  
     for  (i=typeface_level; i<=style_level; i++)
     {
@@ -379,7 +386,7 @@
             return FALSE;
         }
         (globals->panes_store)[i]->handle = -1;
-@@ -1100,7 +1236,7 @@
+@@ -1100,7 +1240,7 @@
     /* Check they have already called font_selector_init */
     if (globals == NULL)
     {

@@ -429,6 +429,22 @@ static S32         main_window_default_height;
 *
 ******************************************************************************/
 
+static void
+iconbar_event_Mouse_SELECT_with_Shift(void)
+{
+    /* open the user's Choices directory display, from where they can find CmdFiles, Templates etc. */
+#if 1
+    const PCTSTR filename = (
+#else
+    TCHARZ filename[BUF_MAX_PATHSTRING];
+
+    tstr_xstrkpy(filename, elemof32(filename),
+#endif
+                 TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR TEXT("X"));
+
+    filer_opendir(filename);
+}
+
 static BOOL
 iconbar_event_Mouse_Click_process(enum CS_Mouse_State pd_mouse_state)
 {
@@ -439,27 +455,21 @@ iconbar_event_Mouse_Click_process(enum CS_Mouse_State pd_mouse_state)
         break;
 
     case CS_Mouse_SELECT_with_Shift:
-        {
-        TCHARZ filename[BUF_MAX_PATHSTRING];
-
-        /* open the user's Choices directory display, from where they can find CmdFiles, Templates etc. */
-        tstr_xstrkpy(filename, elemof32(filename), TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR);
-        tstr_xstrkat(filename, elemof32(filename), TEXT("X"));
-
-        filer_opendir(filename);
+        iconbar_event_Mouse_SELECT_with_Shift();
         break;
-        }
 
     case CS_Mouse_ADJUST:
         application_process_command(N_NewWindow);
         break;
 
-    default:
+    default: default_unhandled();
+#if CHECKING
     case CS_Mouse_SELECT_with_Ctrl:      /* reserved */
     case CS_Mouse_SELECT_with_CtrlShift: /* reserved */
     case CS_Mouse_ADJUST_with_Ctrl:      /* reserved */
     case CS_Mouse_ADJUST_with_Shift:     /* reserved */
     case CS_Mouse_ADJUST_with_CtrlShift: /* reserved */
+#endif
         break;
     }
 
@@ -1050,6 +1060,15 @@ iconbar_event_Message_DataLoad_others(
     xferrecv_insertfileok();
 }
 
+static void
+report_message_type_file(
+    const char * message,
+    const FILETYPE_RISC_OS filetype,
+    const char * filename)
+{
+    reportf("%s: file type &%03X, name %u:%s", message, filetype, _inl_strlen32(filename), filename);
+}
+
 /* object dragged to icon bar - load mostly regardless of type */
 
 static BOOL
@@ -1061,7 +1080,8 @@ iconbar_event_Message_DataLoad(
 
     UNREFERENCED_PARAMETER_InRef_(user_message); /* xferrecv uses last message mechanism */
 
-    reportf("Message_DataLoad(icon): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    //reportf("Message_DataLoad(icon): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    report_message_type_file("Message_DataLoad(icon)", filetype, filename);
 
     switch(filetype)
     {
@@ -1161,7 +1181,8 @@ iconbar_event_Message_DataOpen(
     if(!pd_can_run(filetype))
         return(TRUE);
 
-    reportf("Message_DataOpen: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    //reportf("Message_DataOpen: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    report_message_type_file("Message_DataOpen", filetype, filename);
 
     /* if it's a macro file we need this here to stop pause in macro file allowing message bounce
      * thereby allowing Filer to try to invoke another copy of PipeDream to run this macro file ...
@@ -2547,7 +2568,8 @@ main_event_Message_DataLoad(
 
     UNREFERENCED_PARAMETER_InRef_(user_message); /* xferrecv uses last message mechanism */
 
-    reportf("Message_DataLoad(main): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    //reportf("Message_DataLoad(main): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    report_message_type_file("Message_DataLoad(main)", filetype, filename);
 
     switch(filetype)
     {
@@ -3062,12 +3084,6 @@ riscos_front_document_window_atbox(
     winx_send_front_window_request_at(rear_window_handle, immediate, (const BBox *) &open_box);
 }
 
-extern BOOL
-riscos_adjust_clicked(void)
-{
-    return(winx_adjustclicked());
-}
-
 /******************************************************************************
 *
 * RISC OS module domain initialisation
@@ -3113,14 +3129,17 @@ riscos_initialise_once(void)
     /* SKS 25oct96 allow templates to go out */
     template_require(0, WTEMPLATES_PREFIX "tem_risc");
     template_require(1, WTEMPLATES_PREFIX "tem_main");
-    template_require(2, WTEMPLATES_PREFIX "tem_cht");
-    template_require(3, WTEMPLATES_PREFIX "tem_bc");
-    template_require(4, WTEMPLATES_PREFIX "tem_el");
-    template_require(5, WTEMPLATES_PREFIX "tem_f");
-    template_require(6, WTEMPLATES_PREFIX "tem_p");
-    template_require(7, WTEMPLATES_PREFIX "tem_s");
+    template_require(2, WTEMPLATES_PREFIX "tem_bc");
+    template_require(3, WTEMPLATES_PREFIX "tem_el");
+    template_require(4, WTEMPLATES_PREFIX "tem_f");
+    template_require(5, WTEMPLATES_PREFIX "tem_p");
+    template_require(6, WTEMPLATES_PREFIX "tem_s");
+    // template_require(7, WTEMPLATES_PREFIX "tem_cht"); - see below
     template_init(); /* NB before dbox_init() */
     dbox_init();
+
+    /* deferred, so users will have to template_ensure(7) */
+    template_require(7, WTEMPLATES_PREFIX "tem_cht");
 
     /* now get a handle onto the definition after the dbox is loaded */
 
@@ -3379,11 +3398,17 @@ riscos_settitlebar(
 #endif
 
     /* carefully copy information into the title string */
+#if 1
+    xstrkpy(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, documentname);
+#else
     xstrkpy(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, product_ui_id());
     xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, ":" TITLE_SPACE);
     xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, documentname);
+#endif
+
     if(xf_filealtered)
         xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, TITLE_SPACE "*");
+
     trace_1(TRACE_APP_PD4, "poked main document title to be '%s'", current_p_docu->Xwindow_title);
 
     if(rear_window_handle != HOST_WND_NONE)

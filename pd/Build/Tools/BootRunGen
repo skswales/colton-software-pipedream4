@@ -97,8 +97,8 @@ DEF PROCread_args
 LOCAL env%, ptr%, buflen%
 SYS "OS_GetEnv" TO env%
 :
-buflen% = 511
-DIM buffer% LOCAL buflen%
+buflen% = 1023
+DIM buffer% buflen%
 :
 SYS "XOS_ReadArgs","BASIC,quit/K,load/K,output/A,product/A,version/A,runimage/K,r32/S,d32/S,p32/S,boot/S,alternate/S",env%,buffer%,buflen% TO ;PSR%
 IF PSR% AND 1 THEN ERROR 0,"Bad parameters to BootRunGen"
@@ -507,13 +507,17 @@ REM Never override any other definition...
 PROCs(f%,"File$Type_F0D","TSV",TRUE)
 :
 PROCo(f%,"|")
-PROCo(f%,"| PipeDream (4.59 on) can be set up to be the default handler for any file type")
-PROCo(f%,"| that it can import, so long as it is not overridden by another application.")
+PROCo(f%,"| PipeDream (4.59 on) can be set up to be the default handler for any file")
+IF boot% THEN
+PROCo(f%,"| type that it can import, so long as it is not overridden by another application.")
 PROCo(f%,"| You could put one or both of the following lines in a file in your")
 PROCo(f%,"| !Boot.Choices.Boot.PreDesk directory, substituting the actual upper-case")
 PROCo(f%,"| hex file type for XXX in these aliases and removing the comment characters.")
 BPUT#f%,"| ";: PROCft_ar(f%,"XXX","Run "+var_product_dir$+".!Run %%*0",FALSE)
 BPUT#f%,"| ";: PROCft_ap(f%,"XXX","Run "+var_product_dir$+".!Run -Print %%*0",FALSE)
+ELSE
+PROCo(f%,"| type that it can import; see !Boot for details on how to do this")
+ENDIF
 ENDPROC
 :
 :
@@ -575,7 +579,7 @@ REM     BLNV somewhere
 REM     MOV R0,R0
 REM followed by fifth word
 REM     SWI OS_Exit
-DIM aif_header% LOCAL 127
+DIM aif_header% 127
 LOCAL ro_area_size%, rw_area_size%, dbg_area_size%, zi_area_size%
 LOCAL image_base%, ro_end%, rw_end, dbg_end%, zi_end%, max_addr%
 slot_size% = file_len%: REM In case it's not an AIF

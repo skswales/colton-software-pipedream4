@@ -1213,7 +1213,7 @@ draw_do_render(
     rs.r[4] = (int) graphics_window;
     rs.r[5] = flatness;
 
-    (void) _kernel_swi(/*DrawFile_Render*/ 0x45540, &rs, &rs);
+    (void) cs_kernel_swi(/*DrawFile_Render*/ 0x45540, &rs);
 
     return(status);
 }

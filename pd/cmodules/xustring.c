@@ -473,7 +473,7 @@ _tstr_from_ustr(
         return(TEXT("<<tstr_from_ustr - NONE>>"));
     }
 
-    if(contains_inline(ustr, ustrlen32(ustr)))
+    if(contains_inline(ustr, inline_ustrlen32(ustr)))
     {
         assert0();
         return(TEXT("<<tstr_from_ustr - CONTAINS INLINES>>"));

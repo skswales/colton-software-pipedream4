@@ -103,6 +103,7 @@ structure of the index of dictionaries
 
 typedef struct DICT
 {
+    DICT_NUMBER dict_number;            /* index in the dicts array */
     FILE_HANDLE file_handle_dict;       /* handle of dictionary file */
     ARRAY_HANDLE dicth;                 /* handle of index memory */
     S32 dictsize;                       /* size of dictionary on disk */
@@ -364,14 +365,14 @@ static variables
 */
 
 static P_LIST_BLOCK cachelp = NULL;             /* list of cached blocks */
-static DICT dictlist[MAX_DICT];                 /* dictionary table */
+static P_DICT dicts[MAX_DICT];                  /* dictionary table */
 static S32 spell_addword_nestf = 0;             /* addword nest level */
 static S32 compar_dict;                         /* dictionary compar needs */
 static S32 full_event_registered = 0;           /* we've registered interest in full events */
 static S32 cache_lock = 0;                      /* ignore full events for a mo (!) */
 
 #define dict_number(p_dict) ( \
-    (p_dict) - &dictlist[0] )
+    (p_dict)->dict_number )
 
 _Check_return_
 static inline STATUS
@@ -381,7 +382,7 @@ dict_validate(
 {
     *p_p_dict = P_DICT_NONE;
 
-    if( ((U32) dict_number < (U32) MAX_DICT) && (NULL != (*p_p_dict = &dictlist[dict_number])->file_handle_dict) )
+    if( ((U32) dict_number < (U32) MAX_DICT) && (NULL != (*p_p_dict = dicts[dict_number])->file_handle_dict) )
         return(STATUS_OK);
 
     return(create_error(SPELL_ERR_BADDICT));
@@ -395,8 +396,8 @@ either dictionary number or pointer
 #define ixpdv(p_dict, ix) array_index_is_valid(&(p_dict)->dicth, ix)
 #define ixpdp(p_dict, ix) array_ptr(&(p_dict)->dicth, struct IXSTRUCT, ix)
 
-#define ixv(dict, ix) ixpdv(&dictlist[(dict)], ix)
-#define ixp(dict, ix) ixpdp(&dictlist[(dict)], ix)
+#define ixv(dict, ix) ixpdv(dicts[(dict)], ix)
+#define ixp(dict, ix) ixpdp(dicts[(dict)], ix)
 
 #define SPACE 32
 
@@ -670,7 +671,7 @@ spell_close(
     if((U32) dict_number >= (U32) MAX_DICT)
         return(create_error(SPELL_ERR_BADDICT));
 
-    if(NULL == (file_handle_dict = (p_dict = &dictlist[dict_number])->file_handle_dict))
+    if(NULL == (file_handle_dict = (p_dict = dicts[dict_number])->file_handle_dict))
     {
         trace_1(TRACE_OUT | TRACE_MODULE_SPELL, "spell_close called to close non-open dictionary: %d", (int) dict_number);
         return(create_error(SPELL_ERR_CANTCLOSE));
@@ -976,7 +977,7 @@ spell_flush(
     if((U32) dict_number >= (U32) MAX_DICT)
         return(create_error(SPELL_ERR_BADDICT));
 
-    if(NULL == (file_handle_dict = (p_dict = &dictlist[dict_number])->file_handle_dict))
+    if(NULL == (file_handle_dict = (p_dict = dicts[dict_number])->file_handle_dict))
     {
         trace_1(TRACE_OUT | TRACE_MODULE_SPELL, "spell_flush called to flush non-open dictionary: %d", (int) dict_number);
         return(create_error(SPELL_ERR_CANTWRITE));
@@ -2297,16 +2298,23 @@ static S32
 get_dict_entry(
     _OutRef_    P_P_DICT p_p_dict)
 {
+    STATUS status;
     DICT_NUMBER dict_number;
 
     *p_p_dict = P_DICT_NONE;
 
     for(dict_number = 0; dict_number < MAX_DICT; ++dict_number)
     {
-        const P_DICT p_dict = &dictlist[dict_number];
+        P_DICT p_dict = dicts[dict_number];
+
+        if(NULL == p_dict)
+            if(NULL == (p_dict = dicts[dict_number] = al_ptr_calloc_elem(DICT, 1, &status)))
+                return(status);
 
         if(p_dict->file_handle_dict == NULL)
         {
+            p_dict->dict_number = dict_number;
+
             p_dict->dicth       = 0;
             p_dict->dictsize    = 0;
             p_dict->token_start = p_dict->char_offset = 0;
@@ -2415,7 +2423,7 @@ killcache(
     lett->p.disk = cp->diskaddress;
 
     { /* write out index entry */
-    const P_DICT p_dict = &dictlist[cp->dict_number];
+    const P_DICT p_dict = dicts[cp->dict_number];
     file_handle_dict = p_dict->file_handle_dict;
     if(write && (err = writeindex(p_dict, cp->lettix)) != 0)
     {
@@ -3798,7 +3806,7 @@ static S32
 writeblock(
     CACHEP cp)
 {
-    const P_DICT p_dict = &dictlist[cp->dict_number];
+    const P_DICT p_dict = dicts[cp->dict_number];
     SIXP lett;
 
     trace_2(TRACE_MODULE_SPELL, "writeblock dict: %d, letter: %d", (int) cp->dict_number, cp->lettix);

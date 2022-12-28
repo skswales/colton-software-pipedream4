@@ -14,7 +14,11 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+
 #include <stdarg.h>
+#ifdef __CC_NORCROFT
+#define VA_END_SUPERFLUOUS 1 /* NB the compiler does a good job of optimising this out anyhow */
+#endif
 
 #ifndef __arm
 #ifndef __stdint_ll

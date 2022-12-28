@@ -38,7 +38,7 @@
 #include "pd123_i.h"
 
 #if RISCOS
-#include "kernel.h"
+#include "cs-kernel.h"
 #endif
 
 /*

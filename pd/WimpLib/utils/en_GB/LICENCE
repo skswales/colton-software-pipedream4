@@ -8,6 +8,7 @@
 This licence also applies to the following files in this directory that do
 not contain the above licence:
 
+ hlp_risc
  msg_risc
  spr_risc
  tem_risc

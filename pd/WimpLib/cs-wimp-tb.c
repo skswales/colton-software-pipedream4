@@ -43,7 +43,7 @@ tbl_wimp_create_window(WimpWindow *defn, int *handle)
 
     rs.r[1] = (int) defn;
 
-    e = _kernel_swi(Wimp_CreateWindow, &rs, &rs);
+    e = cs_kernel_swi(Wimp_CreateWindow, &rs);
 
     *handle = e ? 0 : rs.r[0];
 #endif
@@ -78,7 +78,7 @@ tbl_wimp_create_icon(
     rs.r[0] = (int) priority;
     rs.r[1] = (int) defn;
 
-    e = _kernel_swi(Wimp_CreateIcon, &rs, &rs);
+    e = cs_kernel_swi(Wimp_CreateIcon, &rs);
 
     *handle = e ? 0 : rs.r[0];
 #endif
@@ -105,7 +105,7 @@ tbl_wimp_delete_window(WimpDeleteWindowBlock *block)
 
     rs.r[1] = (int) block;
 
-    e = _kernel_swi(Wimp_DeleteWindow, &rs, &rs);
+    e = cs_kernel_swi(Wimp_DeleteWindow, &rs);
 #endif
 
     return(e);
@@ -132,7 +132,7 @@ tbl_wimp_delete_icon(WimpDeleteIconBlock *block)
 
     rs.r[1] = (int) block;
 
-    e = _kernel_swi(Wimp_DeleteIcon, &rs, &rs);
+    e = cs_kernel_swi(Wimp_DeleteIcon, &rs);
 #endif
 
     return(e);
@@ -149,7 +149,7 @@ tbl_wimp_open_window(WimpOpenWindowBlock *show)
 
     rs.r[1] = (int) show;
 
-    return(_kernel_swi(Wimp_OpenWindow, &rs, &rs));
+    return(cs_kernel_swi(Wimp_OpenWindow, &rs));
 }
 
 #endif /* NORCROFT_INLINE_SWIX */
@@ -178,7 +178,7 @@ tbl_wimp_redraw_window(WimpRedrawWindowBlock *block, int *more)
 
     rs.r[1] = (int) block;
 
-    e = _kernel_swi(Wimp_RedrawWindow, &rs, &rs);
+    e = cs_kernel_swi(Wimp_RedrawWindow, &rs);
 
     *more = e ? 0 : rs.r[0];
 #endif
@@ -208,7 +208,7 @@ tbl_wimp_update_window(WimpRedrawWindowBlock *block, int *more)
 
     rs.r[1] = (int) block;
 
-    e = _kernel_swi(Wimp_UpdateWindow, &rs, &rs);
+    e = cs_kernel_swi(Wimp_UpdateWindow, &rs);
 
     *more = e ? 0 : rs.r[0];
 #endif
@@ -238,7 +238,7 @@ tbl_wimp_get_rectangle(WimpRedrawWindowBlock *block, int *more)
 
     rs.r[1] = (int) block;
 
-    e = _kernel_swi(Wimp_GetRectangle, &rs, &rs);
+    e = cs_kernel_swi(Wimp_GetRectangle, &rs);
 
     *more = e ? 0 : rs.r[0];
 #endif
@@ -257,7 +257,7 @@ tbl_wimp_get_window_state(WimpGetWindowStateBlock *state)
 
     rs.r[1] = (int) state;
 
-    return(_kernel_swi(Wimp_GetWindowState, &rs, &rs));
+    return(cs_kernel_swi(Wimp_GetWindowState, &rs));
 }
 
 _kernel_oserror *
@@ -267,7 +267,7 @@ tbl_wimp_set_icon_state(WimpSetIconStateBlock *block)
 
     rs.r[1] = (int) block;
 
-    return(_kernel_swi(Wimp_SetIconState, &rs, &rs));
+    return(cs_kernel_swi(Wimp_SetIconState, &rs));
 }
 
 _kernel_oserror *
@@ -277,7 +277,7 @@ tbl_wimp_get_icon_state(WimpGetIconStateBlock *block)
 
     rs.r[1] = (int) block;
 
-    return(_kernel_swi(Wimp_GetIconState, &rs, &rs));
+    return(cs_kernel_swi(Wimp_GetIconState, &rs));
 }
 
 #endif /* NORCROFT_INLINE_SWIX */
@@ -302,7 +302,7 @@ tbl_wimp_force_redraw(
     u.force_redraw_block.redraw_area.xmax = xmax;
     u.force_redraw_block.redraw_area.ymax = ymax;
 
-    return(_kernel_swi(Wimp_ForceRedraw, &u.rs, &u.rs));
+    return(cs_kernel_swi(Wimp_ForceRedraw, &u.rs));
 }
 
 _kernel_oserror *
@@ -323,7 +323,7 @@ tbl_wimp_set_caret_position(
     rs.r[4] = height;
     rs.r[5] = index;
 
-    return(_kernel_swi(Wimp_SetCaretPosition, &rs, &rs));
+    return(cs_kernel_swi(Wimp_SetCaretPosition, &rs));
 }
 
 #if !defined(NORCROFT_INLINE_SWIX)
@@ -335,7 +335,7 @@ tbl_wimp_get_caret_position(WimpGetCaretPositionBlock *block)
 
     rs.r[1] = (int) block;
 
-    return(_kernel_swi(Wimp_GetCaretPosition, &rs, &rs));
+    return(cs_kernel_swi(Wimp_GetCaretPosition, &rs));
 }
 
 _kernel_oserror *
@@ -345,7 +345,7 @@ tbl_wimp_set_colour(int colour)
 
     rs.r[0] = colour;
 
-    return(_kernel_swi(Wimp_SetColour, &rs, &rs));
+    return(cs_kernel_swi(Wimp_SetColour, &rs));
 }
 
 _kernel_oserror *
@@ -356,7 +356,7 @@ tbl_wimp_set_extent(int window_handle, BBox *area)
     rs.r[0] = window_handle;
     rs.r[1] = (int) area;
 
-    return(_kernel_swi(Wimp_SetExtent, &rs, &rs));
+    return(cs_kernel_swi(Wimp_SetExtent, &rs));
 }
 
 #endif /* NORCROFT_INLINE_SWIX */
@@ -380,7 +380,7 @@ tbl_wimp_plot_icon(WimpPlotIconBlock *block) /* not yet */
 
     rs.r[1] = (int) block;
 
-    return(_kernel_swi(Wimp_PlotIcon, &rs, &rs));
+    return(cs_kernel_swi(Wimp_PlotIcon, &rs));
 #endif
 
     return(e);
@@ -408,7 +408,7 @@ tbl_wimp_block_copy(
     rs.r[5] = dxmin;
     rs.r[6] = dymin;
 
-    return(_kernel_swi(Wimp_BlockCopy, &rs, &rs));
+    return(cs_kernel_swi(Wimp_BlockCopy, &rs));
 }
 
 /* end of cs-wimp-tb.c */

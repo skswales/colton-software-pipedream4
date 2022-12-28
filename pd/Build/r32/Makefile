@@ -7,12 +7,12 @@
 # Copyright © 1989-1998 Colton Software Limited
 # Copyright © 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.61
-#TEXTUAL_VERSION_NUMBER=4.61.01
+TEXTUAL_VERSION_NUMBER=4.62
+#TEXTUAL_VERSION_NUMBER=4.62.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
-URD=$.pipedream4.pipedream__4_61__branch
+URD=$.pipedream4.pipedream__4_62__branch
 
 #PD=$(URD).pd
 PD=^.^
@@ -43,9 +43,11 @@ ASflags=$(ASflags_BASE)
 CC=cc
 CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback
 # -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
-#CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback -arch 2 -cpu 3
+CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback -arch 2 -cpu 3
 # -arch 3M to allow use of S/UMULL with -Otime
 #CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback -arch 3M -cpu 7 -DNORCROFT_ARCH_M
+# fully optimise for modern systems
+#CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback -arch 7 -cpu 7 -DNORCROFT_ARCH_M
 CCflags=$(CCflags_BASE) -Otime
 #
 # CCflags=$(CCflags_BASE) -Otime -DCHECKING
@@ -87,12 +89,14 @@ PipeDream:   \
     @.!PipeDream.Relnotes \
     @.!PipeDream.Resources.Neutral.RISC_OS.!Sprite \
     @.!PipeDream.Resources.Neutral.RISC_OS.BuildVer \
+    @.!PipeDream.Resources.Neutral.RISC_OS.ColMapHTML \
     @.!PipeDream.Resources.Neutral.RISC_OS.ImageSlot \
     @.!PipeDream.Resources.Neutral.RISC_OS.ImgConvert \
     @.!PipeDream.Resources.Neutral.RISC_OS.Loader \
     @.!PipeDream.Resources.Neutral.RISC_OS.Splash \
     @.!PipeDream.Resources.Neutral.RISC_OS.SprCht \
     @.!PipeDream.Resources.Neutral.RISC_OS.SprCht22 \
+    @.!PipeDream.Resources.UK.RISC_OS.HelpMess \
     @.!PipeDream.Resources.UK.RISC_OS.Messages \
     @.!PipeDream.Resources.UK.RISC_OS.Sprites \
     @.!PipeDream.Resources.UK.RISC_OS.Sprites11 \
@@ -381,8 +385,12 @@ o.aof: \
              $(PD).Resources.UK.RISC_OS.WTemplates.tem_s
         Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_s $@ ~C FV
 #
-# and the message file too
+# and the message files too
 #
+@.!PipeDream.Resources.UK.RISC_OS.HelpMess:   \
+             utils.UK.HelpMess
+        Copy @.utils.UK.HelpMess $@ ~C FV
+
 @.!PipeDream.Resources.UK.RISC_OS.Messages:   \
              utils.UK.Messages
         Copy @.utils.UK.Messages $@ ~C FV
@@ -793,6 +801,13 @@ o.pdchart: $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 #
 ###############################################################################
 
+utils.UK.HelpMess:   \
+        utils.UK.t_helpmess \
+        $(WimpLib).utils.en_GB.hlp_risc
+        print  { > $@ } utils.UK.t_helpmess
+        print { >> $@ } $(WimpLib).utils.en_GB.hlp_risc
+        SetType $@ Text
+
 utils.UK.Messages:   \
         utils.UK.t_strings \
         utils.UK.t_reperr \
@@ -806,11 +821,21 @@ utils.UK.Messages:   \
         print { >> $@ } $(WimpLib).utils.en_GB.msg_risc
         SetType $@ Text
 
+utils.UK.t_helpmess:     utils.UK.u_helpmess
+        Run <Prefix$Dir>.utils.UK.u_helpmess > $@
+
 utils.UK.t_reperr:       utils.UK.u_reperr
         Run <Prefix$Dir>.utils.UK.u_reperr > $@
 
 utils.UK.t_strings:      utils.UK.u_strings
         Run <Prefix$Dir>.utils.UK.u_strings > $@
+
+utils.UK.u_helpmess:   \
+        utils.UK.o.u_helpmess \
+        C:o.Stubs
+        Link -o $@ -aif \
+        utils.UK.o.u_helpmess \
+        C:o.Stubs
 
 utils.UK.u_reperr:   \
         utils.UK.o.u_reperr \
@@ -825,6 +850,12 @@ utils.UK.u_strings:   \
         Link -o $@ -aif \
         utils.UK.o.u_strings \
         C:o.Stubs
+
+utils.UK.o.u_helpmess:   $(PD).h.personal $(PD).h.strings
+utils.UK.o.u_helpmess:   \
+        $(PD).c.helpmess \
+        $(PD).utils.c.u_helpmess
+        $(CC) -o $@ $(CCflags_BASE) $(PD).utils.c.u_helpmess
 
 utils.UK.o.u_reperr:   $(PD).h.personal $(PD).h.errdef
 utils.UK.o.u_reperr:   \
@@ -1028,6 +1059,9 @@ utils.Neutral.SprCht24:   \
 
 @.!PipeDream.Resources.Neutral.RISC_OS.BuildVer: o.version
         decaof -a o.version > $@
+
+@.!PipeDream.Resources.Neutral.RISC_OS.ColMapHTML: $(PD).Resources.Neutral.RISC_OS.ColMapHTML
+ Copy $? $@ ~C FV
 
 @.!PipeDream.Resources.Neutral.RISC_OS.ImageSlot: $(PD).Resources.Neutral.RISC_OS.ImageSlot
  Copy $? $@ ~C FV

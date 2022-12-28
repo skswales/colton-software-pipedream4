@@ -1064,12 +1064,14 @@ colh_event_Mouse_Click_single_COLUMN_HEADINGS(
     case CS_Mouse_SELECT_with_Shift: extend = TRUE; break;
     case CS_Mouse_ADJUST:            extend = TRUE; break;
 
-    default:
+    default: default_unhandled();
+#if CHECKING
     case CS_Mouse_SELECT_with_Ctrl:
     case CS_Mouse_SELECT_with_CtrlShift:
     case CS_Mouse_ADJUST_with_Ctrl:
     case CS_Mouse_ADJUST_with_Shift:
     case CS_Mouse_ADJUST_with_CtrlShift:
+#endif
         return(TRUE); /* reserved */
     }
 
@@ -1174,13 +1176,15 @@ colh_event_Mouse_Click_single(
     case CS_Mouse_SELECT: select_clicked = TRUE;  break;
     case CS_Mouse_ADJUST: select_clicked = FALSE; break;
 
-    default:
+    default: default_unhandled();
+#if CHECKING
     case CS_Mouse_SELECT_with_Ctrl:
     case CS_Mouse_SELECT_with_Shift:
     case CS_Mouse_SELECT_with_CtrlShift:
     case CS_Mouse_ADJUST_with_Ctrl:
     case CS_Mouse_ADJUST_with_Shift:
     case CS_Mouse_ADJUST_with_CtrlShift:
+#endif
         return(TRUE); /* reserved */
     }
 
@@ -1427,7 +1431,8 @@ colh_event_Mouse_Click_double_COLUMN_HEADINGS(
     {
     case CS_Mouse_SELECT: break;
 
-    default:
+    default: default_unhandled();
+#if CHECKING
     case CS_Mouse_SELECT_with_Ctrl:
     case CS_Mouse_SELECT_with_Shift:
     case CS_Mouse_SELECT_with_CtrlShift:
@@ -1435,6 +1440,7 @@ colh_event_Mouse_Click_double_COLUMN_HEADINGS(
     case CS_Mouse_ADJUST_with_Ctrl:
     case CS_Mouse_ADJUST_with_Shift:
     case CS_Mouse_ADJUST_with_CtrlShift:
+#endif
         return(TRUE); /* reserved */
     }
 
@@ -1531,12 +1537,14 @@ colh_event_Mouse_Click_start_drag_COLUMN_HEADINGS(
     case CS_Mouse_SELECT_with_Shift: extend = TRUE; break;
     case CS_Mouse_ADJUST:            extend = TRUE; break;
 
-    default:
+    default: default_unhandled();
+#if CHECKING
     case CS_Mouse_SELECT_with_Ctrl:
     case CS_Mouse_SELECT_with_CtrlShift:
     case CS_Mouse_ADJUST_with_Ctrl:
     case CS_Mouse_ADJUST_with_Shift:
     case CS_Mouse_ADJUST_with_CtrlShift:
+#endif
         return(TRUE); /* reserved */
     }
 
@@ -2181,19 +2189,18 @@ null_event_proto(static, colh_pointershape_null_query)
 null_event_proto(static, colh_pointershape_null_event)
 {
     P_DOCNO dochanp = (P_DOCNO) p_null_event_block->client_handle;
-    wimp_mousestr pointer;
+    wimp_mousestr mouse;
 
     trace_0(TRACE_APP_PD4, "colh null call");
 
     if(!select_document_using_docno(*dochanp))
         return(NULL_EVENT_COMPLETED);
 
-    if(NULL != wimp_get_point_info(&pointer))
-        return(NULL_EVENT_COMPLETED);
+    (void) _swix(Wimp_GetPointerInfo, _IN(1), &mouse);
 
-    /*(if(pointer.w == colh_window_handle)*/ /* should be true, as we release null events when pointer leaves window */
+    /*(if(mouse.w == colh_window_handle)*/ /* should be true, as we release null events when pointer leaves window */
     {
-        switch((int)pointer.i)
+        switch((int)mouse.i)
         {
         case COLH_COLUMN_HEADINGS:
             /* if editing, all movement and drags are suppressed, so show default pointer */
@@ -2204,7 +2211,7 @@ null_event_proto(static, colh_pointershape_null_event)
             else
             {
                 pointer_shape * shape;
-                colh_where_in_column_headings((const WimpMouseClickEvent *) &pointer, &shape, NULL, NULL, NULL);
+                colh_where_in_column_headings((const WimpMouseClickEvent *) &mouse, &shape, NULL, NULL, NULL);
                 riscos_setpointershape(shape);
             }
             break;

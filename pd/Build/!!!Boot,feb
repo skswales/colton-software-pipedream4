@@ -9,19 +9,19 @@
 |
 If "<Hdr$Path>"="" Then Error AcornC/C++ Tools not yet opened
 |
-BASIC -quit <Obey$Dir>.Tools.SetBuildEnv -variable pipedream_root -strip pd.Build.Tools.SetBuildEnv
+BASIC -quit <Obey$Dir>.Tools.SetBuildEnv { > null: } -variable pipedream_root -strip pd.Build.Tools.SetBuildEnv
 |
 | RISC OS filetypes are stored using ,xyz suffixes for this project
 | and not the svn:riscosfiletype property
 Set svn$filetypeext ""
 |
-Set PIPEDREAM_TBT pipedream__4_60__branch
+Set PIPEDREAM_TBT pipedream__4_62__branch
 |et PIPEDREAM_TBT trunk
 |et pipedream_root <disc_root>.pipedream4.<PIPEDREAM_TBT>
 |
+Dir <pipedream_root>
 URD <pipedream_root>
 |Lib &.arm.library
-Dir &
 |
 Set PipeDream$ReportEnable 1
 Set PipeDream$TraceEnable 1

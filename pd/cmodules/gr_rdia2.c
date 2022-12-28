@@ -247,7 +247,7 @@ gr_riscdiag_path_recompute_bbox(
     rs.r[6] = (int)  line_style.dash_pattern;
     rs.r[7] = (int) &path_box | 0x80000000; /* where to put bbox */
 
-    void_WrapOsErrorChecking(_kernel_swi(/*Draw_ProcessPath*/ 0x040700, &rs, &rs));
+    void_WrapOsErrorChecking(cs_kernel_swi(/*Draw_ProcessPath*/ 0x040700, &rs));
 #else
     (void) drawmod_processpath(bodge_path_seq, /* path sequence */
                                fill_style,     /* fill style */
@@ -528,7 +528,7 @@ gr_riscdiag_sprite_recompute_bbox(
         rs.r[1] = (int) 0x89ABFEDC; /* kill the OS or any twerp who dares to access this! */
         rs.r[2] = (int) p_sprite;
 
-        (void) _kernel_swi(/*OS_SpriteOp*/ 0x2E, &rs, &rs);
+        (void) cs_kernel_swi(/*OS_SpriteOp*/ 0x2E, &rs);
 
         if((sprite_mode_word.u.u32 < 256U) || (0 == (sprite_mode_word.u.riscos_3_5.mode_word_bit)))
         {   /* Mode Number or Mode Specifier */

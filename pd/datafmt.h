@@ -673,15 +673,6 @@ extern void
 set_fg_colour_from_option(
     _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index);
 
-/*ncr*/
-extern S32
-fx_x(
-    _InVal_     S32 a,
-    _InVal_     S32 x,
-    _InVal_     S32 y);
-
-#define fx_x2(a, x) fx_x(a, x, 0)
-
 extern void
 wrch_h(
     char ch);
@@ -747,6 +738,11 @@ save_file_options_init(
 /*
 exported functions
 */
+
+extern void
+common_save_version_string(
+    _Out_writes_(elemof_array) P_U8 array,
+    _InVal_     U32 elemof_array);
 
 /*ncr*/
 extern STATUS

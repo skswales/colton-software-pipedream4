@@ -17,7 +17,7 @@
 
 #include "cmodules/ev_evali.h"
 
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 
 #include "swis.h" /*C:*/
 
@@ -967,7 +967,7 @@ ss_string_make_ustr(
     _OutRef_    P_SS_DATA p_ss_data,
     _In_z_      PC_USTR ustr)
 {
-    return(ss_string_make_uchars(p_ss_data, ustr, ustrlen32(ustr)));
+    return(ss_string_make_uchars(p_ss_data, ustr, _inl_ustrlen32(ustr)));
 }
 
 _Check_return_

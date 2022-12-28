@@ -1199,7 +1199,7 @@ start_drag(
         _kernel_swi_regs rs;
         rs.r[0] = 0x03 /* autoscroll both directions */ | (1 << 2) /* send Scroll_Request */ ;
         rs.r[1] = (int) &wasb;
-        drag_autoscroll = (NULL == _kernel_swi(Wimp_AutoScroll, &rs, &rs)); /* don't winge */
+        drag_autoscroll = (NULL == cs_kernel_swi(Wimp_AutoScroll, &rs)); /* don't winge */
         } /*block*/
 
         break;
@@ -1245,12 +1245,19 @@ ended_drag(void)
 
     if(drag_autoscroll)
     {
+        drag_autoscroll = FALSE;
+
+#if defined(NORCROFT_INLINE_SWIX)
+        void_WrapOsErrorReporting(
+            _swix(Wimp_AutoScroll, _INR(0,1),
+                0 /* turn autoscroll off */,
+                0));
+#else
         _kernel_swi_regs rs;
         rs.r[0] = 0 /* turn autoscroll off */ ;
         rs.r[1] = 0;
-        void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
-
-        drag_autoscroll = FALSE;
+        void_WrapOsErrorReporting(cs_kernel_swi(Wimp_AutoScroll, &rs));
+#endif
     }
 
     Null_EventHandlerRemove(drag_null_handler, &drag_docno);
@@ -1953,31 +1960,45 @@ process_autoscroll_before_drag_use_autoscroll(void)
 {
     /* use Wimp_AutoScroll */
     WimpAutoScrollBlock wasb;
+    int status_flags;
+#if defined(NORCROFT_INLINE_SWIX_NOT_YET)
+    if(WrapOsErrorReporting_IsError(
+        _swix(Wimp_AutoScroll, _INR(0, 1)|_OUT(0),
+        /*in[0]*/ (1 << 7) /* read current state */ ,
+        /*in[1]*/ &wasb /* filled on return from SWI */,
+        /*out[0]*/ &status_flags)))
+        return;
+#else
     _kernel_swi_regs rs;
     rs.r[0] = (1 << 7) /* read current state */ ;
     rs.r[1] = (int) &wasb; /* filled on return from SWI */
-    void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
+    if(WrapOsErrorReporting_IsError(cs_kernel_swi(Wimp_AutoScroll, &rs)))
+        return;
+    status_flags = rs.r[0];
+#endif
 
     if(!reporting_is_enabled())
         return;
-    reportf("WASSW now %X", rs.r[0]);
+    reportf("WASSW now %X", status_flags);
+#ifdef UNUSED
     reportf(
         "Autoscroll %s commenced; "
         "Pointer is %s%s%s%s%s%s%s;"
         "Some work area %s%s%s%s",
-        (rs.r[0] & (1<<8)) ? "has" : "not",
-        (rs.r[0] & (1<<9)) ? "outside the window's visible area," : "",
-        (rs.r[0] & (1<<10)) ? "within one or two pause zones," : "",
-        (rs.r[0] & (1<<11)) ? "within the centre zone," : "",
-        (rs.r[0] & (1<<12)) ? "left of the centre zone," : "",
-        (rs.r[0] & (1<<13)) ? "below the centre zone," : "",
-        (rs.r[0] & (1<<14)) ? "right of the centre zone," : "",
-        (rs.r[0] & (1<<15)) ? "above the centre zone" : "",
-        (rs.r[0] & (1<<16)) ? "left of the visible area," : "",
-        (rs.r[0] & (1<<17)) ? "below the visible area," : "",
-        (rs.r[0] & (1<<18)) ? "right of the visible area," : "",
-        (rs.r[0] & (1<<19)) ? "above the visible area" : ""
+        (status_flags & (1<<8)) ? "has" : "not",
+        (status_flags & (1<<9)) ? "outside the window's visible area," : "",
+        (status_flags & (1<<10)) ? "within one or two pause zones," : "",
+        (status_flags & (1<<11)) ? "within the centre zone," : "",
+        (status_flags & (1<<12)) ? "left of the centre zone," : "",
+        (status_flags & (1<<13)) ? "below the centre zone," : "",
+        (status_flags & (1<<14)) ? "right of the centre zone," : "",
+        (status_flags & (1<<15)) ? "above the centre zone" : "",
+        (status_flags & (1<<16)) ? "left of the visible area," : "",
+        (status_flags & (1<<17)) ? "below the visible area," : "",
+        (status_flags & (1<<18)) ? "right of the visible area," : "",
+        (status_flags & (1<<19)) ? "above the visible area" : ""
     );
+#endif
 }
 
 static void
@@ -2030,13 +2051,11 @@ process_drag(void)
 {
     int mouse_x, mouse_y;
 
-    {
     wimp_mousestr m;
-    (void) wimp_get_point_info(&m);
+    (void) _swix(Wimp_GetPointerInfo, _IN(1), &m);
     mouse_x = m.x; /* abs GDI coordinates */
     mouse_y = m.y;
     trace_4(TRACE_APP_PD4, "mouse pointer at w %d i %d x %d y %d", m.w, m.i, m.x, m.y);
-    } /*block*/
 
     trace_0(TRACE_APP_PD4, "continuing drag: button still held");
 

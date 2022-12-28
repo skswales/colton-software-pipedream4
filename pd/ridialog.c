@@ -735,8 +735,8 @@ dialog__setfield_str(
     dbox_field f,
     const char * str)
 {
-    reportf(/*trace_3(TRACE_APP_DIALOG,*/ "dialog__setfield_str(%d, (&%p) \"%s\")",
-                                    f, str, trace_string(str));
+    trace_3(TRACE_APP_DIALOG, "dialog__setfield_str(%d, (&%p) \"%s\")",
+                              f, str, trace_string(str));
 
     if(!str)
         str = (const char *) NULLSTR;
@@ -1631,19 +1631,38 @@ dproc_aboutfile(
 
     { /* textual representation of file type */
     const FILETYPE_RISC_OS filetype = currentfiletype(current_filetype_option);
+
+#if 0 /* more code than the cs_kernel_swi way! */
+    int r2, r3;
+    if( WrapOsErrorReporting_IsError(
+        _swix(OS_FSControl, _INR(0,3)|_OUTR(2,3),
+        /*in*/  18,       /*r0*/
+                0,        /*r1*/
+                filetype, /*r2*/
+                0,        /*r3*/
+        /*out*/ &r2,
+                &r3)) )
+        tempstring[0] = CH_NULL;
+    else
+    {
+        * (int *) &tempstring[0] = r2;
+        * (int *) &tempstring[4] = r3;
+    }
+#else
     _kernel_swi_regs rs;
 
     rs.r[0] = 18;
     rs.r[1] = 0;
     rs.r[2] = filetype;
     rs.r[3] = 0;
-    if( WrapOsErrorReporting_IsError(_kernel_swi(OS_FSControl, &rs, &rs)) )
+    if( WrapOsErrorReporting_IsError(cs_kernel_swi(OS_FSControl, &rs)) )
         tempstring[0] = CH_NULL;
     else
     {
         * (int *) &tempstring[0] = rs.r[2];
         * (int *) &tempstring[4] = rs.r[3];
     }
+#endif
 
     consume_int(sprintf(&tempstring[8], " (%3.3X)", filetype));
 
@@ -1663,7 +1682,7 @@ dproc_aboutfile(
     rs.r[0] = (int) &currentfileinfo;
     rs.r[1] = (int) tempstring;
     rs.r[2] = sizeof32(tempstring);
-    if( WrapOsErrorReporting_IsError(_kernel_swi(OS_ConvertStandardDateAndTime, &rs, &rs)) )
+    if( WrapOsErrorReporting_IsError(cs_kernel_swi(OS_ConvertStandardDateAndTime, &rs)) )
         tempstring[0] = CH_NULL;
 #endif
 
@@ -2224,18 +2243,15 @@ savefile_saveproc(
         }
         else
         {
-            wimp_mousestr ms;
-            if( WrapOsErrorReporting_IsError(wimp_get_point_info(&ms)) )
+            wimp_mousestr mouse;
+            pointer_window_handle = HOST_WND_NONE;
+            if( !WrapOsErrorReporting_IsError(_swix(Wimp_GetPointerInfo, _IN(1), &mouse)) )
             {
-                pointer_window_handle = HOST_WND_NONE;
-            }
-            else
-            {
-                pointer_window_handle = ms.w;
-                /*pointer_icon_handle = ms.i;*/
+                pointer_window_handle = mouse.w;
+                /*pointer_icon_handle = mouse.i;*/
             }
             /*trace_4(TRACE_APP_DIALOG, "mouse position at %d %d, window %d, icon %d",
-                    ms.x, ms.y, pointer_window_handle, pointer_icon_handle);*/
+                    mouse.x, mouse.y, pointer_window_handle, pointer_icon_handle);*/
         }
 
         if( (pointer_window_handle == rear_window_handle) ||
@@ -2823,10 +2839,10 @@ dproc_extended_colours(
     if(!dialog__fillin_ok)
         return;
 
-    for(S32 i = 0; i < N_COLOURS; i++)
+    for(U32 i = 0; i < N_COLOURS; i++)
     {
         dptr[i].option = temp_dialog[i].option;
-        reportf("colours[%d]: " U32_XTFMT, i, dptr[i].option);
+        // reportf("colours[%d]: " U32_XTFMT, i, dptr[i].option);
     }
 }
 

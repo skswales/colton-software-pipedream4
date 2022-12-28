@@ -40,6 +40,9 @@ template_copy_new(template *templateHandle);
 extern void
 template_copy_dispose(WimpWindowWithBitset ** ppww);
 
+extern BOOL
+template_ensure(const unsigned int idx);
+
 extern template *
 template_find_new(const char * name);
 
@@ -47,7 +50,7 @@ extern void
 template_readfile(const char * name);
 
 extern void
-template_require(int i, const char * name);
+template_require(const unsigned int idx, const char * name);
 
 /* Set the title of the underlying window definition */
 extern void

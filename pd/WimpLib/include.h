@@ -70,7 +70,10 @@
 
 #if !CROSS_COMPILE
 #define NORCROFT_INLINE_ASM 1
+#if __CC_NORCROFT_VERSION >= 590
+#define NORCROFT_INLINE_SWIX 1
 #endif
+#endif /* CROSS_COMPILE */
 
 
 /* standard includes for WimpLib */
@@ -116,7 +119,7 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "cmodules/xstring.h" /* for safe-string routines */
 #endif
 
-#include "kernel.h" /* C: */
+#include "cs-kernel.h" /* C: */
 
 #ifndef __swis_h
 #include "swis.h" /* C: */
@@ -166,8 +169,8 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "cs-menu.h"    /* includes menu.h */
 #endif
 
-#ifndef __msgs_h
-#include "msgs.h"       /* no includes */
+#ifndef __cs_msgs_h
+#include "cs-msgs.h"    /* includes msgs.h */
 #endif
 
 #ifndef __os_h

@@ -14,7 +14,7 @@
 
 #if RISCOS
 
-#include "kernel.h"
+#include "cs-kernel.h"
 
 #ifndef __cs_wimptx_h
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
@@ -208,7 +208,7 @@ colourpicker_message_ColourPickerResetColourRequest(
         | (1 << 6) /* update from RGB triplet */;
     rs.r[1] = p_colourpicker_callback->dialogue_handle;
     rs.r[2] = (int) &colour_picker_block;
-    void_WrapOsErrorReporting(_kernel_swi(0x47704 /*ColourPicker_UpdateDialogue*/, &rs, &rs));
+    void_WrapOsErrorReporting(cs_kernel_swi(0x47704 /*ColourPicker_UpdateDialogue*/, &rs));
     } /*block*/
 
     return(TRUE);
@@ -295,7 +295,7 @@ colourpicker_open_dialogue(
     rs.r[0] = (int) p_colourpicker_callback->colour_picker_type;
     rs.r[1] = (int) &colour_picker_block;
 
-    if( WrapOsErrorReporting_IsError(_kernel_swi(0x47702 /*ColourPicker_OpenDialogue*/, &rs, &rs)) )
+    if( WrapOsErrorReporting_IsError(cs_kernel_swi(0x47702 /*ColourPicker_OpenDialogue*/, &rs)) )
     {
         p_colourpicker_callback->dialogue_handle = 0;
         p_colourpicker_callback->window_handle = 0;
@@ -341,7 +341,7 @@ host_message_filter_add(
     _kernel_oserror * e;
 
     rs.r[0] = (int) wimp_messages;
-    e = _kernel_swi(0x400F6 /*Wimp_AddMessages*/, &rs, &rs);
+    e = cs_kernel_swi(0x400F6 /*Wimp_AddMessages*/, &rs);
 #endif
 }
 
@@ -356,7 +356,7 @@ host_message_filter_remove(
     _kernel_oserror * e;
 
     rs.r[0] = (int) wimp_messages;
-    e = _kernel_swi(0x400F7 /*Wimp_RemoveMessages*/, &rs, &rs);
+    e = cs_kernel_swi(0x400F7 /*Wimp_RemoveMessages*/, &rs);
 #endif
 }
 
@@ -394,7 +394,7 @@ colourpicker_close_dialogue(
                 _kernel_swi_regs rs;
                 rs.r[0] = 0;
                 rs.r[1] = p_colourpicker_callback->dialogue_handle;
-                void_WrapOsErrorReporting(_kernel_swi(0x47703 /*ColourPicker_CloseDialogue*/, &rs, &rs));
+                void_WrapOsErrorReporting(cs_kernel_swi(0x47703 /*ColourPicker_CloseDialogue*/, &rs));
                 } /*block*/
 
                 break;

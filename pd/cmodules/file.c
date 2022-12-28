@@ -14,7 +14,7 @@
 #include "common/gflags.h"
 
 #if RISCOS
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 #include "swis.h" /*C:*/
 
 #include "cmodules/riscos/osfile.h"
@@ -342,7 +342,7 @@ file_create_directory(
 #if RISCOS
     _kernel_osfile_block osfile_block;
 
-    reportf("file_create_directory(%u:%s)", strlen32(dirname), dirname);
+    // reportf("file_create_directory(%u:%s)", strlen32(dirname), dirname);
 
     memset32(&osfile_block, CH_NULL, sizeof32(osfile_block));
 
@@ -442,7 +442,7 @@ file_flush(
         rs.r[0] = OSArgs_Flush;
         rs.r[1] = file_handle->handle;
 
-        if( file__obtain_error_string(_kernel_swi(OS_Args, &rs, &rs))  &&
+        if( file__obtain_error_string(cs_kernel_swi(OS_Args, &rs))  &&
             (res >= 0)  )
             res = file__set_error(file_handle, create_error(FILE_ERR_CANTWRITE));
 #elif WINDOWS
@@ -655,7 +655,7 @@ file_length(
     rs.r[0] = OSArgs_ReadEXT;
     rs.r[1] = file_handle->handle;
 
-    if(file__obtain_error_string(_kernel_swi(OS_Args, &rs, &rs)))
+    if(file__obtain_error_string(cs_kernel_swi(OS_Args, &rs)))
         length = file__set_error(file_handle, create_error(FILE_ERR_CANTREAD));
     else
         length = rs.r[2];
@@ -753,7 +753,7 @@ file_open(
 #if RISCOS
     if(strlen32(filename) >= sizeof32(file_handle->riscos.filename))
     {
-        reportf("file_open(%u:%s, &%02x): res=FILE_ERR_NAMETOOLONG", strlen(filename), filename, openatts[openmode]);
+        // reportf("file_open(%u:%s, &%02x): res=FILE_ERR_NAMETOOLONG", strlen(filename), filename, openatts[openmode]);
         return(create_error(FILE_ERR_NAMETOOLONG));
     }
 #endif
@@ -779,7 +779,7 @@ file_open(
     rs.r[0] = openatts[openmode];
     rs.r[1] = (int) filename;
 
-    if(file__obtain_error_string(_kernel_swi(OS_Find, &rs, &rs)))
+    if(file__obtain_error_string(cs_kernel_swi(OS_Find, &rs)))
         res = create_error(FILE_ERR_CANTOPEN);
     else
     {
@@ -794,7 +794,7 @@ file_open(
         rs.r[0] = OSFile_ReadInfo;
         rs.r[1] = (int) filename;
         rs.r[2] = 0; /* for error->untyped case */
-        if( _kernel_swi(OS_File, &rs, &rs)  || /* oh, ignore that error (especially for device streams) */
+        if( cs_kernel_swi(OS_File, &rs)  || /* oh, ignore that error (especially for device streams) */
             ((rs.r[2] >> (12+8)) != -1)    )  /* dated? */
             file_handle->riscos.filetype = FILETYPE_UNTYPED;
         else
@@ -1255,9 +1255,9 @@ file__closefile(
         rs.r[0] = 0;
         rs.r[1] = file_handle->handle;
 
-        reportf("file__closefile(OS_handle=%d)", file_handle->handle);
+        // reportf("file__closefile(OS_handle=%d)", file_handle->handle);
 
-        if(file__obtain_error_string(_kernel_swi(OS_Find, &rs, &rs)))
+        if(file__obtain_error_string(cs_kernel_swi(OS_Find, &rs)))
         {
             if(res >= 0)
                 res = create_error(FILE_ERR_CANTCLOSE);
@@ -1270,7 +1270,7 @@ file__closefile(
                 rs.r[0] = OSFile_SetType;
                 rs.r[1] = (int) &file_handle->riscos.filename;
                 rs.r[2] = file_handle->riscos.filetype;
-                if(file__obtain_error_string(_kernel_swi(OS_File, &rs, &rs)))
+                if(file__obtain_error_string(cs_kernel_swi(OS_File, &rs)))
                     if(res >= 0)
                         res = create_error(FILE_ERR_CANTCLOSE);
             }
@@ -1590,7 +1590,7 @@ file__seek(
             rs.r[1] = file_handle->handle;
             rs.r[2] = (int) newptr;
 
-            if(file__obtain_error_string(_kernel_swi(OS_Args, &rs, &rs)))
+            if(file__obtain_error_string(cs_kernel_swi(OS_Args, &rs)))
                 newptr = file__set_error(file_handle, create_error(FILE_ERR_CANTREAD));
         }
     }
@@ -1724,7 +1724,7 @@ file__tell(
     rs.r[0] = OSArgs_ReadPTR;
     rs.r[1] = file_handle->handle;
 
-    if(file__obtain_error_string(_kernel_swi(OS_Args, &rs, &rs)))
+    if(file__obtain_error_string(cs_kernel_swi(OS_Args, &rs)))
         curptr = file__set_error(file_handle, create_error(FILE_ERR_CANTREAD));
     else
         curptr = rs.r[2];
@@ -2017,7 +2017,7 @@ file__eof(
     rs.r[0] = OSArgs_EOFCheck;
     rs.r[1] = file_handle->handle;
 
-    if(file__obtain_error_string(_kernel_swi(OS_Args, &rs, &rs)))
+    if(file__obtain_error_string(cs_kernel_swi(OS_Args, &rs)))
         res = file__set_error(file_handle, create_error(FILE_ERR_CANTWRITE));
     else
         res = (rs.r[2] != 0); /* non-zero -> EOF */

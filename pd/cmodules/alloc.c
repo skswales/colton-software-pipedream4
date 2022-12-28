@@ -66,7 +66,7 @@ internal definitions
 #define EXPOSE_RISCOS_FLEX 1
 #define EXPOSE_RISCOS_SWIS 1
 
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h"
 #include "swis.h" /*C:*/
 
 #include "os.h"
@@ -816,6 +816,8 @@ alloc_init(void)
 
     for(;;) /* loop for structure */
     {
+        (void) flex_granularity_read();
+
         /*reportf(TEXT("g_dynamic_area_limit: %d"), g_dynamic_area_limit);*/
         if((alloc_dynamic_area_handle = flex_init(de_const_cast(char *, g_dynamic_area_name), 0, g_dynamic_area_limit)) < 0)
             break;

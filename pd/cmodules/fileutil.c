@@ -14,7 +14,7 @@
 #include "common/gflags.h"
 
 #if RISCOS
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 #include "swis.h" /*C:*/
 
 #include "cmodules/riscos/osfile.h"
@@ -790,7 +790,7 @@ file_is_dir(
 {
     BOOL res;
     #if RISCOS
-    _kernel_swi_regs r;
+    _kernel_swi_regs rs;
     #elif WINDOWS
     unsigned  usAttr, usError;
     #endif
@@ -799,9 +799,9 @@ file_is_dir(
     dirname = file__make_usable_dir(dirname, array, elemof32(array));
 
     #if RISCOS
-    r.r[0] = OSFile_ReadNoPath;
-    r.r[1] = (int) dirname;
-    res = ((NULL == _kernel_swi(OS_File, &r, &r))  &&  (r.r[0] == OSFile_ObjectType_Dir));
+    rs.r[0] = OSFile_ReadNoPath;
+    rs.r[1] = (int) dirname;
+    res = ((NULL == cs_kernel_swi(OS_File, &rs))  &&  (rs.r[0] == OSFile_ObjectType_Dir));
     #elif WINDOWS
     #if WINDOWS
     AnsiToOem(array, (P_U8) dirname);
@@ -832,16 +832,16 @@ file_is_file(
 {
     BOOL res;
     #if RISCOS
-    _kernel_swi_regs r;
+    _kernel_swi_regs rs;
     #elif WINDOWS
     char      array[BUF_MAX_PATHSTRING];
     unsigned  usAttr, usError;
     #endif
 
     #if RISCOS
-    r.r[0] = OSFile_ReadNoPath;
-    r.r[1] = (int) filename;
-    res = ((NULL == _kernel_swi(OS_File, &r, &r))  &&  (r.r[0] == OSFile_ObjectType_File));
+    rs.r[0] = OSFile_ReadNoPath;
+    rs.r[1] = (int) filename;
+    res = ((NULL == cs_kernel_swi(OS_File, &rs))  &&  (rs.r[0] == OSFile_ObjectType_File));
     #elif WINDOWS
     #if WINDOWS
     AnsiToOem(array, (P_U8) filename);

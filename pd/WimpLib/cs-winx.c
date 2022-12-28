@@ -11,17 +11,21 @@
 
 #include "cmodules/aligator.h"
 
+#pragma -s1
+
 _Check_return_
 extern BOOL
 winx_adjustclicked(void)
 {
     wimp_mousestr m;
 
-    if(wimpt_complain(wimp_get_point_info(&m)))
+    if(wimpt_complain(_swix(Wimp_GetPointerInfo, _IN(1), &m)))
         return(FALSE);
 
     return(0 != (m.bbits & wimp_BRIGHT));
 }
+
+#pragma -s0
 
 extern void
 winx_changedtitle(

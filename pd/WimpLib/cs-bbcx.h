@@ -23,17 +23,7 @@ cs-riscasm.s
 */
 
 #if defined(NORCROFT_INLINE_SWIX)
-_Check_return_
-_Ret_maybenull_
-static inline _kernel_oserror *
-os_writeN(
-    _In_reads_(count) const char * s,
-    _InVal_     U32 count)
-{
-    return(
-        _swix(OS_WriteN, _INR(0, 1),
-        /*in*/  s, count));
-}
+#define os_writeN(s, count) _swix(OS_WriteN, _INR(0,1), (s), (count))
 #else
 _Check_return_
 _Ret_maybenull_
@@ -56,6 +46,8 @@ os_plot(
         _swix(OS_Plot, _INR(0, 2),
         /*in*/  code, x, y));
 }
+//#elif defined(NORCROFT_INLINE_SWIX_COMPILER_BARFS)
+#define os_plot(code, x, y) _swix(OS_Plot, _INR(0,2), (code), (x), (y))
 #else
 _Check_return_
 _Ret_maybenull_

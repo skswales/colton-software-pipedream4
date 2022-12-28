@@ -48,56 +48,51 @@ event_read_submenudata(void);
 
 #include "event.c"
 
-static BOOL
+static _kernel_oserror *
 event__default_process_Redraw_Window_Request(
     const WimpRedrawWindowRequestEvent * const redraw_window_request)
 {
     WimpRedrawWindowBlock redraw_window_block;
     BOOL more;
+    _kernel_oserror * e;
 
     trace_0(TRACE_RISCOS_HOST, "unclaimed Redraw_Window_Request - doing redraw");
 
-    (void) wimpt_complain(tbl_wimp_redraw_window_x(redraw_window_request->window_handle, &redraw_window_block, &more)); /* more := FALSE on error */
+    e = tbl_wimp_redraw_window_x(redraw_window_request->window_handle, &redraw_window_block, &more); /* more := FALSE on error */
 
     while(more)
     {
         /* nothing to redraw */
 
-        (void) wimpt_complain(tbl_wimp_get_rectangle(&redraw_window_block, &more)); /* more := FALSE on error */
+        e = tbl_wimp_get_rectangle(&redraw_window_block, &more); /* more := FALSE on error */
     }
 
-    return(FALSE);
+    return(e);
 }
 
-static BOOL
+static _kernel_oserror *
 event__default_process_Open_Window_Request(
     /*poked*/ WimpOpenWindowRequestEvent * const open_window_request)
 {
     trace_0(TRACE_RISCOS_HOST, "unclaimed Open_Window_Request - doing open");
 
-    (void) wimpt_complain(winx_open_window(open_window_request));
-
-    return(FALSE);
+    return(winx_open_window(open_window_request));
 }
 
-static BOOL
+static _kernel_oserror *
 event__default_process_Close_Window_Request(
     const WimpCloseWindowRequestEvent * const close_window_request)
 {
     trace_0(TRACE_RISCOS_HOST, "unclaimed Close_Window_Request - doing close");
 
-    (void) wimpt_complain(winx_close_window(close_window_request->window_handle));
-
-    return(FALSE);
+    return(winx_close_window(close_window_request->window_handle));
 }
 
-static BOOL
+static _kernel_oserror *
 event__default_process_Key_Pressed(
     const WimpKeyPressedEvent * const key_pressed)
 {
-    (void) wimpt_complain(wimp_processkey(key_pressed->key_code));
-
-    return(FALSE);
+    return(wimp_processkey(key_pressed->key_code));
 }
 
 static BOOL
@@ -119,6 +114,8 @@ event__default_process(
     const int event_code,
     WimpPollBlock * const event_data)
 {
+    _kernel_oserror * e = NULL;
+
     switch(event_code)
     {
     case Wimp_ENull:
@@ -127,16 +124,20 @@ event__default_process(
         return(TRUE);
 
     case Wimp_ERedrawWindow:
-        return(event__default_process_Redraw_Window_Request(&event_data->redraw_window_request));
+        e = event__default_process_Redraw_Window_Request(&event_data->redraw_window_request);
+        break;
 
     case Wimp_EOpenWindow:
-        return(event__default_process_Open_Window_Request(&event_data->open_window_request));
+        e = event__default_process_Open_Window_Request(&event_data->open_window_request);
+        break;
 
     case Wimp_ECloseWindow:
-        return(event__default_process_Close_Window_Request(&event_data->close_window_request));
+        e = event__default_process_Close_Window_Request(&event_data->close_window_request);
+        break;
 
     case Wimp_EKeyPressed:
-        return(event__default_process_Key_Pressed(&event_data->key_pressed));
+        e = event__default_process_Key_Pressed(&event_data->key_pressed);
+        break;
 
     case Wimp_EUserMessage:
     case Wimp_EUserMessageRecorded:
@@ -145,8 +146,11 @@ event__default_process(
 
     default:
         trace_1(TRACE_RISCOS_HOST, "unclaimed Wimp Event %s", report_wimp_event(event_code, event_data));
-        return(FALSE);
+        break;
     }
+
+    wimpt_complain(e);
+    return(FALSE);
 }
 
 /*

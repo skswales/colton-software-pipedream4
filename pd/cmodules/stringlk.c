@@ -17,7 +17,7 @@
 
 #include "strings.h"
 
-#include "msgs.h"
+#include "cs-msgs.h"
 
 #ifndef MSGS_LOOKUP_DELIMITER_STR
 #define MSGS_LOOKUP_DELIMITER_STR "_"

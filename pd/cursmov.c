@@ -1370,13 +1370,13 @@ gotoslot_fn_core(void)
             if(file_is_rooted(tstr_buf))
             {
                 docno = find_document_using_wholename(tstr_buf);
-                reportf("GotoSlot: rooted %s is docno %d", report_tstr(tstr_buf), docno);
+                // reportf("GotoSlot: rooted %s is docno %d", report_tstr(tstr_buf), docno);
                 baddoc = (DOCNO_NONE == docno);
             }
             else
             {
                 docno = find_document_using_leafname(tstr_buf);
-                reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
+                // reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
                 baddoc = ((DOCNO_SEVERAL == docno) || (DOCNO_NONE == docno));
             }
             if(!baddoc)
@@ -2843,7 +2843,7 @@ cal_offset_in_slot(
             rs.r[5] = 0;
             rs.r[6] = 0;
 
-            font_complain(_kernel_swi(0x400A1 /*Font_ScanString*/, &rs, &rs));
+            font_complain(cs_kernel_swi(0x400A1 /*Font_ScanString*/, &rs));
 
             fs.term = rs.r[1] - (int) fs.s;
 

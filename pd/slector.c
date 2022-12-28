@@ -15,7 +15,7 @@
 
 #include "datafmt.h"
 
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h"
 
 #include "riscos_x.h"
 

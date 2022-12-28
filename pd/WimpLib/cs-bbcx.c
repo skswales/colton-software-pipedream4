@@ -15,6 +15,18 @@
 #include "cs-bbcx.h"
 #endif
 
+/* wee shim saves a tiny bit in callers */
+
+_Check_return_
+_Ret_maybenull_
+extern _kernel_oserror *
+cs_kernel_swi(
+    _InVal_     int swi_code,
+    _Inout_     _kernel_swi_regs * const in_and_out)
+{
+    return(_kernel_swi(swi_code, in_and_out, in_and_out));
+}
+
 _Check_return_
 _Ret_maybenull_
 extern _kernel_oserror *

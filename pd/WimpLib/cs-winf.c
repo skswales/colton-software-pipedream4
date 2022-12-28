@@ -14,12 +14,12 @@
 extern BOOL
 winf_adjustbumphit(int * p_hit_icon_handle /*inout*/, int value_icon_handle)
 {
-    int hit_icon_handle = *p_hit_icon_handle;
+    const int hit_icon_handle = *p_hit_icon_handle;
     const int dec_icon_handle = value_icon_handle - 1;
     const int inc_icon_handle = dec_icon_handle - 1;
     BOOL res = ((hit_icon_handle == inc_icon_handle)  ||  (hit_icon_handle == dec_icon_handle));
 
-    if(res  &&  winx_adjustclicked())
+    if( res  &&  winx_adjustclicked() )
         *p_hit_icon_handle = (hit_icon_handle ^ (inc_icon_handle ^ dec_icon_handle));
 
     return(res);
@@ -63,27 +63,26 @@ winf_getfield(
     tracef4("[winf_getfield(&%p, %u, &%p, %d): ", (void *) window_handle, i, buffer, size);
     assert(size != 0); /* places at least CH_NULL */
 
-    if(wimpt_complain(wimp_get_icon_info(window_handle, icon_handle, &info)))
-    {
-        j = 0;  /* returns "" */
-    }
-    else if(0 == (info.flags & wimp_ITEXT))
-    {
-        tracef0("- non-text icon: ");
-        j = 0;  /* returns "" */
-    }
-    else
-    {
-        myassert2x(info.flags & wimp_INDIRECT, "winf_getfield: window &%p icon %u has inline buffer", (void *) window_handle, (void *) icon_handle);
+    buffer[0] = CH_NULL; /* returns "" */
 
-        from = info.data.indirecttext.buffer;
-        ptr  = from;
-        while(*ptr++ >= 32)
-            ;
-        j = ptr - from - 1;
-        j = min(j, size - 1);
-        memcpy(buffer, from, j);
+    if(wimpt_complain(wimp_get_icon_info(window_handle, icon_handle, &info)))
+        return;
+
+    if(0 == (info.flags & wimp_ITEXT))
+    {
+        tracef0("- non-text icon");
+        return;
     }
+
+    myassert2x(info.flags & wimp_INDIRECT, "winf_getfield: window &%p icon %u has inline buffer", (void *) window_handle, (void *) icon_handle);
+
+    from = info.data.indirecttext.buffer;
+    ptr  = from;
+    while(*ptr++ >= 32)
+        ;
+    j = ptr - from - 1;
+    j = min(j, size - 1);
+    memcpy(buffer, from, j);
 
     buffer[j] = CH_NULL;
     tracef1(" returns \"%s\"]", buffer);
@@ -160,12 +159,14 @@ winf_fadefield(
     if(wimpt_complain(wimp_get_icon_info(window_handle, icon_handle, &info)))
         return;
 
-    if(0 == (info.flags & wimp_INOSELECT))
-        /* prod it, to cause redraw */
-        (void) wimpt_complain(
-                    wimp_set_icon_state(window_handle, icon_handle,
-                                        /* EOR */ wimp_INOSELECT,
-                                        /* BIC */ (wimp_iconflags) 0));
+    if(0 != (info.flags & wimp_INOSELECT))
+        return;
+
+    /* prod it, to cause redraw */
+    (void) wimpt_complain(
+                wimp_set_icon_state(window_handle, icon_handle,
+                                    /* EOR */ wimp_INOSELECT,
+                                    /* BIC */ (wimp_iconflags) 0));
 }
 
 extern void
@@ -178,12 +179,14 @@ winf_unfadefield(
     if(wimpt_complain(wimp_get_icon_info(window_handle, icon_handle, &info)))
         return;
 
-    if(0 != (info.flags & wimp_INOSELECT))
-        /* prod it, to cause redraw */
-        (void) wimpt_complain(
-                    wimp_set_icon_state(window_handle, icon_handle,
-                                        /* EOR */ wimp_INOSELECT,
-                                        /* BIC */ (wimp_iconflags) 0));
+    if(0 == (info.flags & wimp_INOSELECT))
+        return;
+
+    /* prod it, to cause redraw */
+    (void) wimpt_complain(
+                wimp_set_icon_state(window_handle, icon_handle,
+                                    /* EOR */ wimp_INOSELECT,
+                                    /* BIC */ (wimp_iconflags) 0));
 }
 
 /* note that unhide is rather harder - would need a saved state to restore */
@@ -252,28 +255,26 @@ winf_bumpdouble(
     double try_ddelta, dval;
     BOOL res = winf_adjustbumphit(&hit_icon_handle, value_icon_handle);
 
-    if(res)
-    {
-        try_ddelta = *ddelta;
+    if(!res)
+        return(res);
 
-        if(hit_icon_handle == dec_icon_handle)
-            try_ddelta = 0.0 - try_ddelta;
+    try_ddelta = *ddelta;
 
-        dval = winf_getdouble(window_handle, value_icon_handle, dvar, decplaces);
+    if(hit_icon_handle == dec_icon_handle)
+        try_ddelta = 0.0 - try_ddelta;
 
-        dval += try_ddelta;
+    dval = winf_getdouble(window_handle, value_icon_handle, dvar, decplaces);
 
-        if( dval > *dmax)
-            dval = *dmax;
-        else if(dval < *dmin)
-            dval = *dmin;
+    dval += try_ddelta;
 
-        *dvar = dval;
+    if(dval < *dmin) dval = *dmin;
+    if(dval > *dmax) dval = *dmax;
 
-        winf_setdouble(window_handle, value_icon_handle, dvar, decplaces);
-    }
+    *dvar = dval;
 
-    return(res);
+    winf_setdouble(window_handle, value_icon_handle, dvar, decplaces);
+
+    return(TRUE);
 }
 
 extern void
@@ -288,18 +289,16 @@ winf_checkdouble(
 {
     double dval = winf_getdouble(window_handle, value_icon_handle, dvar, decplaces);
 
-    if( dval > *dmax)
-        dval = *dmax;
-    else if(dval < *dmin)
-        dval = *dmin;
+    if(dval < *dmin) dval = *dmin;
+    if(dval > *dmax) dval = *dmax;
 
-    if(*dvar != dval)
-    {
-        *dvar = dval;
+    if(*dvar == dval)
+        return;
 
-        if(modify)
-            *modify = 1;
-    }
+    *dvar = dval;
+
+    if(modify)
+        *modify = 1;
 
     /* NEVER set modify 0; that's for the caller to accumulate */
 }
@@ -368,28 +367,26 @@ winf_bumpint(
     int try_idelta, ival;
     BOOL res = winf_adjustbumphit(&hit_icon_handle, value_icon_handle);
 
-    if(res)
-    {
-        try_idelta = idelta;
+    if(!res)
+        return(res);
 
-        if(hit_icon_handle == dec_icon_handle)
-            try_idelta = 0 - try_idelta;
+    try_idelta = idelta;
 
-        ival = winf_getint(window_handle, value_icon_handle, *ivar);
+    if(hit_icon_handle == dec_icon_handle)
+        try_idelta = 0 - try_idelta;
 
-        ival += try_idelta;
+    ival = winf_getint(window_handle, value_icon_handle, *ivar);
 
-        if( ival > imax)
-            ival = imax;
-        else if(ival < imin)
-            ival = imin;
+    ival += try_idelta;
 
-        *ivar = ival;
+    if(ival < imin) ival = imin;
+    if(ival > imax) ival = imax;
 
-        winf_setint(window_handle, value_icon_handle, *ivar);
-    }
+    *ivar = ival;
 
-    return(res);
+    winf_setint(window_handle, value_icon_handle, *ivar);
+
+    return(TRUE);
 }
 
 extern void
@@ -402,18 +399,16 @@ winf_checkint(
 {
     int ival = winf_getint(window_handle, value_icon_handle, *ivar);
 
-    if( ival > imax)
-        ival = imax;
-    else if(ival < imin)
-        ival = imin;
+    if(ival < imin) ival = imin;
+    if(ival > imax) ival = imax;
 
-    if(*ivar != ival)
-    {
-        *ivar = ival;
+    if(*ivar == ival)
+        return;
 
-        if(modify)
-            *modify = 1;
-    }
+    *ivar = ival;
+
+    if(modify)
+        *modify = 1;
 
     /* NEVER set modify 0; that's for the caller to accumulate */
 }

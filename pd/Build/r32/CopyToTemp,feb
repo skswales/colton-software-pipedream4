@@ -148,6 +148,7 @@ Set bld$Resources$Dir   <Obey$Dir>.!PipeDream.Resources
 %CDir                                                           <pd$Disc>.Z.Resources.Neutral.RISC_OS
 %Copy <src$Resources$Dir>.Neutral.RISC_OS.!Sprite               <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
 %Copy <bld$Resources$Dir>.Neutral.RISC_OS.BuildVer              <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <src$Resources$Dir>.Neutral.RISC_OS.ColMapHTML            <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
 %Copy <src$Resources$Dir>.Neutral.RISC_OS.ImageSlot             <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
 %Copy <bld$Resources$Dir>.Neutral.RISC_OS.Loader                <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
 %Copy <bld$Resources$Dir>.Neutral.RISC_OS.Splash                <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v

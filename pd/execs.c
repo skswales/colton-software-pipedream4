@@ -1288,7 +1288,7 @@ domacrofile_fn_core(void)
         return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
     }
 
-    reportf("Executing command file %s", buffer);
+    // reportf("Executing command file %s", buffer);
 
     do_execfile(buffer);
 

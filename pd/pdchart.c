@@ -4154,6 +4154,9 @@ gr_chart_save_external(
     { /* SKS after PD 4.12 26mar92 - keep consistent with save_version_string */
     U8 array[LIN_BUFSIZ];
 
+#if 1
+    common_save_version_string(array, elemof32(array));
+#else
     xstrkpy(array, elemof32(array), applicationversion);
     xstrkat(array, elemof32(array), ", ");
 
@@ -4166,6 +4169,7 @@ gr_chart_save_external(
     xstrkat(array, elemof32(array), ", R");
 
     xstrkat(array, elemof32(array), registration_number());
+#endif
 
     res = gr_chart_construct_save_txt(f, PDCHART_CON_VERSION, array);
     }

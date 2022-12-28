@@ -286,11 +286,24 @@ colourtrans_ReturnColourNumberForMode(
     _In_        unsigned int mode,
     _In_        unsigned int palette)
 {
+#if defined(NORCROFT_INLINE_ASM)
+    int colnum;
+    __asm {
+        MOV     r0, word;
+        MOV     r1, mode;
+        MOV     r2, palette;
+        SWI     (ColourTrans_ReturnColourNumberForMode | XOS_Bit), /*in*/ {R0,R1,R2}, /*out*/ {R0,PSR}, /*corrupted*/ {};
+        MOVVS   r0, #0 // VS -> error -> return zero colour number
+        MOV     colnum, r0
+    }
+    return(colnum);
+#else
     _kernel_swi_regs rs;
     rs.r[0] = word;
     rs.r[1] = mode;
     rs.r[2] = palette;
-    return(_kernel_swi(ColourTrans_ReturnColourNumberForMode, &rs, &rs) ? 0 : rs.r[0]);
+    return(cs_kernel_swi(ColourTrans_ReturnColourNumberForMode, &rs) ? 0 : rs.r[0]);
+#endif
 }
 
 _Check_return_
@@ -300,12 +313,25 @@ colourtrans_SetGCOL(
     _In_        int flags,
     _In_        int gcol_action)
 {
+#if defined(NORCROFT_INLINE_ASM)
+    _kernel_oserror * e;
+    __asm {
+        MOV     r0, word;
+        MOV     r3, flags;
+        MOV     r4, gcol_action;
+        SWI     (ColourTrans_SetGCOL | XOS_Bit), /*in*/ {R0,R3,R4}, /*out*/ {R0,R2,R3,PSR}, /*corrupted*/ {};
+        MOVVC   r0, #0 // VC -> no error
+        MOV     e, r0
+    }
+    return(e);
+#else
     _kernel_swi_regs rs;
     rs.r[0] = word;
     rs.r[3] = flags;
     rs.r[4] = gcol_action;
     assert((rs.r[3] & 0xfffffe7f) == 0); /* just bits 7 and 8 are valid */
-    return(_kernel_swi(ColourTrans_SetGCOL, &rs, &rs)); /* ignore gcol_out */
+    return(cs_kernel_swi(ColourTrans_SetGCOL, &rs)); /* ignore gcol_out */
+#endif
 }
 
 static inline void
@@ -334,7 +360,7 @@ riscos_set_wimp_colour_value_index_byte(
 
     wimp_colour_value |= 0x10;
 
-    reportf("cvib: 0x%.8X", wimp_colour_value);
+    //reportf("cvib: 0x%.8X", wimp_colour_value);
     *p_wimp_colour_value = wimp_colour_value;
 }
 
@@ -704,6 +730,11 @@ main_window_width(void)
 *
 ******************************************************************************/
 
+/* "c.riscdraw", line 715: Fatal internal error: corrupted register 1 (used but not set) */
+#if defined(NORCROFT_INLINE_SWIX) && defined(os_plot)
+//#undef os_plot
+#endif
+
 extern void
 at(
     tcoord tx,
@@ -711,7 +742,14 @@ at(
 {
     trace_2(TRACE_DRAW, "at(%d, %d)", tx, ty);
 
+#if 1 /* workaround for the above */
+    const coord gdi_x = gcoord_x(tx);
+    const coord gdi_y = gcoord_y_textout(ty);
+
+    wimpt_safe(bbc_move(gdi_x, gdi_y));
+#else
     wimpt_safe(bbc_move(gcoord_x(tx), gcoord_y_textout(ty)));
+#endif
 }
 
 extern void
@@ -723,7 +761,14 @@ at_fonts(
     {
         trace_3(TRACE_DRAW, "at_fonts(%d (%d), %d)", x, textcell_xorg + x, ty);
 
+#if 1 /* workaround for the above */
+        const coord gdi_x = textcell_xorg + x;
+        const coord gdi_y = gcoord_y_textout(ty);
+
+        wimpt_safe(bbc_move(gdi_x, gdi_y));
+#else
         wimpt_safe(bbc_move(textcell_xorg + x, gcoord_y_textout(ty)));
+#endif
     }
     else
         at(x, ty);
@@ -1586,7 +1631,7 @@ process_Scroll_Request_xscroll(
 {
     for(;;)
     {
-        reportf(/*trace_1(TRACE_APP_PD4,*/ "app_Scroll_Request: xscroll %d", xscroll);
+        // reportf(/*trace_1(TRACE_APP_PD4,*/ "app_Scroll_Request: xscroll %d", xscroll);
 
         switch(xscroll)
         {
@@ -1637,7 +1682,7 @@ process_Scroll_Request_yscroll(
 {
     for(;;)
     {
-        reportf(/*trace_1(TRACE_APP_PD4,*/ "app_Scroll_Request: yscroll %d", yscroll);
+        // reportf(/*trace_1(TRACE_APP_PD4,*/ "app_Scroll_Request: yscroll %d", yscroll);
 
         switch(yscroll)
         {
@@ -2494,7 +2539,7 @@ filealtered(
 {
     if(xf_filealtered != newstate)
     {
-        reportf("filealtered := %d for %s", newstate, report_tstr(currentfilename()));
+        // reportf("filealtered := %d for %s", newstate, report_tstr(currentfilename()));
 
         xf_filealtered = newstate;
 
@@ -2524,7 +2569,7 @@ colourtrans_SetFontColours(
     rs.r[1] = bg_colour;
     rs.r[2] = fg_colour;
     rs.r[3] = max_offset;
-    return(_kernel_swi(ColourTrans_SetFontColours, &rs, &rs)); /* don't care about updated values here */
+    return(cs_kernel_swi(ColourTrans_SetFontColours, &rs)); /* don't care about updated values here */
 #endif
 }
 
@@ -2675,7 +2720,7 @@ riscprint_start(void)
     /* open an output stream onto "printer:" */
     rs.r[0] = 0x8F; /* OpenOut, Ignore File$Path, give err if a dir.! */
     rs.r[1] = (int) "printer:";
-    if(_kernel_swi(OS_Find, &rs, &rs))
+    if(cs_kernel_swi(OS_Find, &rs))
     {
         reperr(ERR_PRINT_WONT_OPEN, _kernel_last_oserror()->errmess);
         return(FALSE);
@@ -2810,7 +2855,7 @@ riscprint_page(
         else
             pageptr = NULL;
 
-        reportf("print_drawpage(%s)", report_tstr(pageptr));
+        // reportf("print_drawpage(%s)", report_tstr(pageptr));
         bum = print_complain(print_drawpage(copies,
                                             sequence,   /* sequence number */
                                             pageptr,    /* textual page number */
@@ -2954,7 +2999,7 @@ riscprint_end(
     trace_0(TRACE_APP_PD4_RENDER, "riscprint_end(): closing printer stream");
     rs.r[0] = 0;
     rs.r[1] = riscos_printer.job;
-    e2 = WrapOsErrorReporting(_kernel_swi(OS_Find, &rs, &rs));
+    e2 = WrapOsErrorReporting(cs_kernel_swi(OS_Find, &rs));
 
     e = e ? e : e2;
 

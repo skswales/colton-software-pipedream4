@@ -56,7 +56,10 @@
 
 #if !CROSS_COMPILE
 #define NORCROFT_INLINE_ASM 1
+#if __CC_NORCROFT_VERSION >= 590
+#define NORCROFT_INLINE_SWIX 1
 #endif
+#endif /* CROSS_COMPILE */
 
 /*
 gr_rdiag.c and numbers.c require these to be defined

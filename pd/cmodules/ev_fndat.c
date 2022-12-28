@@ -19,7 +19,7 @@
 
 #if RISCOS
 #define EXPOSE_RISCOS_SWIS 1
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 #include "swis.h" /*C:*/
 #endif
 
@@ -899,7 +899,7 @@ fivebytetime_from_date(
     rs.r[0] = -1; /* use current territory */
     rs.r[1] = (int) &p_fivebyte->utc[0];
     rs.r[2] = (int) &time_ordinals;
-    if(NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertOrdinalsToTime, &rs, &rs)))
+    if(NULL != WrapOsErrorChecking(cs_kernel_swi(Territory_ConvertOrdinalsToTime, &rs)))
         zero_struct_ptr(p_fivebyte);
 #endif
 
@@ -929,7 +929,7 @@ PROC_EXEC_PROTO(c_weeknumber)
     rs.r[2] = (int) buffer;
     rs.r[3] = sizeof32(buffer);
     rs.r[4] = (int) "%WK";
-    if( NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertDateAndTime, &rs, &rs)) )
+    if(NULL != WrapOsErrorChecking(cs_kernel_swi(Territory_ConvertDateAndTime, &rs)))
         weeknumber_result = 0; /* a result of zero -> info not available */
     else
         weeknumber_result = (S32) fast_strtoul(buffer, NULL);

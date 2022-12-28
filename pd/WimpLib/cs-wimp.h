@@ -362,7 +362,9 @@ typedef struct WimpIconFlagsBitset /* flags bitset for ease of manipulation */
 
     UBF button_type       : 4;
 
-    UBF esg               : 5; /* as per PRM Vol III */
+    UBF esg               : 4; /* as per PRM Vol III, but see RISC OS Open documentation */
+
+    UBF numeric           : 1; /* this is new since $deity knows when */
 
     UBF selected          : 1;
     UBF shaded            : 1;

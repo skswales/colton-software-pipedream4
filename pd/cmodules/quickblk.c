@@ -299,7 +299,9 @@ quick_block_printf(
 
     va_start(args, format);
     status = quick_block_vprintf(p_quick_block, format, args);
+#ifndef VA_END_SUPERFLUOUS
     va_end(args);
+#endif
 
     return(status);
 }
@@ -320,7 +322,6 @@ quick_block_vprintf(
     /**/        va_list args)
 {
     PC_U8Z p_u8;
-    STATUS status = STATUS_OK;
 #if WINDOWS
     U8 preceding;
     U8 conversion;
@@ -331,13 +332,13 @@ quick_block_vprintf(
     {
         /* output what we have so far */
         if(p_u8 - format)
-            status_break(status = quick_block_bytes_add(p_quick_block, format, PtrDiffBytesU32(p_u8, format)));
+            status_return(quick_block_bytes_add(p_quick_block, format, PtrDiffBytesU32(p_u8, format)));
 
         format = p_u8 + 1; /* skip the % */
 
         if(CH_PERCENT_SIGN == *format)
         {
-            status_break(status = quick_block_byte_add(p_quick_block, CH_PERCENT_SIGN));
+            status_return(quick_block_byte_add(p_quick_block, CH_PERCENT_SIGN));
             format++; /* skip the escaped % too */
             continue;
         }
@@ -376,7 +377,7 @@ quick_block_vprintf(
             len = strlen32(buffer); /* limit transfer to what actually was achieved */
 #endif
 
-        status_break(status = quick_block_bytes_add(p_quick_block, buffer, len));
+        status_return(quick_block_bytes_add(p_quick_block, buffer, len));
 
 #if WINDOWS /* Microsoft seems to pass args by value not reference so that args ain't updated like Norcroft compiler */
         switch(conversion)
@@ -439,10 +440,10 @@ quick_block_vprintf(
     }
 
     /* output trailing fragment */
-    if(*format && status_ok(status))
-        status = quick_block_bytes_add(p_quick_block, format, strlen32(format));
+    if(!*format)
+        return(STATUS_OK);
 
-    return(status);
+    return(quick_block_bytes_add(p_quick_block, format, strlen32(format)));
 }
 
 /*
@@ -455,7 +456,7 @@ quick_ublock_ustr_add(
     _InoutRef_      P_QUICK_UBLOCK p_quick_ublock,
     _In_z_          PC_USTR ustr)
 {
-    return(quick_ublock_uchars_add(p_quick_ublock, ustr, ustrlen32(ustr)));
+    return(quick_ublock_uchars_add(p_quick_ublock, ustr, _inl_ustrlen32(ustr)));
 }
 
 /* end of quickblk.c */

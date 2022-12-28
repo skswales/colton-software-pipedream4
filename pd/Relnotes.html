@@ -96,6 +96,33 @@
     <p>Please refer to the <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> for details of changes to functionality.</p>
 
 
+<h4>4.62 (28 Dec 2022)</h4>
+
+<p>Fix for loading chart UI sprites on non-RISC OS 5 systems.</p>
+
+<p>Fix for rapidly flashing action buttons in dialogue boxes on RISC OS 3.1.</p>
+
+<p>WimpSlot required at startup reduced - in total it is about 44 KiB less compared to 4.61.</p>
+
+<p>Chart UI templates are only loaded when needed (saves about 20 KiB).</p>
+
+<p>Interactive Help messages are only loaded when needed (saves about 8 KiB).</p>
+
+<p>List of HTML colour names used by @C@ is now loaded as needed.
+The file ColMapHTML may be found in Resources.RISC_OS.Neutral.
+You could modify this file to add custom colours but beware that any
+changes to the one supplied in the application directory may not survive updates!
+Instead, it would be better to create a directory called RISC_OS
+in Boot:Choices.PipeDream and put the modified file in there.</p>
+
+<p>Lotus 1-2-3 converter detection is performed on each attempted load of Lotus files rather than just once.
+Allows user to not have to restart PipeDream 4 if converter had not been 'seen', or has been moved due to reinstallation.</p>
+
+<p>Window title bars no longer contain 'PipeDream: ' prefix - more consistent with current usage.</p>
+
+<p>ROOL DDE 31a build environment used. This allows PipeDream 4 to directly call SWIs in many cases. Yay.</p>
+
+
 <h4>4.61 (12 Dec 2022)</h4>
 
 <p>Engineering format for the TEXT() spreadsheet function updated to match
@@ -108,7 +135,7 @@ This adds the following to the list of SI prefixes to be used for multiples and 
 <li>r : 10^-27</li>
 <li>q : 10^-30</li>
 </ul>
-<p>Prior to this release, PipeDream used prefixes that had been proposed by Jeff K. Aronson in the 1990s for these multiples and submultiples,
+<p>Prior to this release, PipeDream 4 used prefixes that had been proposed by Jeff K. Aronson in the 1990s for these multiples and submultiples,
 with the prefixes W, X, x, w corresponding to the new prefixes Q, R, r, q.</p>
 
 <p>Several redundant RISC_OSLib functions removed; some others replaced with inline ASM blocks.</p>

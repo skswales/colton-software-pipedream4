@@ -2867,7 +2867,7 @@ font_width(
     rs.r[5] = (int) &c;
     rs.r[6] = (int) NULL;
 
-    font_complain(_kernel_swi(0x400A1 /*Font_ScanString*/, &rs, &rs));
+    font_complain(cs_kernel_swi(0x400A1 /*Font_ScanString*/, &rs));
 
     return(rs.r[3] /*length*/);
 }

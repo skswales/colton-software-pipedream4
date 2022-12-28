@@ -704,20 +704,15 @@ typedef U16 EV_TYPE; typedef EV_TYPE * P_EV_TYPE; typedef const EV_TYPE * PC_EV_
 should really be in ss_const.h but need RPN_DAT_xxx
 */
 
-/* use this for minimising need for overflow detection in calculations */
+/* use this for minimising need for overflow detection in calculations and space in RPN */
 
 _Check_return_
 static inline EV_IDNO
 ev_integer_size(
-    _InVal_     S32 integer)
+    _InVal_     S32 s32)
 {
-    const S32 abs_integer = abs(integer);
-
     /* S16_MAX + 1 for ARM immediate constant */
-    if(abs_integer >= ((S32) S16_MAX + 1))
-      return(DATA_ID_WORD32);
-
-    return(DATA_ID_WORD16);
+    return((abs(s32) < ((S32) S16_MAX + 1)) ? DATA_ID_WORD16 : DATA_ID_WORD32);
 }
 
 static inline void
@@ -1270,6 +1265,11 @@ ev_recalc_status(
 extern void
 ev_report_ERROR_CUSTOM(
     _InRef_     PC_SS_DATA p_ss_data);
+
+extern BOOL g_ev_C99_mode; /*const-to-you*/
+
+extern void
+ev_set_C99_mode(BOOL C99_mode);
 
 extern void
 ev_set_options(

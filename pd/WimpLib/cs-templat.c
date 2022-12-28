@@ -12,6 +12,7 @@
  * SKS 27 Nov 1997 Change ESG used to 1 from 15 to stop other radio buttons being nobbled
  * SKS 14 Jan 1998 Refrain from hacking ESG used! All templates should now have action buttons with ESG=1
  * SKS 21 Apr 1998 Support for tristate icons
+ * SKS 19 Dec 2022 Support for deferred loading
  */
 
 #include "include.h"
@@ -31,9 +32,9 @@ static void   template__convert_font_ref(unsigned int b, WimpIconFlagsWithBitset
 internal functions
 */
 
-#define TEMPLATE__N_BLOCKS 10
+#define TEMPLATE__N_BLOCKS 10U
 
-static char *       template__block[TEMPLATE__N_BLOCKS + 1]; /* always have NULL entry at end */
+static char *       template__block[TEMPLATE__N_BLOCKS];
 
 /*
 invented here
@@ -208,12 +209,15 @@ template__convert_font_ref(unsigned int b, WimpIconFlagsWithBitset * p_flags_ua)
 
 #endif /* TEMPLATE_FONT_RESOLVE */
 
+/* call this at startup to set which template files to load */
+
 extern void
 template_require(
-    int i,
+    const unsigned int idx,
     const char * name)
 {
-    template__require[i] = name; /* NB not copied */
+    if(idx < TEMPLATE__N_BLOCKS)
+        template__require[idx] = name; /* NB not copied */
 }
 
 extern void
@@ -407,7 +411,7 @@ template_find_new(
     TEMPLATE_INDEX_ENTRY * ip, * first_ip;
     unsigned int           b;
 
-    for(b = 0; template__block[b]  &&  !templateHandle; ++b)
+    for(b = 0; (b < TEMPLATE__N_BLOCKS)  &&  !templateHandle; ++b)
     {
         first_ip = template__indexentry(b, 0);
         ip       = first_ip - 1;
@@ -493,6 +497,33 @@ template__readfile_do(
         wimpt_noerr((os_error *) _kernel_last_oserror());
 }
 
+/*ncr*/
+extern BOOL
+template_ensure(
+    const unsigned int idx)
+{
+    if(idx >= TEMPLATE__N_BLOCKS)
+        return(FALSE);
+
+    if(NULL != template__block[idx])
+        return(TRUE);
+
+    if(NULL == template__require[idx])
+        return(FALSE);
+
+    char filename__require[256];
+    int length__require = res_findname(template__require[idx], filename__require);
+    if(length__require > 0)
+    {
+        template__readfile_do(idx, filename__require, length__require);
+
+        tracef2("[template_ensure: binding template__block[%u] at &%p]", idx, template__block[idx]);
+        template__resolve(idx);
+    }
+
+    return(NULL != template__block[idx]);
+}
+
 extern void
 template_readfile(
     const char * filename)
@@ -525,22 +556,10 @@ template_readfile(
         }
     }
 
-    for(b = 0; template__require[b]; ++b)
-    {
-        if(!template__block[b])
-        {
-            char filename__require[256];
-            int length__require = res_findname(template__require[b], filename__require);
-            if(length__require > 0)
-                template__readfile_do(b, filename__require, length__require);
-        }
-    }
+    /* if there were to be in-memory ones again, we'd have to template__resolve() them here? */
 
-    for(b = 0; template__block[b]; ++b)
-    {
-        tracef2("[template_readfile: binding template__block[%u] at &%p]", b, template__block[b]);
-        template__resolve(b);
-    }
+    for(b = 0; b < TEMPLATE__N_BLOCKS; ++b)
+        (void) template_ensure(b);
 }
 
 static void
@@ -656,6 +675,8 @@ template__resolve_icon(
                                         /* mutate into a menu button */
                                         if('6' == type)
                                         {
+                                            iconflags.bits.bg_colour = 12; /* default button mutates to fresh cream */
+
                                             /* reduce the height of this button */
                                             S32 iymin = readval_S32(&p_icon_ua->bbox.ymin);
                                             S32 iymax = readval_S32(&p_icon_ua->bbox.ymax);
@@ -666,9 +687,7 @@ template__resolve_icon(
                                         }
                                         p[-3] = '1'; /* mutate into R1 */
                                         p[-2] = CH_NULL; /* remove the depressing effect */
-                                        /*iconflags &= ~wimp_IESGMASK;*/
-                                        /*iconflags |= (0x01U * wimp_IESG);*/
-                                        /* ^^^ OK,Cancel should be this ESG anyway */
+                                        iconflags.bits.esg = 1;
                                         iconflags.bits.button_type = 0x09U;
                                         mutate_flags = TRUE;
                                         break;

@@ -20,7 +20,7 @@
 /* local header file */
 #include "ev_evali.h"
 
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h" /*C:*/
 
 #include "swis.h" /*C:*/
 
@@ -1250,13 +1250,13 @@ ss_data_to_result_convert(
     {
     case DATA_ID_REAL:
     case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
     case DATA_ID_DATE:
     case DATA_ID_BLANK:
     case DATA_ID_ERROR:
         p_ev_result->arg = ss_data_temp.arg.ss_constant;
         break;
 
-    case DATA_ID_WORD16:
     case DATA_ID_WORD32:
         /* minimise storage in result type */
         p_ev_result->data_id = ev_integer_size(ss_data_temp.arg.integer);

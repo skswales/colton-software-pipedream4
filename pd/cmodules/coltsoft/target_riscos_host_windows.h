@@ -126,7 +126,7 @@ typedef unsigned int _Bool;
 #define inline_when_fast_fp inline
 
 #if defined(__INTELLISENSE__)
-#include "kernel.h" /*C:*/
+#include "cs-kernel.h"
 #include "swis.h" /*C:*/
 #endif
 

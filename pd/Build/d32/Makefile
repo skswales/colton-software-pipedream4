@@ -7,12 +7,12 @@
 # Copyright © 1989-1998 Colton Software Limited
 # Copyright © 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.61
-#TEXTUAL_VERSION_NUMBER=4.61.01
+TEXTUAL_VERSION_NUMBER=4.62
+#TEXTUAL_VERSION_NUMBER=4.62.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
-URD=$.pipedream4.pipedream__4_61__branch
+URD=$.pipedream4.pipedream__4_62__branch
 
 #PD=$(URD).pd
 PD=^.^

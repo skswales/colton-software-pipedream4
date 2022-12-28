@@ -1734,16 +1734,15 @@ formwind_pointershape_end_tracking(
 null_event_proto(static, formwind_pointershape_null_event)
 {
     FORMULA_WINDOW_HANDLE formwind = (FORMULA_WINDOW_HANDLE) p_null_event_block->client_handle;
-    wimp_mousestr pointer;
+    wimp_mousestr mouse;
 
     trace_0(TRACE_APP_EXPEDIT, "formwind null call");
 
-    if(NULL != wimp_get_point_info(&pointer))
-        return(NULL_EVENT_COMPLETED);
+    if(NULL != _swix(Wimp_GetPointerInfo, _IN(1), &mouse))
 
-    if(pointer.w == formwind->fw_main_window_handle) /* should be true, as we release null events when pointer leaves window */
+    if(mouse.w == formwind->fw_main_window_handle) /* should be true, as we release null events when pointer leaves window */
     {
-        switch((int)pointer.i)
+        switch((int)mouse.i)
         {
         case FORMWIND_FUNCTION_SELECTOR:
             trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu");

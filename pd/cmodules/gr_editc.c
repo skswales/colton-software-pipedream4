@@ -325,7 +325,7 @@ gr_chartedit_new(
     cep->notifyhandle = nproc ? nhandle : NULL;
 
     /* create window */
-    template_h = template_find_new(GR_CHARTEDIT_TEM);
+    template_h = (chart_template_ensure() ? template_find_new(GR_CHARTEDIT_TEM) : NULL);
 
     if(template_h)
     {
@@ -895,7 +895,7 @@ gr_editc_colourtrans_ReturnColourNumber(
 {
     _kernel_swi_regs rs;
     rs.r[0] = entry.word;
-    return(_kernel_swi(ColourTrans_ReturnColourNumber, &rs, &rs) ? 0 : rs.r[0]);
+    return(cs_kernel_swi(ColourTrans_ReturnColourNumber, &rs) ? 0 : rs.r[0]);
 }
 
 _Check_return_
@@ -910,7 +910,7 @@ gr_editc_colourtrans_SetGCOL(
     rs.r[3] = flags;
     rs.r[4] = gcol_action;
     assert((rs.r[3] & 0xfffffe7f) == 0); /* just bits 7 and 8 are valid */
-    return(_kernel_swi(ColourTrans_SetGCOL, &rs, &rs)); /* ignore gcol_out */
+    return(cs_kernel_swi(ColourTrans_SetGCOL, &rs)); /* ignore gcol_out */
 }
 
 _Check_return_
@@ -980,7 +980,7 @@ gr_riscdiag_path_render(
         rs.r[2] = (int) &path_xform          /* xform matrix  */;
                   /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
         rs.r[3] =       2 * GR_RISCDRAW_PER_RISCOS;
-        e = _kernel_swi(Draw_Fill, &rs, &rs);
+        e = cs_kernel_swi(Draw_Fill, &rs);
 #else
         e = drawmod_fill(bodge_path_seq /* path sequence */,
                          fill_Default   /* fill style    */,
@@ -1017,7 +1017,7 @@ gr_riscdiag_path_render(
         _kernel_swi_regs rs;
         rs.r[0] = 3;
         rs.r[1] = colnum_foreground ^ colnum_background;
-        (void) _kernel_swi(OS_SetColour, &rs, &rs);
+        (void) cs_kernel_swi(OS_SetColour, &rs);
 #endif
         } /*block*/
 
@@ -1046,7 +1046,7 @@ gr_riscdiag_path_render(
         rs.r[4] =       line.thickness;
         rs.r[5] = (int) &line.spec;
         rs.r[6] = (int) line.dash_pattern;
-        e = _kernel_swi(Draw_Stroke, &rs, &rs);
+        e = cs_kernel_swi(Draw_Stroke, &rs);
 #else
         e = drawmod_stroke(bodge_path_seq /* path sequence */,
                            fill           /* fill style    */,

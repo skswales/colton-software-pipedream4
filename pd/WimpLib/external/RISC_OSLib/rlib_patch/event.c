@@ -278,8 +278,8 @@
 -        event__recreation = 0 ;
 -        event__current_menu = p->maker(p->handle);
 -        m = (wimp_menuhdr*) menu_syshandle(event__current_menu);
-+        if(wimpt_complain(wimp_get_point_info(&ms))) { ms.bbits = (wimp_bbits) 0; }
-+        event_statics.recreatepending = ((ms.bbits & wimp_BRIGHT) == wimp_BRIGHT);
++        
++        event_statics.recreatepending = winx_adjustclicked();
        }
        else
        {

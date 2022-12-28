@@ -30,8 +30,8 @@
 exported functions from riscos.c
 */
 
-extern BOOL
-riscos_adjust_clicked(void);
+extern BOOL winx_adjustclicked(void);
+#define riscos_adjust_clicked() winx_adjustclicked()
 
 extern void
 riscos_caret_hide(void);

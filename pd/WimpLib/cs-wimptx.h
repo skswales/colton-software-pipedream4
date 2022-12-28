@@ -104,7 +104,11 @@ extern os_error *
 os_set_error(int errnum, const char * errmess);
 
 #ifndef RISC_OS_3_5
-#define RISC_OS_3_5 0xa5
+#define RISC_OS_3_5 0xA5
+#endif
+
+#ifndef RISC_OS_5
+#define RISC_OS_5 0xAA
 #endif
 
 extern void

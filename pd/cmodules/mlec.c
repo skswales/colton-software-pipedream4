@@ -683,7 +683,7 @@ mlec_get_desktop_font(void)
 
     rs.r[0] = 8;
 
-    if(NULL == (p_kernel_oserror = _kernel_swi(Wimp_ReadSysInfo, &rs, &rs)))
+    if(NULL == (p_kernel_oserror = cs_kernel_swi(Wimp_ReadSysInfo, &rs)))
         host_font = (HOST_FONT) rs.r[0];
 
     return(host_font);
@@ -708,7 +708,7 @@ mlec_find_font(
     rs.r[4] = 0;
     rs.r[5] = 0;
 
-    if(NULL == (p_kernel_oserror = (_kernel_swi(Font_FindFont, &rs, &rs))))
+    if(NULL == (p_kernel_oserror = (cs_kernel_swi(Font_FindFont, &rs))))
         host_font = (HOST_FONT) rs.r[0];
 
     return(host_font);
@@ -1338,7 +1338,7 @@ mlec__event_Key_Pressed(
 {
     int err = 0;
 
-    reportf(/*trace_1(TRACE_MODULE_MLEC,*/ "** Key_Pressed on EditBox pane window, key code=%d **", key_pressed->key_code);
+    // reportf(/*trace_1(TRACE_MODULE_MLEC,*/ "** Key_Pressed on EditBox pane window, key code=%d **", key_pressed->key_code);
 
     switch(key_pressed->key_code) /*>>>this is a load of crap, but it will do for now*/
     {
@@ -1496,7 +1496,7 @@ host_setfontcolours_for_mlec(
     rs.r[2] = rgb_fg.word;
     rs.r[3] = 14; /* max offset - some magic number, !Draw uses 14 */
 
-    (void) _kernel_swi(ColourTrans_SetFontColours, &rs, &rs);
+    (void) cs_kernel_swi(ColourTrans_SetFontColours, &rs);
 #endif
 }
 
@@ -2930,7 +2930,7 @@ render_line(
             rs.r[4] = y + base_line_shift;
             rs.r[7] = showcnt;
 
-            (void) _kernel_swi(Font_Paint, &rs, &rs);
+            (void) cs_kernel_swi(Font_Paint, &rs);
         }
         else
         {
@@ -3166,13 +3166,11 @@ null_event_proto(static, mlec__drag_null_handler_null_event)
     gdi_org.y = window_state.visible_area.ymax - window_state.yscroll;
     } /*block*/
 
-    { /* obtain mouse position relative to window origin */
+    /* obtain mouse position relative to window origin */
     wimp_mousestr mouse;
-    if( WrapOsErrorReporting_IsError(wimp_get_point_info(&mouse)) )
-        return(NULL_EVENT_COMPLETED);
+    (void) _swix(Wimp_GetPointerInfo, _IN(1), &mouse);
     rel_x = mouse.x - gdi_org.x;
     rel_y = mouse.y - gdi_org.y;
-    } /*block*/
 
     x = ( rel_x - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] +8 ) / 16;                 /* 8=half char width, 16=char width*/
     y = (-rel_y - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] -1) / mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
@@ -3539,7 +3537,7 @@ mlec_colourtrans_ReturnColourNumber(
 {
     _kernel_swi_regs rs;
     rs.r[0] = entry.word;
-    return(_kernel_swi(ColourTrans_ReturnColourNumber, &rs, &rs) ? 0 : rs.r[0]);
+    return(cs_kernel_swi(ColourTrans_ReturnColourNumber, &rs) ? 0 : rs.r[0]);
 }
 
 static void
@@ -3568,7 +3566,7 @@ host_set_EOR_for_mlec(void)
 
     rs.r[0] = 3;
     rs.r[1] = colnum_foreground ^ colnum_background;
-    (void) _kernel_swi(OS_SetColour, &rs, &rs);
+    (void) cs_kernel_swi(OS_SetColour, &rs);
 #endif
     } /*block*/
 }

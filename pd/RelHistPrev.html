@@ -89,7 +89,7 @@ It also sets up some keyboard shortcuts which were unintentionally left unmapped
 <p>PipeDream dialogue box buttons are now somewhat more RISC OS Style Guide (Issue 3) compliant.</p>
 <p>The standard <strong>File – Save</strong> dialogue box is now Style Guide compliant and less daunting. The full <strong>File – Save</strong> dialogue box is still available from the menu.</p>
 <p><code>!RunImage</code> has been reduced in size by about 10% by stripping C function names.</p>
-<p>PipeDream will start up using about 150KB less memory than 4.57.</p>
+<p>PipeDream will start up using about 150 KiB less memory than 4.57.</p>
 <p>Updated copy of RISC_OSLib used to avoid (rare) zero page accesses.</p>
 <p>Uses <code>*IconSprites !SpritesR4</code> on RISC OS 3, 4 and 6 (alternate pin position).</p>
 <p>Application resources have restructured within !PipeDream.  <code>PipeDream$Path</code> is set appropriately by the Loader. It is used to locate vital resources needed to run PipeDream e.g. messages, sprites and window templates, to locate most data presented by PipeDream to the user e.g. chart markers, master dictionary, printer drivers and also the user's data e.g. Choices, Key, command files, user dictionaries etc.<br />
@@ -515,7 +515,7 @@ Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CRV</p>
 <p>Use ColourPicker module to select chart colours rather than old dboxtcol.</p>
 <p>Uses 24-bit palette entries rather than copying nibbles a la RISC OS 2.</p>
 <p>Eliminate redundant Draw groups in chart text objects.</p>
-<p>Removed archaic Drawfile loading and rendering code from RISC_OSLib (saves about 34KB; only renders using Drawfile module).</p>
+<p>Removed archaic Drawfile loading and rendering code from RISC_OSLib (saves about 34 KiB; only renders using Drawfile module).</p>
 <p>Begin merge of PipeDream's copy of RISC_OSLib with modern one from ROOL.</p>
 <p>Allow matrix determinant to be calculated for larger sizes.</p>
 <h3><strong>4.50/35 (23 Mar 2012)</strong></h3>
@@ -567,11 +567,11 @@ Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CRV</p>
 <p><code>PROPER("barnes-wallis")</code> spreadsheet function now correctly returns <code>"Barnes-Wallis"</code>.</p>
 <p><code>VALUE()</code> spreadsheet function fixed to return 0 when presented with input that doesn't yield a numeric result.</p>
 <h3><strong>4.50/10 (28 May 1997)</strong></h3>
-<p>PipeDream now claims an extra 4KB of stack memory whilst starting up in order to prevent itself running out of memory whilst starting to print when this is invoked from the button bar.</p>
+<p>PipeDream now claims an extra 4 KiB of stack memory whilst starting up in order to prevent itself running out of memory whilst starting to print when this is invoked from the button bar.</p>
 <p>You can now raise negative numbers to odd fractional powers e.g. <code>(-8)^(1/3)</code> will find the cube root of two — in fact the cube root with zero imaginary part.</p>
 <p>Thin grid lines are now printed using a very small (but non-zero) line width in order to get round some printer driver faults.</p>
 <h3><strong>4.50/09 (27 Jan 1997)</strong></h3>
-<p>PipeDream now claims an extra 32KB of memory before starting to print in order to prevent itself running out of memory whilst printing.</p>
+<p>PipeDream now claims an extra 32 KiB of memory before starting to print in order to prevent itself running out of memory whilst printing.</p>
 <h3><strong>4.50/08 (17 Jan 1997)</strong></h3>
 <p><code>Ctrl-TAB</code> and <code>Shift-Ctrl-TAB</code> when text is in the editing line didn't enter the text into the edited slot before moving.</p>
 <p>Manual axis settings now override any automatically calculated limits. Data points beyond the min / max axis values are now clipped at the min / max axis values.</p>
