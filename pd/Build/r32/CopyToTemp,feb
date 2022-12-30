@@ -161,6 +161,7 @@ Set bld$Resources$Dir   <Obey$Dir>.!PipeDream.Resources
 %CDir                                                           <pd$Disc>.Z.Resources.UK
 %CDir                                                           <pd$Disc>.Z.Resources.UK.RISC_OS
 | Built resources - Messages and Sprite files
+%Copy <bld$Resources$Dir>.UK.RISC_OS.HelpMess                   <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
 %Copy <bld$Resources$Dir>.UK.RISC_OS.Messages                   <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
 %Copy <bld$Resources$Dir>.UK.RISC_OS.Sprites                    <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
 %Copy <bld$Resources$Dir>.UK.RISC_OS.Sprites11                  <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v

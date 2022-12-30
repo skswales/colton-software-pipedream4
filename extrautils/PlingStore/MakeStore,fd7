@@ -12,7 +12,7 @@
 
 | NB As this whole bundle will be named in !Store
 Set pd$Release pd-46200
-|et pd$Release pd-46101
+Set pd$Release pd-46201
 
 Set MakeStore$Dir <Obey$Dir>
 
