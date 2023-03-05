@@ -79,6 +79,25 @@ viewsheet_load_core(
     _InoutRef_  P_ROW p_insert_numrow,
     _InoutRef_  P_BOOL p_breakout);
 
+static U32
+best_file_buffer_size(void)
+{
+    uint32_t page_size, n_pages;
+    if(0 == _swix(OS_ReadMemMapInfo, _OUTR(0,1), &page_size, &n_pages))
+    {
+        uint64_t total_size = n_pages * (uint64_t) page_size;
+        // reportf("OS_ReadMemMapInfo: %u pages of %u bytes = %" PRIu64 "MB", n_pages, page_size, total_size >> 20);
+
+        if(total_size > 16*1024*1024) /* 'modern' enough */
+            return(64*1024);
+
+        if(total_size >= 4*1024*1024) /* [4..16] is A440..A540 territory */
+            return(16*1024);
+    }
+    
+    return(4*1024);
+}
+
 /* ----------------------------------------------------------------------- */
 
 enum PD_CONSTRUCT_OFFSETS
@@ -1104,7 +1123,7 @@ savefile_core(
     if(NULL == (output = pd_file_open(filename, file_open_write)))
         return(reperr_null(ERR_CANNOTOPEN));
 
-    (void) file_buffer(output, NULL, 16*1024); /* no messing about for save */
+    (void) file_buffer(output, NULL, best_file_buffer_size()); /* no messing about for save */
 
     /* file successfully opened at this point */
 
@@ -3526,7 +3545,7 @@ loadfile_core(
     if(NULL == (loadinput = pd_file_open(filename, file_open_read)))
         return(reperr(ERR_CANNOTOPEN, filename));
 
-    (void) file_buffer(loadinput, NULL, 16*1024); /* no messing about for load */
+    (void) file_buffer(loadinput, NULL, best_file_buffer_size()); /* no messing about for load */
 
     flength = file_length(loadinput);
     /* we're going to divide by this */

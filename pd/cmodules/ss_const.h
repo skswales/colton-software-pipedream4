@@ -418,6 +418,11 @@ ss_array_make(
     _InVal_     S32 x_size,
     _InVal_     S32 y_size);
 
+extern void
+ss_data_set_integer_fn(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     S32 s32);
+
 _Check_return_
 extern bool
 ss_data_get_logical(

@@ -198,7 +198,7 @@ PROC_EXEC_PROTO(c_col)
 
     col_result = (S32) col + 1;
 
-    ss_data_set_integer(p_ss_data_res, col_result);
+    ss_data_set_integer_fn(p_ss_data_res, col_result);
 }
 
 /******************************************************************************
@@ -222,7 +222,7 @@ PROC_EXEC_PROTO(c_cols)
         cols_result = (S32) x_size;
     }
 
-    ss_data_set_integer(p_ss_data_res, cols_result);
+    ss_data_set_integer_fn(p_ss_data_res, cols_result);
 }
 
 /******************************************************************************
@@ -440,7 +440,7 @@ PROC_EXEC_PROTO(c_row)
 
     row_result = (S32) row + 1;
 
-    ss_data_set_integer(p_ss_data_res, row_result);
+    ss_data_set_integer_fn(p_ss_data_res, row_result);
 }
 
 /******************************************************************************
@@ -464,7 +464,7 @@ PROC_EXEC_PROTO(c_rows)
         rows_result = (S32) y_size;
     }
 
-    ss_data_set_integer(p_ss_data_res, rows_result);
+    ss_data_set_integer_fn(p_ss_data_res, rows_result);
 }
 
 /******************************************************************************
@@ -955,7 +955,7 @@ PROC_EXEC_PROTO(c_page)
 
     page_result = (S32) status + 1;
 
-    ss_data_set_integer(p_ss_data_res, page_result);
+    ss_data_set_integer_fn(p_ss_data_res, page_result);
 }
 
 /******************************************************************************
@@ -976,7 +976,7 @@ PROC_EXEC_PROTO(c_pages)
 
     pages_result = (S32) status;
 
-    ss_data_set_integer(p_ss_data_res, pages_result);
+    ss_data_set_integer_fn(p_ss_data_res, pages_result);
 }
 
 #endif
@@ -1157,7 +1157,7 @@ PROC_EXEC_PROTO(c_odf_type)
         break;
     }
 
-    ss_data_set_integer(p_ss_data_res, odf_type_result);
+    ss_data_set_integer_fn(p_ss_data_res, odf_type_result);
 }
 
 #endif

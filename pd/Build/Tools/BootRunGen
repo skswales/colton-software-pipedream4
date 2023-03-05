@@ -147,10 +147,6 @@ iso_date$ = $convert_blk%
 text_date$ = MID$(TIME$,5,11)
 version_and_date$ = version$+" ("+text_date$+")"
 PROCo(f%,"| "+file$+" file for "+true_product$+postfix$+" "+version_and_date$)
-IF NOT boot% THEN
-PROCo(f%,"|")
-  PROCo(f%,FNif_nz_then(FNvar_product("Running"))+"Error 0 "+true_product$+" is already running")
-ENDIF
 PROCo(f%,"|")
 IF alternate% THEN
   PROCs(f%,FNvar_product("Dir"),"<Obey$Dir>.!"+appl_product$,boot%)
@@ -371,11 +367,15 @@ IF release% THEN
     PROCo(f%,"Run "+product$+":RISC_OS.ImageSlot "+var_product_dir$+".!RunImage "+imageslotparm$)
   ELSE
     REM Use our determined slot size to generate arguments to WimpSlot command
+    REM NB min/max are usually crossed here
+    wimpslotparm_min$ = "-min "+STR$(FNround_up(slot_size% + imageslotparm_1% + imageslotparm_2%, 32768)/1024)+"K"
+    wimpslotparm_max$ = "-max "+STR$(FNround_up(slot_size% + imageslotparm_1%, 32768)/1024)+"K"
+    PRINT "WimpSlot "+wimpslotparm_min$+" "+wimpslotparm_max$+" (effective on old 4MB systems)"
     REM Round up to 16KB (not 32KB) here to maximise free memory for 2MB systems
     REM Note that may end up with some trivial wastage on modern 4KB page systems
-    REM NB min/max are usually crossed here
     wimpslotparm_min$ = "-min "+STR$(FNround_up(slot_size% + imageslotparm_1% + imageslotparm_2%, 16384)/1024)+"K"
     wimpslotparm_max$ = "-max "+STR$(FNround_up(slot_size% + imageslotparm_1%, 16384)/1024)+"K"
+    PRINT "WimpSlot "+wimpslotparm_min$+" "+wimpslotparm_max$+" (effective on old 2MB systems)"
     IF TRUE THEN
     REM Hell, if it works on a 4KB page system, it will do on a larger page one!
     wimpslotparm_min$ = "-min "+STR$(FNround_up(slot_size% + imageslotparm_1% + imageslotparm_2%, 4096)/1024)+"K"

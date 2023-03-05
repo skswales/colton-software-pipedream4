@@ -128,7 +128,7 @@ PROC_EXEC_PROTO(c_code)
     if(0 != uchars_n)
         code_result = (S32) PtrGetByte(uchars);
 
-    ss_data_set_integer(p_ss_data_res, code_result);
+    ss_data_set_integer_fn(p_ss_data_res, code_result);
 }
 
 /******************************************************************************
@@ -291,7 +291,7 @@ PROC_EXEC_PROTO(c_find)
     if(NULL != (uchars = (PC_UCHARS) memstr32(uchars_AddBytes(ss_data_get_string(args[1]), start_n), find_len - start_n, ss_data_get_string(args[0]), ss_data_get_string_size(args[0])))) /*strstr replacement*/
         find_result = 1 + PtrDiffBytesS32(uchars, ss_data_get_string(args[1]));
 
-    ss_data_set_integer(p_ss_data_res, find_result);
+    ss_data_set_integer_fn(p_ss_data_res, find_result);
 }
 
 #if 0 /* just for diff minimization */
@@ -445,7 +445,7 @@ PROC_EXEC_PROTO(c_length)
 
     exec_func_ignore_parms();
 
-    ss_data_set_integer(p_ss_data_res, length_result);
+    ss_data_set_integer_fn(p_ss_data_res, length_result);
 }
 
 /******************************************************************************
@@ -521,7 +521,7 @@ PROC_EXEC_PROTO(c_n)
     switch(ss_data_get_data_id(args[0]))
     {
     case DATA_ID_LOGICAL:
-        ss_data_set_integer(p_ss_data_res, (S32) ss_data_get_logical(args[0]));
+        ss_data_set_integer_fn(p_ss_data_res, (S32) ss_data_get_logical(args[0]));
         break;
 
     case DATA_ID_DATE:
@@ -531,7 +531,7 @@ PROC_EXEC_PROTO(c_n)
 
     case DATA_ID_STRING:
         /* can't discriminate here between strings and text cells */
-        ss_data_set_integer(p_ss_data_res, 0);
+        ss_data_set_integer_fn(p_ss_data_res, 0);
         break;
 
     default:
@@ -980,7 +980,8 @@ PROC_EXEC_PROTO(c_value)
 
     if(0 == len)
     {
-        ss_data_set_integer(p_ss_data_res, 0); /* SKS 08sep97 now behaves as documented */
+        ss_data_set_integer_fn(p_ss_data_res, 0); /* SKS 08sep97 now behaves as documented */
+        return;
     }
     else
     {
@@ -1000,7 +1001,7 @@ PROC_EXEC_PROTO(c_value)
         ss_data_set_real_try_integer(p_ss_data_res, ui_strtod(ustr_bptr(buffer), &ptr));
 
         if(0 == PtrDiffBytesU32(ptr, buffer))
-            ss_data_set_integer(p_ss_data_res, 0); /* SKS 08sep97 now behaves as documented */
+            ss_data_set_integer_fn(p_ss_data_res, 0); /* SKS 08sep97 now behaves as documented */
     }
 }
 

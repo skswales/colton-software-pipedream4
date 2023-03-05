@@ -601,7 +601,7 @@ convert_number_spreadsheet(
         if(ss_data_get_real(&p_numform_info->ss_data) > (F64) S32_MAX)
             p_numform_info->spreadsheet = 0;
         else
-            ss_data_set_integer(&p_numform_info->ss_data, (S32) real_floor(ss_data_get_real(&p_numform_info->ss_data) + 0.5)); /* round prior to force */ /* already range checked so should convert OK */
+            ss_data_set_integer_fn(&p_numform_info->ss_data, (S32) real_floor(ss_data_get_real(&p_numform_info->ss_data) + 0.5)); /* round prior to force */ /* already range checked so should convert OK */
     }
 
     /* all integer args are representable in spreadsheet format */
@@ -1044,7 +1044,7 @@ numform(
         }
         else if(ss_data_get_integer(&numform_info.ss_data) < 0)
         {
-            ss_data_set_integer(&numform_info.ss_data, 0 - ss_data_get_integer(&numform_info.ss_data));
+            ss_data_set_integer_fn(&numform_info.ss_data, 0 - ss_data_get_integer(&numform_info.ss_data));
             assert(ss_data_get_integer(&numform_info.ss_data) > 0); /* watch out for S32_MIN - that should never have got into an integer value */
             numform_info.number.negative = 1;
         }

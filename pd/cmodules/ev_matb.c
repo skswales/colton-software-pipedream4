@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2022 Stuart Swales */
+/* Copyright (C) 2014-2023 Stuart Swales */
 
 /* More mathematical function routines for evaluator */
 
@@ -440,7 +440,7 @@ PROC_EXEC_PROTO(c_odf_mod)
             }
         }
 
-        ss_data_set_integer(p_ss_data_res, s32_odf_mod_result);
+        ss_data_set_integer_fn(p_ss_data_res, s32_odf_mod_result);
         break;
         }
 

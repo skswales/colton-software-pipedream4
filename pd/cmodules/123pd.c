@@ -459,7 +459,7 @@ main(
     const char * outfile;
 
     /* banner */
-    puts("PipeDream to Lotus 1-2-3 converter: (C) Colton Software 1988-2022");
+    puts("PipeDream to Lotus 1-2-3 converter: (C) 1988-2023 Colton Software");
 
     /* argument checking */
     if(argc < 3)

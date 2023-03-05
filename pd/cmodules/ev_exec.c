@@ -61,7 +61,7 @@ PROC_EXEC_PROTO(c_uop_minus)
     if(ss_data_is_real(args[0]))
         ss_data_set_real(p_ss_data_res, -ss_data_get_real(args[0]));
     else
-        ss_data_set_integer(p_ss_data_res, -ss_data_get_integer(args[0]));
+        ss_data_set_integer_fn(p_ss_data_res, -ss_data_get_integer(args[0]));
 }
 
 /******************************************************************************
@@ -246,7 +246,7 @@ date_subtract_date_calc(
     }
     else
     {
-        ss_data_set_integer(p_ss_data_res,
+        ss_data_set_integer_fn(p_ss_data_res,
                             (ss_data_get_date(p_ss_data_res)->date
                                     ? ss_data_get_date(p_ss_data_res)->date
                                     : ss_data_get_date(p_ss_data_res)->time));
@@ -1065,7 +1065,7 @@ array_range_proc_finish_running_data(
         case DATA_ID_LOGICAL: /* really shouldn't occur */
         case DATA_ID_WORD16:
         case DATA_ID_WORD32:
-            ss_data_set_integer(p_ss_data, ss_data_get_integer(&p_stat_block->running_data));
+            ss_data_set_integer_fn(p_ss_data, ss_data_get_integer(&p_stat_block->running_data));
             break;
         }
     }
@@ -1116,7 +1116,7 @@ array_range_proc_finish_COUNT(
     _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    ss_data_set_integer(p_ss_data, p_stat_block->count);
+    ss_data_set_integer_fn(p_ss_data, p_stat_block->count);
 }
 
 static void
@@ -1124,7 +1124,7 @@ array_range_proc_finish_COUNTA(
     _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    ss_data_set_integer(p_ss_data, p_stat_block->count_a);
+    ss_data_set_integer_fn(p_ss_data, p_stat_block->count_a);
 }
 
 _Check_return_
@@ -1312,7 +1312,7 @@ array_range_proc_item_add(
         args[0] = p_ss_data;
         args[1] = &p_stat_block->running_data;
 
-        c_bop_add(args, 2, &result_data, &dummy_slr);
+        c_bop_add(&result_data, args, 2, &dummy_slr);
 
         p_stat_block->running_data = result_data;
     }
@@ -1372,7 +1372,7 @@ array_range_proc_number_integer_MAX(
     PC_SS_DATA p_ss_data)
 {
     if( (0 == p_stat_block->count) || (ss_data_get_integer(p_ss_data) > ss_data_get_integer(&p_stat_block->running_data)) )
-        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
+        ss_data_set_integer_fn(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
 
     return(true);
 }
@@ -1384,7 +1384,7 @@ array_range_proc_number_integer_MIN(
     PC_SS_DATA p_ss_data)
 {
     if( (0 == p_stat_block->count) || (ss_data_get_integer(p_ss_data) < ss_data_get_integer(&p_stat_block->running_data)) )
-        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
+        ss_data_set_integer_fn(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
 
     return(true);
 }
@@ -1397,9 +1397,9 @@ array_range_proc_number_integer_sum(
 {
     /* only dealing with individual narrower integer types here but SKS shows this may eventually overflow WORD16 */
     if(0 == p_stat_block->count)
-        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
+        ss_data_set_integer_fn(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
     else
-        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data) + ss_data_get_integer(&p_stat_block->running_data));
+        ss_data_set_integer_fn(&p_stat_block->running_data, ss_data_get_integer(p_ss_data) + ss_data_get_integer(&p_stat_block->running_data));
 
     return(true);
 }
@@ -1976,7 +1976,7 @@ lookup_finish(
 
     case LOOKUP_MATCH:
         if(p_stack_lookup->p_lookup_block->in_array)
-            ss_data_set_integer(p_ss_data_res, p_stack_lookup->p_lookup_block->count);
+            ss_data_set_integer_fn(p_ss_data_res, p_stack_lookup->p_lookup_block->count);
         else
             ss_data_resource_copy(p_ss_data_res, &p_stack_lookup->p_lookup_block->result_data);
         break;
@@ -2066,7 +2066,7 @@ stat_block_init(
     p_stat_block->parm1       = parm1;
     p_stat_block->result1     = 0;
 
-    ss_data_set_integer(&p_stat_block->running_data, 0);
+    ss_data_set_integer(&p_stat_block->running_data, 0); /* NB _fn disruptive */
 
     switch(function_id)
     {

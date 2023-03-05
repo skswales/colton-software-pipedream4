@@ -15,11 +15,15 @@
 
 #include "cmodules/mathxcpx.h"
 
-#include "cmodules/mathxtra.h" /* for mx_fsquare() */
+#include "cmodules/mathxtra.h" /* for mathxtra_square() */
 
-#ifndef                   __mathnums_h
+#ifndef                     MATHNUMS_H
 #include "cmodules/coltsoft/mathnums.h" /* for _log10_e */
 #endif
+
+#pragma no_check_stack /* nothing goes deep here */
+
+#define mathxtra_square mx_fsquare /* for transition */
 
 /*
 internal functions
@@ -36,14 +40,13 @@ enum HYP_FN_TYPE
 
 #define PC_DBL PC_F64
 
-_Check_return_ _Success_(status_ok(return))
-static STATUS
+_Check_return_
+static COMPLEX
 do_inverse_hyperbolic(
-    _InVal_     enum HYP_FN_TYPE type,
     _InRef_     PC_COMPLEX z_in,
+    _InVal_     enum HYP_FN_TYPE type,
     _InRef_opt_ PC_DBL mult_z_by_i,
-    _InRef_opt_ PC_DBL mult_res_by_i,
-    _OutRef_    P_COMPLEX z_out);
+    _InRef_opt_ PC_DBL mult_res_by_i);
 
 #endif /* defined(USE_OWN_COMPLEX_IMPL) */
 
@@ -76,6 +79,28 @@ complex_Re_one_half = COMPLEX_INIT( 0.5, 0.0 );
 
 /******************************************************************************
 *
+* complex infinity
+*
+******************************************************************************/
+
+static const COMPLEX
+complex_infinity = COMPLEX_INIT( INFINITY, INFINITY );
+
+/******************************************************************************
+*
+* complex NaN
+*
+******************************************************************************/
+
+#if defined(UNUSED_IN_PD) || defined(USE_OWN_COMPLEX_IMPL)
+
+static const COMPLEX
+complex_nan = COMPLEX_INIT( NAN, NAN );
+
+#endif /* UNUSED_IN_PD */
+
+/******************************************************************************
+*
 * return modulus of complex number
 *
 ******************************************************************************/
@@ -88,6 +113,8 @@ complex_modulus( /* |z| */
 #if defined(USE_OWN_COMPLEX_IMPL)
     return(hypot(complex_real(z), complex_imag(z)));
 #else
+    // See C99 7.3.8.1, G.6
+    // no error case
     return(cabs(*z));
 #endif
 }
@@ -104,8 +131,14 @@ complex_argument( /* arg(z) */
     _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
+    // See C99 7.12.4.4, F.9.1.4
+    // domain error (NaN) *possible* when both inputs are 0
+    // value returned in [-pi, +pi]
     return(atan2(complex_imag(z), complex_real(z))); /* note silly C library ordering (y, x) */
 #else
+    // See C99 7.3.9.1, G.6
+    // no error case
+    // value returned in [-pi, +pi]
     return(carg(*z));
 #endif
 }
@@ -118,18 +151,17 @@ complex_argument( /* arg(z) */
 *
 ******************************************************************************/
 
-extern void
+_Check_return_
+extern COMPLEX
 complex_add( /* z1 + z2 */
     _InRef_     PC_COMPLEX z1,
-    _InRef_     PC_COMPLEX z2,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z2)
 {
 #if defined(USE_OWN_COMPLEX_IMPL) || defined(_MSC_VER)
-    complex_set_ri(z_out,
-                   /*r*/ complex_real(z1) + complex_real(z2),
-                   /*i*/ complex_imag(z1) + complex_imag(z2));
+    return(complex_ri( /*r*/ complex_real(z1) + complex_real(z2),
+                       /*i*/ complex_imag(z1) + complex_imag(z2) ));
 #else
-    *z_out = (*z1) + (*z2);
+    return(*z1 + *z2);
 #endif
 }
 
@@ -141,18 +173,17 @@ complex_add( /* z1 + z2 */
 *
 ******************************************************************************/
 
-extern void
+_Check_return_
+extern COMPLEX
 complex_subtract( /* z1 - z2 */
     _InRef_     PC_COMPLEX z1,
-    _InRef_     PC_COMPLEX z2,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z2)
 {
 #if defined(USE_OWN_COMPLEX_IMPL) || defined(_MSC_VER)
-    complex_set_ri(z_out,
-                   /*r*/ complex_real(z1) - complex_real(z2),
-                   /*i*/ complex_imag(z1) - complex_imag(z2));
+    return(complex_ri( /*r*/ complex_real(z1) - complex_real(z2),
+                       /*i*/ complex_imag(z1) - complex_imag(z2) ));
 #else
-    *z_out = (*z1) - (*z2);
+    return(*z1 - *z2);
 #endif
 }
 
@@ -164,20 +195,19 @@ complex_subtract( /* z1 - z2 */
 *
 ******************************************************************************/
 
-extern void
+_Check_return_
+extern COMPLEX
 complex_multiply( /* z1 * z2 */
     _InRef_     PC_COMPLEX z1,
-    _InRef_     PC_COMPLEX z2,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z2)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    complex_set_ri(z_out,
-                   /*r*/ complex_real(z1) * complex_real(z2) - complex_imag(z1) * complex_imag(z2),
-                   /*i*/ complex_imag(z1) * complex_real(z2) + complex_real(z1) * complex_imag(z2));
+    return(complex_ri( /*r*/ complex_real(z1) * complex_real(z2) - complex_imag(z1) * complex_imag(z2),
+                       /*i*/ complex_imag(z1) * complex_real(z2) + complex_real(z1) * complex_imag(z2) ));
 #elif defined(_MSC_VER)
-    complex_set(z_out, _Cmulcc((*z1), (*z2)));
+    return(_Cmulcc((*z1), (*z2)));
 #else
-    *z_out = (*z1) * (*z2);
+    return(*z1 * *z2);
 #endif
 }
 
@@ -189,29 +219,25 @@ complex_multiply( /* z1 * z2 */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
+_Check_return_
+extern COMPLEX
 complex_divide( /* z1 / z2 */
     _InRef_     PC_COMPLEX z1,
-    _InRef_     PC_COMPLEX z2,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z2)
 {
     /* c*c + d*d */
-    const double divisor = mx_fsquare(complex_real(z2)) + mx_fsquare(complex_imag(z2));
+    const double divisor = mathxtra_square(complex_real(z2)) + mathxtra_square(complex_imag(z2));
 
     /* check for divide by zero about to trap */
     if(fabs(divisor) < DBL_MIN)
-        return(EVAL_ERR_DIVIDEBY0);
+        return(complex_infinity);
 
 #if defined(USE_OWN_COMPLEX_IMPL) || defined(_MSC_VER)
-    complex_set_ri(z_out,
-                   /*r*/ (complex_real(z1) * complex_real(z2) + complex_imag(z1) * complex_imag(z2)) / divisor,
-                   /*i*/ (complex_imag(z1) * complex_real(z2) - complex_real(z1) * complex_imag(z2)) / divisor);
+    return(complex_ri( /*r*/ (complex_real(z1) * complex_real(z2) + complex_imag(z1) * complex_imag(z2)) / divisor,
+                       /*i*/ (complex_imag(z1) * complex_real(z2) - complex_real(z1) * complex_imag(z2)) / divisor ));
 #else
-    *z_out = (*z1) / (*z2);
+    return(*z1 / *z2);
 #endif
-
-    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -220,19 +246,22 @@ complex_divide( /* z1 / z2 */
 *
 ******************************************************************************/
 
-extern void
+#if defined(UNUSED_IN_PD)
+
+_Check_return_
+extern COMPLEX
 complex_conjugate( /* conj(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
-#if defined(USE_OWN_COMPLEX_IMPL)
-    complex_set_ri(z_out,
-                   /*r*/   complex_real(z),
-                   /*i*/ - complex_imag(z));
+#if defined(USE_OWN_COMPLEX_IMPL) || defined(__SOFTFP__) /* compiler barf */
+    return(complex_ri( /*r*/   complex_real(z),
+                       /*i*/ - complex_imag(z) ));
 #else
-    *z_out = conj(*z);
+    return(conj(*z));
 #endif
 }
+
+#endif /* UNUSED_IN_PD */
 
 /******************************************************************************
 *
@@ -240,22 +269,33 @@ complex_conjugate( /* conj(z) */
 *
 * exp(a+ib) = exp(a) * cos(b) + i(exp(a) * sin(b))
 *
+* notes on real cos() function:
+*   See C99 7.12.4.5, F.9.1.1
+*   domain error (NaN) for ±inf input
+*   range error *possible* for large magnitude input (imprecise value)
+*   value returned in [-1, +1]
+*
+* notes on real sin() function:
+*   See C99 7.12.4.6, F.9.1.6
+*   domain error (NaN) for ±inf input
+*   range error *possible* for large magnitude input (imprecise value)
+*   value returned in [-1, +1]
+*
 ******************************************************************************/
 
-extern void
+_Check_return_
+extern COMPLEX
 complex_exp( /* e^z */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     /* make exp(a) */
     const double exp_a = exp(complex_real(z));
 
-    complex_set_ri(z_out,
-                   /*r*/ exp_a * cos(complex_imag(z)),
-                   /*i*/ exp_a * sin(complex_imag(z)));
+    return(complex_ri( /*r*/ exp_a * cos(complex_imag(z)),
+                       /*i*/ exp_a * sin(complex_imag(z)) ));
 #else
-    *z_out = cexp(*z);
+    return(cexp(*z));
 #endif
 }
 
@@ -269,32 +309,24 @@ complex_exp( /* e^z */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
+_Check_return_
+extern COMPLEX
 complex_log_e( /* log_e(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
-    STATUS status = STATUS_OK;
 #if defined(USE_OWN_COMPLEX_IMPL)
-    const double r_squared = mx_fsquare(complex_real(z)) + mx_fsquare(complex_imag(z));
-    double lnz_real_part;
+    const double r_squared = mathxtra_square(complex_real(z)) + mathxtra_square(complex_imag(z));
 
-    errno = 0;
+    if(0.0 == r_squared)
+        return(complex_nan); /* ln(0) is undefined */
 
-    lnz_real_part = log(r_squared) * 0.5; /* x saves a sqrt() */
+    const double ln_z_real_part = log(r_squared) * 0.5; /* x saves a sqrt() */
 
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        status = EVAL_ERR_BAD_LOG;
-
-    complex_set_ri(z_out,
-                   /*r*/ lnz_real_part,
-                   /*i*/ complex_argument(z));
+    return(complex_ri( /*r*/ ln_z_real_part,
+                       /*i*/ complex_argument(z) ));
 #else
-    *z_out = clog(*z);
+    return(clog(*z));
 #endif
-
-    return(status);
 }
 
 /******************************************************************************
@@ -307,29 +339,25 @@ complex_log_e( /* log_e(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
+#if defined(UNUSED_IN_PD)
+
+_Check_return_
+extern COMPLEX
 complex_log_2( /* log_2(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
-    const double r_squared = mx_fsquare(complex_real(z)) + mx_fsquare(complex_imag(z));
-    double log2_real_part;
-    STATUS status = STATUS_OK;
+    const double r_squared = mathxtra_square(complex_real(z)) + mathxtra_square(complex_imag(z));
 
-    errno = 0;
+    if(0.0 == r_squared)
+        return(complex_nan); /* ln(0) is undefined */
 
-    log2_real_part = log2(r_squared) * 0.5; /* x saves a sqrt() */
+    const double log2_real_part = log2(r_squared) * 0.5; /* x saves a sqrt() */
 
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        status = EVAL_ERR_BAD_LOG;
-
-    complex_set_ri(z_out,
-                   /*r*/ log2_real_part,
-                   /*i*/ complex_argument(z) * _log2_e); /* rotate */
-
-    return(status);
+    return(complex_ri( /*r*/ log2_real_part,
+                       /*i*/ complex_argument(z) * _log2_e )); /* rotate */
 }
+
+#endif /* UNUSED_IN_PD */
 
 /******************************************************************************
 *
@@ -341,29 +369,25 @@ complex_log_2( /* log_2(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
+#if defined(UNUSED_IN_PD)
+
+_Check_return_
+extern COMPLEX
 complex_log_10( /* log_10(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
-    const double r_squared = mx_fsquare(complex_real(z)) + mx_fsquare(complex_imag(z));
-    double log10_real_part;
-    STATUS status = STATUS_OK;
+    const double r_squared = mathxtra_square(complex_real(z)) + mathxtra_square(complex_imag(z));
 
-    errno = 0;
+    if(0.0 == r_squared)
+        return(complex_nan); /* ln(0) is undefined */
 
-    log10_real_part = log10(r_squared) * 0.5; /* x saves a sqrt() */
+    const double log10_real_part = log10(r_squared) * 0.5; /* x saves a sqrt() */
 
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        status = EVAL_ERR_BAD_LOG;
-
-    complex_set_ri(z_out,
-                   /*r*/ log10_real_part,
-                   /*i*/ complex_argument(z) * _log10_e); /* rotate */
-
-    return(status);
+    return(complex_ri( /*r*/ log10_real_part,
+                       /*i*/ complex_argument(z) * _log10_e )); /* rotate */
 }
+
+#endif /* UNUSED_IN_PD */
 
 #if defined(USE_OWN_COMPLEX_IMPL)
 
@@ -373,22 +397,21 @@ complex_log_10( /* log_10(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-static STATUS
-complex_wlnz(
+_Check_return_
+static COMPLEX
+complex_w_ln_z(
     _InRef_     PC_COMPLEX w,
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX ln_z;
+    const double Re_w = complex_real(w);
+    const double Im_w = complex_imag(w);
 
-    status_return(complex_log_e(z, &ln_z));
+    const COMPLEX ln_z = complex_log_e(z);
+    const double Re_ln_z = complex_real(&ln_z);
+    const double Im_ln_z = complex_imag(&ln_z);
 
-    complex_set_ri(z_out,
-                   /*r*/ complex_real(w) * complex_real(&ln_z)  -  complex_imag(w) * complex_imag(&ln_z),
-                   /*i*/ complex_real(w) * complex_imag(&ln_z)  +  complex_imag(w) * complex_real(&ln_z));
-
-    return(STATUS_OK);
+    return(complex_ri( /*r*/ Re_w * Re_ln_z  -  Im_w * Im_ln_z,
+                       /*i*/ Re_w * Im_ln_z  +  Im_w * Re_ln_z ));
 }
 
 #endif /* USE_OWN_COMPLEX_IMPL */
@@ -399,27 +422,23 @@ complex_wlnz(
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
+_Check_return_
+extern COMPLEX
 complex_power( /* z1^z2 */
     _InRef_     PC_COMPLEX z1,
-    _InRef_     PC_COMPLEX z2,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z2)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    COMPLEX wlnz;
+    /* find and check w*ln(z) */
+    const COMPLEX w_ln_z = complex_w_ln_z(z2, z1);
+    const double Re_w_ln_z = complex_real(&w_ln_z);
+    const double Im_w_ln_z = complex_imag(&w_ln_z);
 
-    /* find and check wlnz */
-    status_return(complex_wlnz(z2, z1, &wlnz));
-
-    complex_set_ri(z_out,
-                   /*r*/ exp(complex_real(&wlnz)) * cos(complex_imag(&wlnz)),
-                   /*i*/ exp(complex_real(&wlnz)) * sin(complex_imag(&wlnz)));
+    return(complex_ri( /*r*/ exp(Re_w_ln_z) * cos(Im_w_ln_z),
+                       /*i*/ exp(Re_w_ln_z) * sin(Im_w_ln_z) ));
 #else
-    *z_out = cpow(*z1, *z2);
+    return(cpow(*z1, *z2));
 #endif
-
-    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -428,29 +447,47 @@ complex_power( /* z1^z2 */
 *
 ******************************************************************************/
 
-extern void
-complex_square_root( /* square root : sqrt(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+#if defined(UNUSED_IN_PD) || defined(USE_OWN_COMPLEX_IMPL)
+
+_Check_return_
+extern COMPLEX
+complex_square_root( /* sqrt(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     if( (0.0 == complex_real(z)) && (0.0 == complex_imag(z)) )
-    {
-        *z_out = complex_zero;
-        return;
-    }
+        return(complex_zero);
 
-    status_consume(complex_power(z, &complex_Re_one_half, z_out));
+    return(complex_power(z, &complex_Re_one_half));
 #else
-    *z_out = csqrt(*z);
+    return(csqrt(*z));
 #endif
 }
+
+#endif /* UNUSED_IN_PD */
 
 /******************************************************************************
 *
 * complex trig functions and their inverses
 *
 ******************************************************************************/
+
+#pragma force_fpargs_in_regs
+static COMPLEX
+complex_reciprocal(
+    _InVal_     COMPLEX z)
+{
+    return(complex_Re_one / z);
+}
+#pragma no_force_fpargs_in_regs
+
+static void
+complex_reciprocal_helper(
+    _InRef_     PC_COMPLEX z,
+    _OutRef_    P_COMPLEX z_out)
+{
+    *z_out = complex_reciprocal(*z);
+}
 
 /******************************************************************************
 *
@@ -460,21 +497,21 @@ complex_square_root( /* square root : sqrt(z) */
 *
 ******************************************************************************/
 
-extern void
-complex_cosine( /* cosine : cos(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_cosine( /* cos(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     /* make exp(b) and exp(-b) */
     const double exp_b = exp(complex_imag(z));
     const double exp_mb = 1.0 / exp_b;
+    const double Re_z = complex_real(z);
 
-    complex_set_ri(z_out,
-                   /*r*/ (exp_mb + exp_b) * cos(complex_real(z)) * 0.5,
-                   /*i*/ (exp_mb - exp_b) * sin(complex_real(z)) * 0.5);
+    return(complex_ri( /*r*/ (exp_mb + exp_b) * cos(Re_z) * 0.5,
+                       /*i*/ (exp_mb - exp_b) * sin(Re_z) * 0.5 ));
 #else
-    *z_out = ccos(*z);
+    return(ccos(*z));
 #endif
 }
 
@@ -484,20 +521,17 @@ complex_cosine( /* cosine : cos(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_arc_cosine( /* arc cosine : arccos(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_arc_cosine( /* arccos(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     static const double c_acos_mult_res = +1.0;
 
-    return(do_inverse_hyperbolic(C_COSH, z, NULL, &c_acos_mult_res, z_out));
+    return(do_inverse_hyperbolic(z, C_COSH, NULL, &c_acos_mult_res));
 #else
-    *z_out = cacos(*z);
-
-    return(STATUS_OK);
+    return(cacos(*z));
 #endif
 }
 
@@ -509,17 +543,12 @@ complex_arc_cosine( /* arc cosine : arccos(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_secant( /* secant : sec(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_secant( /* sec(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX cos_z;
-
-    complex_cosine(z, &cos_z);
-
-    return(complex_reciprocal(&cos_z, z_out));
+    return(complex_reciprocal(complex_cosine(z)));
 }
 
 /******************************************************************************
@@ -528,17 +557,14 @@ complex_secant( /* secant : sec(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_arc_secant( /* arc secant : arcsec(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_arc_secant( /* arcsec(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX reciprocal_z;
+    COMPLEX reciprocal_z; complex_reciprocal_helper(z, &reciprocal_z);
 
-    status_return(complex_reciprocal(z, &reciprocal_z));
-
-    return(complex_arc_cosine(&reciprocal_z, z_out));
+    return(complex_arc_cosine(&reciprocal_z));
 }
 
 /******************************************************************************
@@ -549,21 +575,21 @@ complex_arc_secant( /* arc secant : arcsec(z) */
 *
 ******************************************************************************/
 
-extern void
-complex_sine( /* sine : sin(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_sine( /* sin(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     /* make exp(b) and exp(-b) */
     const double exp_b = exp(complex_imag(z));
     const double exp_mb = 1.0 / exp_b;
+    const double Re_z = complex_real(z);
 
-    complex_set_ri(z_out,
-                   /*r*/ (exp_b + exp_mb) * sin(complex_real(z)) * 0.5,
-                   /*i*/ (exp_b - exp_mb) * cos(complex_real(z)) * 0.5);
+    return(complex_ri( /*r*/ (exp_b + exp_mb) * sin(Re_z) * 0.5,
+                       /*i*/ (exp_b - exp_mb) * cos(Re_z) * 0.5 ));
 #else
-    *z_out = csin(*z);
+    return(csin(*z));
 #endif
 }
 
@@ -573,21 +599,18 @@ complex_sine( /* sine : sin(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
+_Check_return_
+extern COMPLEX
 complex_arc_sine( /* arc sine(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     static const double c_asin_mult_z   = -1.0;
     static const double c_asin_mult_res = +1.0;
 
-    return(do_inverse_hyperbolic(C_SINH, z, &c_asin_mult_z, &c_asin_mult_res, z_out));
+    return(do_inverse_hyperbolic(z, C_SINH, &c_asin_mult_z, &c_asin_mult_res));
 #else
-    *z_out = casin(*z);
-
-    return(STATUS_OK);
+    return(casin(*z));
 #endif
 }
 
@@ -599,17 +622,12 @@ complex_arc_sine( /* arc sine(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_cosecant( /* cosecant : csc(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_cosecant( /* csc(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX sin_z;
-
-    complex_sine(z, &sin_z);
-
-    return(complex_reciprocal(&sin_z, z_out));
+    return(complex_reciprocal(complex_sine(z)));
 }
 
 /******************************************************************************
@@ -618,17 +636,14 @@ complex_cosecant( /* cosecant : csc(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_arc_cosecant( /* arc cosecant : arccsc(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_arc_cosecant( /* arccsc(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX reciprocal_z;
+    COMPLEX reciprocal_z; complex_reciprocal_helper(z, &reciprocal_z);
 
-    status_return(complex_reciprocal(z, &reciprocal_z));
-
-    return(complex_arc_sine(&reciprocal_z, z_out));
+    return(complex_arc_sine(&reciprocal_z));
 }
 
 /******************************************************************************
@@ -637,24 +652,18 @@ complex_arc_cosecant( /* arc cosecant : arccsc(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_tangent( /* tangent : tan(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_tangent( /* tan(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    COMPLEX sin_z, cos_z;
+    const COMPLEX sin_z = complex_sine(z);
+    const COMPLEX cos_z = complex_cosine(z);
 
-    complex_sine(z, &sin_z);
-
-    complex_cosine(z, &cos_z);
-
-    return(complex_divide(&sin_z, &cos_z, z_out));
+    return(complex_divide(&sin_z, &cos_z));
 #else
-    *z_out = ctan(*z);
-
-    return(STATUS_OK);
+    return(ctan(*z));
 #endif
 }
 
@@ -664,21 +673,18 @@ complex_tangent( /* tangent : tan(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_arc_tangent( /* arc tangent : arctan(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_arc_tangent( /* arctan(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     static const double c_atan_mult_z   = -1.0;
     static const double c_atan_mult_res = +1.0;
 
-    return(do_inverse_hyperbolic(C_TANH, z, &c_atan_mult_z, &c_atan_mult_res, z_out));
+    return(do_inverse_hyperbolic(z, C_TANH, &c_atan_mult_z, &c_atan_mult_res));
 #else
-    *z_out = catan(*z);
-
-    return(STATUS_OK);
+    return(catan(*z));
 #endif
 }
 
@@ -690,19 +696,19 @@ complex_arc_tangent( /* arc tangent : arctan(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_cotangent( /* cotangent : cot(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_cotangent( /* cot(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX sin_z, cos_z;
+#if defined(USE_OWN_COMPLEX_IMPL)
+    const COMPLEX sin_z = complex_sine(z);
+    const COMPLEX cos_z = complex_cosine(z);
 
-    complex_sine(z, &sin_z);
-
-    complex_cosine(z, &cos_z);
-
-    return(complex_divide(&cos_z, &sin_z, z_out));
+    return(complex_divide(&cos_z, &sin_z));
+#else
+    return(complex_reciprocal(ctan(*z)));
+#endif
 }
 
 /******************************************************************************
@@ -711,17 +717,14 @@ complex_cotangent( /* cotangent : cot(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_arc_cotangent( /* arc cotangent : arccot(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_arc_cotangent( /* arccot(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX reciprocal_z;
+    COMPLEX reciprocal_z; complex_reciprocal_helper(z, &reciprocal_z);
 
-    status_return(complex_reciprocal(z, &reciprocal_z));
-
-    return(complex_arc_tangent(&reciprocal_z, z_out));
+    return(complex_arc_tangent(&reciprocal_z));
 }
 
 /******************************************************************************
@@ -738,21 +741,20 @@ complex_arc_cotangent( /* arc cotangent : arccot(z) */
 *
 ******************************************************************************/
 
-extern void
-complex_hyperbolic_cosine( /* hyperbolic cosine : cosh(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_hyperbolic_cosine( /* cosh(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     /* make exp(a) and exp(-a) */
     const double exp_a = exp(complex_real(z));
     const double exp_ma = 1.0 / exp_a;
 
-    complex_set_ri(z_out,
-                /*r*/ (exp_a + exp_ma) * cos(complex_imag(z)) * 0.5,
-                /*i*/ (exp_a - exp_ma) * sin(complex_imag(z)) * 0.5);
+    return(complex_ri( /*r*/ (exp_a + exp_ma) * cos(complex_imag(z)) * 0.5,
+                       /*i*/ (exp_a - exp_ma) * sin(complex_imag(z)) * 0.5 ));
 #else
-    *z_out = ccosh(*z);
+    return(ccosh(*z));
 #endif
 }
 
@@ -762,18 +764,15 @@ complex_hyperbolic_cosine( /* hyperbolic cosine : cosh(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_inverse_hyperbolic_cosine( /* inverse hyperbolic cosine : acosh(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_inverse_hyperbolic_cosine( /* acosh(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    return(do_inverse_hyperbolic(C_COSH, z, NULL, NULL, z_out));
+    return(do_inverse_hyperbolic(z, C_COSH, NULL, NULL));
 #else
-    *z_out = cacosh(*z);
-
-    return(STATUS_OK);
+    return(cacosh(*z));
 #endif
 }
 
@@ -785,17 +784,12 @@ complex_inverse_hyperbolic_cosine( /* inverse hyperbolic cosine : acosh(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_hyperbolic_secant( /* hyperbolic secant : sech(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_hyperbolic_secant( /* sech(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX cosh_z;
-
-    complex_hyperbolic_cosine(z, &cosh_z);
-
-    return(complex_reciprocal(&cosh_z, z_out));
+    return(complex_reciprocal(complex_hyperbolic_cosine(z)));
 }
 
 /******************************************************************************
@@ -804,17 +798,14 @@ complex_hyperbolic_secant( /* hyperbolic secant : sech(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_inverse_hyperbolic_secant( /* inverse hyperbolic secant : asech(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_inverse_hyperbolic_secant( /* asech(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX reciprocal_z;
+    COMPLEX reciprocal_z; complex_reciprocal_helper(z, &reciprocal_z);
 
-    status_return(complex_reciprocal(z, &reciprocal_z));
-
-    return(complex_inverse_hyperbolic_cosine(&reciprocal_z, z_out));
+    return(complex_inverse_hyperbolic_cosine(&reciprocal_z));
 }
 
 /******************************************************************************
@@ -825,21 +816,20 @@ complex_inverse_hyperbolic_secant( /* inverse hyperbolic secant : asech(z) */
 *
 ******************************************************************************/
 
-extern void
-complex_hyperbolic_sine( /* hyperbolic sine : sinh(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_hyperbolic_sine( /* sinh(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
     /* make exp(a) and exp(-a) */
     const double exp_a = exp(complex_real(z));
     const double exp_ma = 1.0 / exp_a;
 
-    complex_set_ri(z_out,
-                   /*r*/ (exp_a - exp_ma) * cos(complex_imag(z)) * 0.5,
-                   /*i*/ (exp_a + exp_ma) * sin(complex_imag(z)) * 0.5);
+    return(complex_ri( /*r*/ (exp_a - exp_ma) * cos(complex_imag(z)) * 0.5,
+                       /*i*/ (exp_a + exp_ma) * sin(complex_imag(z)) * 0.5 ));
 #else
-    *z_out = csinh(*z);
+    return(csinh(*z));
 #endif
 }
 
@@ -849,18 +839,15 @@ complex_hyperbolic_sine( /* hyperbolic sine : sinh(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_inverse_hyperbolic_sine( /* inverse hyperbolic sine : asinh(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_inverse_hyperbolic_sine( /* asinh(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    return(do_inverse_hyperbolic(C_SINH, z, NULL, NULL, z_out));
+    return(do_inverse_hyperbolic(z, C_SINH, NULL, NULL));
 #else
-    *z_out = casinh(*z);
-
-    return(STATUS_OK);
+    return(casinh(*z));
 #endif
 }
 
@@ -872,17 +859,12 @@ complex_inverse_hyperbolic_sine( /* inverse hyperbolic sine : asinh(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_hyperbolic_cosecant( /* hyperbolic cosecant : csch(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_hyperbolic_cosecant( /* csch(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX sinh_z;
-
-    complex_hyperbolic_sine(z, &sinh_z);
-
-    return(complex_reciprocal(&sinh_z, z_out));
+    return(complex_reciprocal(complex_hyperbolic_sine(z)));
 }
 
 /******************************************************************************
@@ -891,17 +873,14 @@ complex_hyperbolic_cosecant( /* hyperbolic cosecant : csch(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_inverse_hyperbolic_cosecant( /* inverse hyperbolic cosecant : acsch(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_inverse_hyperbolic_cosecant( /* acsch(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX reciprocal_z;
+    COMPLEX reciprocal_z; complex_reciprocal_helper(z, &reciprocal_z);
 
-    status_return(complex_reciprocal(z, &reciprocal_z));
-
-    return(complex_inverse_hyperbolic_sine(&reciprocal_z, z_out));
+    return(complex_inverse_hyperbolic_sine(&reciprocal_z));
 }
 
 /******************************************************************************
@@ -910,25 +889,19 @@ complex_inverse_hyperbolic_cosecant( /* inverse hyperbolic cosecant : acsch(z) *
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_hyperbolic_tangent( /* hyperbolic tangent : tanh(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_hyperbolic_tangent( /* tanh(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    COMPLEX sinh_z, cosh_z;
+    const COMPLEX sinh_z = complex_hyperbolic_sine(z);
+    const COMPLEX cosh_z = complex_hyperbolic_cosine(z);
 
-    complex_hyperbolic_sine(z, &sinh_z);
-
-    complex_hyperbolic_cosine(z, &cosh_z);
-
-    status_return(complex_divide(&sinh_z, &cosh_z, z_out));
+    return(complex_divide(&sinh_z, &cosh_z));
 #else
-    *z_out = ctanh(*z);
+    return(ctanh(*z));
 #endif
-
-    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -937,18 +910,15 @@ complex_hyperbolic_tangent( /* hyperbolic tangent : tanh(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_inverse_hyperbolic_tangent( /* inverse hyperbolic tangent : atanh(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_inverse_hyperbolic_tangent( /* atanh(z) */
+    _InRef_     PC_COMPLEX z)
 {
 #if defined(USE_OWN_COMPLEX_IMPL)
-    return(do_inverse_hyperbolic(C_TANH, z, NULL, NULL, z_out));
+    return(do_inverse_hyperbolic(z, C_TANH, NULL, NULL));
 #else
-    *z_out = catanh(*z);
-
-    return(STATUS_OK);
+    return(catanh(*z));
 #endif
 }
 
@@ -960,17 +930,12 @@ complex_inverse_hyperbolic_tangent( /* inverse hyperbolic tangent : atanh(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_hyperbolic_cotangent( /* hyperbolic cotangent : coth(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_hyperbolic_cotangent( /* coth(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX tanh_z;
-
-    status_return(complex_hyperbolic_tangent(z, &tanh_z));
-
-    return(complex_reciprocal(&tanh_z, z_out));
+    return(complex_reciprocal(complex_hyperbolic_tangent(z)));
 }
 
 /******************************************************************************
@@ -979,17 +944,14 @@ complex_hyperbolic_cotangent( /* hyperbolic cotangent : coth(z) */
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-extern STATUS
-complex_inverse_hyperbolic_cotangent( /* inverse hyperbolic cotangent : acoth(z) */
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX z_out)
+_Check_return_
+extern COMPLEX
+complex_inverse_hyperbolic_cotangent( /* acoth(z) */
+    _InRef_     PC_COMPLEX z)
 {
-    COMPLEX reciprocal_z;
+    COMPLEX reciprocal_z; complex_reciprocal_helper(z, &reciprocal_z);
 
-    status_return(complex_reciprocal(z, &reciprocal_z));
-
-    return(complex_inverse_hyperbolic_tangent(&reciprocal_z, z_out));
+    return(complex_inverse_hyperbolic_tangent(&reciprocal_z));
 }
 
 #if defined(USE_OWN_COMPLEX_IMPL)
@@ -1019,43 +981,35 @@ complex_inverse_hyperbolic_cotangent( /* inverse hyperbolic cotangent : acoth(z)
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(status_ok(return))
-static STATUS
+_Check_return_
+static COMPLEX
 do_inverse_hyperbolic(
-    _InVal_     enum HYP_FN_TYPE type,
     _InRef_     PC_COMPLEX z_in,
+    _InVal_     enum HYP_FN_TYPE type,
     _InRef_opt_ PC_DBL mult_z_by_i,
-    _InRef_opt_ PC_DBL mult_res_by_i,
-    _OutRef_    P_COMPLEX z_out)
+    _InRef_opt_ PC_DBL mult_res_by_i)
 {
-    COMPLEX z, out, temp, furtle;
-
     /* maybe preprocess z
         multiply the input by   i * mult_z_by_i
          i(a + ib) = -b + ia
         -i(a + ib) =  b - ia
         mult_z_by_i is 1 to multiply by i, -1 to multiply by -i
     */
+    COMPLEX z = *z_in;
+
     if(NULL != mult_z_by_i)
-    {
-        complex_set_ri(&z,
-                       /*r*/ complex_imag(z_in) * -(*mult_z_by_i),
-                       /*i*/ complex_real(z_in) *  (*mult_z_by_i));
-    }
-    else
-    {
-        z = *z_in;
-    }
+        z = complex_ri( /*r*/ complex_imag(&z) * -(*mult_z_by_i),
+                        /*i*/ complex_real(&z) *  (*mult_z_by_i) );
+
+    COMPLEX temp;
 
     if(type == C_TANH)
     {
         /* temp = (1+z)/(1-z) */
-        COMPLEX z1, z2;
+        const COMPLEX z1 = complex_ri( 1.0 + complex_real(&z),   complex_imag(&z) );
+        const COMPLEX z2 = complex_ri( 1.0 - complex_real(&z), - complex_imag(&z) );
 
-        complex_set_ri(&z1, 1.0 + complex_real(&z),   complex_imag(&z));
-        complex_set_ri(&z2, 1.0 - complex_real(&z), - complex_imag(&z));
-
-        status_return(complex_divide(&z1, &z2, &temp));
+        temp = complex_divide(&z1, &z2);
     }
     else
     {
@@ -1063,27 +1017,23 @@ do_inverse_hyperbolic(
         const double add_in_middle = (type == C_COSH ? -1.0 : +1.0);
 
         /* furtle = z*z + add_in_middle */
-        complex_set_ri(&furtle,
-                       /*r*/ mx_fsquare(complex_real(&z)) - mx_fsquare(complex_imag(&z))  +  add_in_middle,
-                       /*i*/ complex_real(&z) * complex_imag(&z) * 2.0);
+        const COMPLEX furtle = complex_ri( /*r*/ mathxtra_square(complex_real(&z)) - mathxtra_square(complex_imag(&z))  +  add_in_middle,
+                                           /*i*/ complex_real(&z) * complex_imag(&z) * 2.0 );
 
         /* sqrt(furtle) into temp */
-        complex_square_root(&furtle, &temp);
+        temp = complex_square_root(&furtle);
 
         /* temp = z + sqrt(furtle) */
-        complex_set_ri(&temp,
-                       /*r*/ complex_real(&z) + complex_real(&temp),
-                       /*i*/ complex_imag(&z) + complex_imag(&temp));
+        temp = complex_ri( /*r*/ complex_real(&z) + complex_real(&temp),
+                           /*i*/ complex_imag(&z) + complex_imag(&temp) );
     }
 
     /* out = ln(temp) */
-    status_return(complex_log_e(&temp, &out));
+    COMPLEX out = complex_log_e(&temp);
 
-    /* now its in out, halve it for arctans */
+    /* now its in out, halve it for arctans (just in magnitude) */
     if(type == C_TANH)
-    {   /* halve it (just in magnitude) */
-        complex_set_ri(&out, complex_real(&out) / 2.0, complex_imag(&out) / 2.0);
-    }
+        out = complex_ri( complex_real(&out) / 2.0, complex_imag(&out) / 2.0 );
 
     /* maybe postprocess out
         multiply the output by   i * mult_res_by_i
@@ -1092,17 +1042,10 @@ do_inverse_hyperbolic(
         mult_res_by_i is 1 to multiply by i, -1 to multiply by -i
     */
     if(NULL != mult_res_by_i)
-    {
-        complex_set_ri(z_out,
-                       /*r*/ complex_imag(&out) * -(*mult_res_by_i),
-                       /*i*/ complex_real(&out) *  (*mult_res_by_i));
-    }
-    else
-    {
-        *z_out = out;
-    }
+        out = complex_ri( /*r*/ complex_imag(&out) * -(*mult_res_by_i),
+                          /*i*/ complex_real(&out) *  (*mult_res_by_i) );
 
-    return(STATUS_OK);
+    return(out);
 }
 
 #endif /* defined(USE_OWN_COMPLEX_IMPL) */

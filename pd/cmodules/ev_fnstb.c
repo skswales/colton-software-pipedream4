@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2022 Stuart Swales */
+/* Copyright (C) 2014-2023 Stuart Swales */
 
 /* Statistical function routines for evaluator */
 
@@ -1039,7 +1039,7 @@ PROC_EXEC_PROTO(c_rank_eq)
 
     ss_data_free_resources(&ss_data_temp_array);
 
-    ss_data_set_integer(p_ss_data_res, position);
+    ss_data_set_integer_fn(p_ss_data_res, position);
 }
 
 /******************************************************************************

@@ -352,6 +352,7 @@ riscdialog_execute(
 
         switch(boxnumber)
         {
+#if 0 /* this pair are handled explicitly in browse.c */
         /* anasubgram */
         case D_USER_ANAG:
             title = Anagrams_dialog_STR;
@@ -360,6 +361,7 @@ riscdialog_execute(
         case D_USER_SUBGRAM:
             title = Subgrams_dialog_STR;
             break;
+#endif
 
         case D_LOAD:
             title = (d_load[1].option == 'Y') ? Insert_file_STR : Load_file_STR; /* need both as we poke the template */
@@ -1713,7 +1715,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987" "\x97" "2022 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987" "\x97" "2023 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 
@@ -3879,7 +3881,7 @@ dproc_insert_page_number(
 
     dialog__setfield_str(insert_page_number_Format, entry ? entry->value : NULL);
 
-    ss_data_set_integer(&ss_data, curpnm);
+    ss_data_set_integer_fn(&ss_data, curpnm);
     display_D_N_P_sample(insert_page_number_Format, insert_page_number_Sample, &ss_data);
 
     while(((f = dialog__fillin(TRUE)) != dbox_CLOSE)  &&  (f != dbox_OK))

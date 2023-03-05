@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Copyright © 2014-2022 Stuart Swales
+# Copyright © 2014-2023 Stuart Swales
 
 # set your cross environment up first
 arm-none-eabi-gcc \

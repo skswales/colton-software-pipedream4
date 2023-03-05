@@ -2,7 +2,9 @@
 ** License, v. 2.0. If a copy of the MPL was not distributed with this
 ** file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-** Copyright © 2014-2022 Stuart Swales
+** Copyright © 1991-1998 Colton Software Limited
+** Copyright © 1998-2015 R W Colton
+** Portions Copyright © 2014-2023 Stuart Swales
 
 NB This licence file pertains to the PipeDream 4 documentation source tree;
 a different licence is shipped to the end user in RiscPkg.Copyright.
@@ -13,11 +15,6 @@ PipeDream 4 documentation to others. You are also welcome to modify the source
 code of PipeDream 4 documentation as you want to meet your needs. The Mozilla
 Public License also gives you the right to distribute your modified
 versions.
-
-----------------------------------------------------------------------------
-
-Copyright © 1991-1998 Colton Software Limited
-Copyright © 1998-2015 R W Colton
 
 ======================
 

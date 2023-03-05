@@ -1441,7 +1441,7 @@ bitstr_text_at_P(
         ++from; /* skip the letter */
         ++from; /* skip the colon to the format */
 
-        ss_data_set_integer(&ss_data, curpnm);
+        ss_data_set_integer_fn(&ss_data, curpnm);
 
         bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ss_data);
 

@@ -667,7 +667,7 @@ PROC_EXEC_PROTO(c_logest)
         targs3  = NULL;
 
     /* call my friend to do the hard work */
-    c_linest(args, n_args, p_ss_data_res, p_cur_slr);
+    c_linest(p_ss_data_res, args, n_args, p_cur_slr);
 
     args[0] = targs0;
 

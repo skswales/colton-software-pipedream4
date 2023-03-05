@@ -179,7 +179,7 @@ PROC_EXEC_PROTO(c_day)
 
     day_result = day;
 
-    ss_data_set_integer(p_ss_data_res, day_result);
+    ss_data_set_integer_fn(p_ss_data_res, day_result);
 }
 
 /******************************************************************************
@@ -304,7 +304,7 @@ PROC_EXEC_PROTO(c_days)
     /* return number of days between two dates */
     days_result = ss_data_get_date_date(args[0]) /* end_date */ - ss_data_get_date_date(args[1]) /* start_date */;
 
-    ss_data_set_integer(p_ss_data_res, days_result);
+    ss_data_set_integer_fn(p_ss_data_res, days_result);
 }
 
 /******************************************************************************
@@ -401,7 +401,7 @@ PROC_EXEC_PROTO(c_days_360)
 
     days_360_result += 360 * (end_year - start_year);
 
-    ss_data_set_integer(p_ss_data_res, negate_result ? -days_360_result : days_360_result);
+    ss_data_set_integer_fn(p_ss_data_res, negate_result ? -days_360_result : days_360_result);
 }
 
 /******************************************************************************
@@ -515,7 +515,7 @@ PROC_EXEC_PROTO(c_hour)
 
     hour_result = hours;
 
-    ss_data_set_integer(p_ss_data_res, hour_result);
+    ss_data_set_integer_fn(p_ss_data_res, hour_result);
 }
 
 #if 0 /* just for diff minimization */
@@ -565,7 +565,7 @@ PROC_EXEC_PROTO(c_isoweeknum)
 
     isoweeknum_result = calc_isoweeknum(year, month, day);
 
-    ss_data_set_integer(p_ss_data_res, isoweeknum_result);
+    ss_data_set_integer_fn(p_ss_data_res, isoweeknum_result);
 }
 
 #endif
@@ -589,7 +589,7 @@ PROC_EXEC_PROTO(c_minute)
 
     minute_result = minutes;
 
-    ss_data_set_integer(p_ss_data_res, minute_result);
+    ss_data_set_integer_fn(p_ss_data_res, minute_result);
 }
 
 /******************************************************************************
@@ -611,7 +611,7 @@ PROC_EXEC_PROTO(c_month)
 
     month_result = month;
 
-    ss_data_set_integer(p_ss_data_res, month_result);
+    ss_data_set_integer_fn(p_ss_data_res, month_result);
 }
 
 /******************************************************************************
@@ -633,7 +633,7 @@ PROC_EXEC_PROTO(c_monthdays)
 
     monthdays_result = (LEAP_YEAR_ACTUAL(year) ? ev_days_in_month_leap[month - 1] : ev_days_in_month[month - 1]);
 
-    ss_data_set_integer(p_ss_data_res, monthdays_result);
+    ss_data_set_integer_fn(p_ss_data_res, monthdays_result);
 }
 
 /******************************************************************************
@@ -712,7 +712,7 @@ PROC_EXEC_PROTO(c_second)
 
     second_result = seconds;
 
-    ss_data_set_integer(p_ss_data_res, second_result);
+    ss_data_set_integer_fn(p_ss_data_res, second_result);
 }
 
 /******************************************************************************
@@ -776,7 +776,7 @@ PROC_EXEC_PROTO(c_today)
 {
     exec_func_ignore_parms();
 
-    c_now(args, n_args, p_ss_data_res, p_cur_slr);
+    c_now(p_ss_data_res, args, n_args, p_cur_slr);
 
     if(ss_data_is_date(p_ss_data_res))
         p_ss_data_res->arg.ss_date.time = SS_TIME_NULL;
@@ -852,7 +852,7 @@ PROC_EXEC_PROTO(c_weekday)
     weekday = ((ss_data_get_date_date(args[0]) + 1) % 7) + 1;
 #endif
 
-    ss_data_set_integer(p_ss_data_res, weekday);
+    ss_data_set_integer_fn(p_ss_data_res, weekday);
 }
 
 /******************************************************************************
@@ -935,7 +935,7 @@ PROC_EXEC_PROTO(c_weeknumber)
         weeknumber_result = (S32) fast_strtoul(buffer, NULL);
 
     assert(weeknumber_result >= 0);
-    ss_data_set_integer(p_ss_data_res, weeknumber_result);
+    ss_data_set_integer_fn(p_ss_data_res, weeknumber_result);
 #else
     S32 year, month, day;
     U8Z buffer[32];
@@ -959,7 +959,7 @@ PROC_EXEC_PROTO(c_weeknumber)
     weeknumber_result += 1;
 
     assert(weeknumber_result >= 0);
-    ss_data_set_integer(p_ss_data_res, weeknumber_result);
+    ss_data_set_integer_fn(p_ss_data_res, weeknumber_result);
 #endif
     } /*block*/
 }
@@ -983,7 +983,7 @@ PROC_EXEC_PROTO(c_year)
 
     year_result = year;
 
-    ss_data_set_integer(p_ss_data_res, year_result);
+    ss_data_set_integer_fn(p_ss_data_res, year_result);
 }
 
 /* end of ev_fndat.c */

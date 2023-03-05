@@ -335,7 +335,7 @@ PROC_EXEC_PROTO(c_m_determ)
 
     if(x_size == 0)
     {
-        ss_data_set_integer(p_ss_data_res, 1); /* yes, really */
+        ss_data_set_integer_fn(p_ss_data_res, 1); /* yes, really */
         return;
     }
 
@@ -619,7 +619,7 @@ PROC_EXEC_PROTO(c_m_unit)
             {
                 const P_SS_DATA elep = ss_array_element_index_wr(p_ss_data_res, ix, iy);
 
-                ss_data_set_integer(elep, (ix == iy) ? 1 : 0);
+                ss_data_set_integer_fn(elep, (ix == iy) ? 1 : 0);
             }
         }
     }

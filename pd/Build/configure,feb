@@ -2,7 +2,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright © 2012-2022 Stuart Swales
+| Copyright © 2012-2023 Stuart Swales
 |
 Set pd$configure$tokenize &.^.^.coltsoft.pipedream__4_62__branch.cs-free.SFryatt.tokenize
 IfThere <pd$configure$tokenize> Then Copy <pd$configure$tokenize> <Obey$Dir>.Tools.tokenize ~C~VN

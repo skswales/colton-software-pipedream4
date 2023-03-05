@@ -142,7 +142,7 @@ PROC_EXEC_PROTO(c_abs)
     if(ss_data_is_real(args[0]))
         ss_data_set_real(p_ss_data_res, fabs(ss_data_get_real(args[0])));
     else
-        ss_data_set_integer(p_ss_data_res, abs(ss_data_get_integer(args[0])));
+        ss_data_set_integer_fn(p_ss_data_res, abs(ss_data_get_integer(args[0])));
 }
 
 /******************************************************************************
@@ -228,9 +228,9 @@ PROC_EXEC_PROTO(c_int)
     case DATA_ID_DATE:
         /* Convert just the date component to a largely Excel-compatible serial number */
         if(SS_DATE_NULL != ss_data_get_date(args[0])->date))
-            ss_data_set_integer(p_ss_data_res, ss_dateval_to_serial_number(ss_data_get_date(args[0])->date))); /* ignore any time component */
+            ss_data_set_integer_fn(p_ss_data_res, ss_dateval_to_serial_number(ss_data_get_date(args[0])->date))); /* ignore any time component */
         else
-            ss_data_set_integer(p_ss_data_res, 0); /* ignore any time component, and this is a pure time value */
+            ss_data_set_integer_fn(p_ss_data_res, 0); /* ignore any time component, and this is a pure time value */
         return;
 
 #endif
@@ -286,7 +286,7 @@ c_mod_two_ints(
 
     s32_mod_result = (s32_a % s32_b); /* remainder has the same sign as the dividend (C99) */
 
-    ss_data_set_integer(p_ss_data_res, s32_mod_result);
+    ss_data_set_integer_fn(p_ss_data_res, s32_mod_result);
 }
 
 static void
@@ -338,7 +338,7 @@ PROC_EXEC_PROTO(c_mod)
 PROC_EXEC_PROTO(c_sgn)
 {
     const F64 number = ss_data_get_real(args[0]);
-    S32 sgn_result;
+    S32 sgn_result = 0;
 
     exec_func_ignore_parms();
 
@@ -346,10 +346,8 @@ PROC_EXEC_PROTO(c_sgn)
         sgn_result = 1;
     else if(number < -F64_MIN)
         sgn_result = -1;
-    else
-        sgn_result = 0;
 
-    ss_data_set_integer(p_ss_data_res, sgn_result);
+    ss_data_set_integer_fn(p_ss_data_res, sgn_result);
 }
 
 /******************************************************************************

@@ -4,7 +4,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright © 2013-2022 Stuart Swales
+| Copyright © 2013-2023 Stuart Swales
 |
 If "<Patch$Dir>"="" Then IfThere Boot:^.Apps.Development.!Patch Then Filer_Run Boot:^.Apps.Development.!Patch
 If "<Patch$Dir>"="" Then Error 0 Patch had not been 'seen' - try again as it might have now?

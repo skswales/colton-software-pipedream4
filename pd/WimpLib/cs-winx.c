@@ -44,7 +44,7 @@ winx_changedtitle(
         (void) wimpt_complain(
                 tbl_wimp_force_redraw((wimp_w) -1 /* entire screen */,
                                       wstate.o.box.x0, wstate.o.box.y1 + dy /* title bar contents starts one raster up */,
-                                      wstate.o.box.x1, wstate.o.box.y0 + wimp_win_title_height(dy) - 2*dy));
+                                      wstate.o.box.x1, wstate.o.box.y1 + wimp_win_title_height(dy) - dy));
 #else
         wimp_redrawstr redraw;
         redraw.w      = (wimp_w) -1; /* entire screen */

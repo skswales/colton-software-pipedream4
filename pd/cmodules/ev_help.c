@@ -172,7 +172,7 @@ arg_normalise_date_as_integer(
     if(SS_DATE_NULL != p_ss_data->arg.ss_date.date)
         return(ss_data_set_integer_rid(p_ss_data, ss_dateval_to_serial_number(p_ss_data->arg.ss_date.date)));
     else
-        return(ss_data_set_integer(p_ss_data, 0)); /* this is a pure time value */
+        return(ss_data_set_integer_fn(p_ss_data, 0)); /* this is a pure time value */
 #else
     return(ss_data_set_error(p_ss_data, EVAL_ERR_UNEXDATE));
 #endif
@@ -248,7 +248,7 @@ arg_normalise_blank(
     }
 
     /* map blank arg to zero and retry */
-    ss_data_set_integer(p_ss_data, 0);
+    ss_data_set_integer(p_ss_data, 0); /* NB _fn disruptive */
 
     return(arg_normalise(p_ss_data, type_flags, p_max_x, p_max_y));
 }

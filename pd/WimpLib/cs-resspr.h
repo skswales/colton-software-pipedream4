@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2020-2022 Stuart Swales */
+/* Copyright (C) 2020-2023 Stuart Swales */
 
 #ifndef __cs_resspr_h
 #define __cs_resspr_h

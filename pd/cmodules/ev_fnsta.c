@@ -252,11 +252,13 @@ binomial_coefficient_calc(
     }
     else if(k > n)
     {
-        ss_data_set_integer(p_ss_data_out, 0);
+        ss_data_set_integer_fn(p_ss_data_out, 0);
+        return;
     }
     else if( (k == 0) || (k == n) )
     {
-        ss_data_set_integer(p_ss_data_out, 1);
+        ss_data_set_integer_fn(p_ss_data_out, 1);
+        return;
     }
     else if(n <= 170) /* SKS maximum factorial that will fit in F64 */
     {
@@ -288,7 +290,7 @@ binomial_coefficient_calc(
             /* no worries about remainders - combination always integer result! */
             S32 binomial_coefficient_result_integer = ss_data_get_integer(p_ss_data_out) / ss_data_get_integer(&ss_data_divisor);
 
-            ss_data_set_integer(p_ss_data_out, binomial_coefficient_result_integer);
+            ss_data_set_integer_fn(p_ss_data_out, binomial_coefficient_result_integer);
         }
     }
     else
@@ -508,11 +510,13 @@ permut_calc(
     }
     else if(k > n)
     {
-        ss_data_set_integer(p_ss_data_out, 0);
+        ss_data_set_integer_fn(p_ss_data_out, 0);
+        return;
     }
     else if(k == 0)
     {
-        ss_data_set_integer(p_ss_data_out, 1);
+        ss_data_set_integer_fn(p_ss_data_out, 1);
+        return;
     }
     else if(n <= 170) /* SKS maximum factorial that will fit in F64 */
     {
@@ -635,10 +639,10 @@ PROC_EXEC_PROTO(c_rank)
             if(spearman_correct) /* SKS 12apr95 make suitable for passing to spearman with equal values */
                 ss_data_set_real(p_ss_data, position + (equal - 1.0) * 0.5);
             else
-                ss_data_set_integer(p_ss_data, position);
+                ss_data_set_integer_fn(p_ss_data, position);
 
             p_ss_data = ss_array_element_index_wr(p_ss_data_res, 1, iy);
-            ss_data_set_integer(p_ss_data, equal);
+            ss_data_set_integer_fn(p_ss_data, equal);
             } /*block*/
 
             ss_data_free_resources(&ss_data);

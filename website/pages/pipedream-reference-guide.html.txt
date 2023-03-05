@@ -11,7 +11,7 @@
 <p> </p>
 <p>This <em>Reference Guide</em> was written by Colton Software.</p>
 
-<p>© 1991-2022 Colton Software</p>
+<p>© 1991-2023 Colton Software</p>
 
 <strong>Additional credits</strong>
 

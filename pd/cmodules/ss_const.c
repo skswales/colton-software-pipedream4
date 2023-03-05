@@ -55,6 +55,20 @@ ss_data_set_error(
 
 /******************************************************************************
 *
+* set integer type into data element (frequently done as inline)
+*
+******************************************************************************/
+
+extern void
+ss_data_set_integer_fn(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     S32 s32)
+{
+    ss_data_set_integer(p_ss_data, s32);
+}
+
+/******************************************************************************
+*
 * floor() of real with possible ickle rounding
 *
 * rounding performed like real_trunc()
@@ -181,11 +195,11 @@ ss_data_real_to_integer_force(
     if(islessequal(fabs(floor_value), (F64) S32_MAX)) /* test rejects NaN */
     {
         s32 = (S32) floor_value;
-        ss_data_set_integer(p_ss_data, s32);
+        ss_data_set_integer_fn(p_ss_data, s32);
         return(STATUS_DONE); /* converted OK */
     }
 
-    ss_data_set_integer(p_ss_data, isless(floor_value, 0.0) ? -S32_MAX : S32_MAX);
+    ss_data_set_integer_fn(p_ss_data, isless(floor_value, 0.0) ? -S32_MAX : S32_MAX);
     return(STATUS_OK); /* out of range */
 }
 
@@ -217,7 +231,7 @@ ss_data_real_to_integer_try(
     if(islessequal(fabs(floor_value), (F64) S32_MAX))
     {
         s32 = (S32) floor_value;
-        ss_data_set_integer(p_ss_data, s32);
+        ss_data_set_integer_fn(p_ss_data, s32);
         return(TRUE); /* converted OK */
     }
 

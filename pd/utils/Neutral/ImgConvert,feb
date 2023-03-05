@@ -4,7 +4,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright © 2020-2022 Stuart Swales
+| Copyright © 2020-2023 Stuart Swales
 |
 If "%*0"="" Then Error 0 This utility is used by PipeDream 4 to convert image files
 If "<ChangeFSI$Dir>"="" Then Error 0 PipeDream 4 needs ChangeFSI to convert this file

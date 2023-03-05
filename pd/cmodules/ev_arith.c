@@ -64,7 +64,7 @@ two_nums_add_try(
     switch(two_nums_type_match(p_ss_data_1, p_ss_data_2, TRUE))
     {
     case TWO_INTS:
-        ss_data_set_integer(p_ss_data_res, ss_data_get_integer(p_ss_data_1) + ss_data_get_integer(p_ss_data_2));
+        ss_data_set_integer_fn(p_ss_data_res, ss_data_get_integer(p_ss_data_1) + ss_data_get_integer(p_ss_data_2));
         return(true);
 
     case TWO_REALS:
@@ -93,7 +93,7 @@ two_nums_subtract_try(
     switch(two_nums_type_match(p_ss_data_1, p_ss_data_2, TRUE))
     {
     case TWO_INTS:
-        ss_data_set_integer(p_ss_data_res, ss_data_get_integer(p_ss_data_1) - ss_data_get_integer(p_ss_data_2));
+        ss_data_set_integer_fn(p_ss_data_res, ss_data_get_integer(p_ss_data_1) - ss_data_get_integer(p_ss_data_2));
         return(true);
 
     case TWO_REALS:
@@ -122,7 +122,7 @@ two_nums_multiply_try(
     switch(two_nums_type_match(p_ss_data_1, p_ss_data_2, TRUE))
     {
     case TWO_INTS:
-        ss_data_set_integer(p_ss_data_res, ss_data_get_integer(p_ss_data_1) * ss_data_get_integer(p_ss_data_2));
+        ss_data_set_integer_fn(p_ss_data_res, ss_data_get_integer(p_ss_data_1) * ss_data_get_integer(p_ss_data_2));
         return(true);
 
     case TWO_REALS:
@@ -255,7 +255,7 @@ two_nums_divide_try_two_integers(
 
         if(0 == remainder)
         {
-            ss_data_set_integer(p_ss_data_res, quotient);
+            ss_data_set_integer_fn(p_ss_data_res, quotient);
             return(true);
         }
     }

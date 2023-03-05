@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Copyright © 2019-2022 Stuart Swales
+# Copyright © 2019-2023 Stuart Swales
 
 echo Checking out RISC_OSLib from ROOL
 

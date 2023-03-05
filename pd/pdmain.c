@@ -383,8 +383,6 @@ main(
         break;
     }
 
-    _kernel_setenv("PipeDream$Running", "Yes"); /* Set */
-
     /* Go and find something to do now -  just loop getting events until we are told to curl up and die */
     for(;;)
     {
@@ -411,8 +409,6 @@ application__atexit_apcs_softpcs(void)
 static void
 application__atexit(void)
 {
-    _kernel_setenv("PipeDream$Running", NULL); /* Unset early in case anything subsequent barfs */
-
     font_close_all(TRUE); /* shut down font system releasing handles */
 
     reset_mc();

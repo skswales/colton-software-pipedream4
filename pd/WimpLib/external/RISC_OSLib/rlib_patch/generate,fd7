@@ -4,7 +4,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright © 2013-2022 Stuart Swales
+| Copyright © 2013-2023 Stuart Swales
 |
 echo This script requires GNU diff - install DiffUtils (temporarily if needs be) to acquire
 IfThere $.coltsoft.trunk.cs-free.GNU.riscos.diff Then Set alias$gnu-diff Run $.coltsoft.trunk.cs-free.GNU.riscos.diff %%*0

@@ -1018,9 +1018,9 @@ eval_rpn(
                     {
                     case EXEC_EXEC:
                         (*func_data->p_proc_exec)
-                            (args,
+                            (&func_result,
+                             args,
                              arg_count,
-                             &func_result,
                              &stack_ptr->slr);
                         break;
 
@@ -1978,7 +1978,7 @@ ev_recalc_for_ALERT(
 
     ev_alert_close();
 
-    ss_data_set_integer(p_ss_data, (S32) res);
+    ss_data_set_integer_fn(p_ss_data, (S32) res);
 
     return(res);
 }
@@ -2018,7 +2018,7 @@ ev_recalc_for_INPUT(
             /* memory leak on old contents of name? */
             name_ptr_must(name_num)->def_data = string_data;
 
-            ss_data_set_integer(p_ss_data, (S32) res);
+            ss_data_set_integer_fn(p_ss_data, (S32) res);
         }
     }
 
@@ -2740,7 +2740,7 @@ ev_recalc(void)
                                  stack_processing_array.type_count, stack_processing_array.arg_types,
                                  resp,
                                  &max_x, &max_y)) == 0)
-                (*stack_processing_array.exec)(args, stack_processing_array.n_args, resp, &stack_ptr->slr);
+                (*stack_processing_array.exec)(resp, args, stack_processing_array.n_args, &stack_ptr->slr);
             else if(res > 0)
             {
                 ss_data_free_resources(resp);

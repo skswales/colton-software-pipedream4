@@ -1546,7 +1546,7 @@ ss_recog_number(
 
             if(!try_fp)
             {
-                ss_data_set_integer(p_ss_data, (negative ? - (S32) u32 : (S32) u32));
+                ss_data_set_integer_fn(p_ss_data, (negative ? - (S32) u32 : (S32) u32));
                 res = PtrDiffBytesS32(ep, in_str_in);
                 /*reportf("recog_number(%s) X scanned %d", in_str_in, ss_data_get_integer(p_ss_data));*/
             }

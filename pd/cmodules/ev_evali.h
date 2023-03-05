@@ -66,16 +66,16 @@ types for exec routines
 */
 
 typedef void (* P_PROC_EXEC) (
+    _InoutRef_  P_SS_DATA p_ss_data_res,
     P_SS_DATA args[EV_MAX_ARGS],
     _InVal_     S32 n_args,
-    _InoutRef_  P_SS_DATA p_ss_data_res,
     _InRef_     PC_EV_SLR p_cur_slr);
 
 #define PROC_EXEC_PROTO(_p_proc_exec) \
 extern void _p_proc_exec( \
+    _InoutRef_  P_SS_DATA p_ss_data_res, \
     P_SS_DATA args[EV_MAX_ARGS], \
     _InVal_     S32 n_args, \
-    _InoutRef_  P_SS_DATA p_ss_data_res, \
     _InRef_     PC_EV_SLR p_cur_slr)
 
 #define exec_func_ignore_parms() (void) ( \
