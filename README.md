@@ -6,16 +6,6 @@ As a number of the earlier versions did not have git tags corresponding to the s
 Unfortunately this means that those earlier versions have risen to the top of the Release pages! You may have to go digging.
 
 
-ReadMe for PipeDream 4 Build
-----------------------------
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
-Copyright © 2013-2022 Stuart Swales
-
-
 Prerequisites
 -------------
 
