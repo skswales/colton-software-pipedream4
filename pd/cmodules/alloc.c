@@ -71,7 +71,7 @@ internal definitions
 
 #include "os.h"
 
-#ifndef __cs_flex_h
+#ifndef   CS_FLEX_H
 #include "cs-flex.h"
 #endif
 

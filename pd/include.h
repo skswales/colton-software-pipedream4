@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __include_h
-#define __include_h
+#ifndef INCLUDE_H
+#define INCLUDE_H
 
 #if defined(SB_GLOBAL_REGISTER)
 /*extern*/ __global_reg(6) struct DOCU * current_p_docu; /* keep current_p_docu in APCS v6 register (== ARM r9) */
@@ -70,6 +70,6 @@ extern struct DOCU * current_p_docu; /* keep current_p_docu in global data (no b
 #define current_p_docu_global_register_stash_block_end() /*EMPTY*/
 #endif
 
-#endif  /* __include_h */
+#endif  /* INCLUDE_H */
 
 /* end of include.h */

@@ -1,4 +1,4 @@
-﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/"><strong>Hints and Tips</strong></a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+﻿<a href="/coltsoft/pipedream/getting_started">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips"><strong>Hints and Tips</strong></a> &bull; <a href="/coltsoft/pipedream/release_history">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads">Downloads</a>
 
 <h3>Personalisation</h3>
 

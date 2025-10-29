@@ -17,15 +17,15 @@
 
 #include "cmodules/spell.h"
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"
 #endif
 
-#ifndef __cs_template_h
+#ifndef   CS_TEMPLATE_H
 #include "cs-template.h"
 #endif
 
@@ -33,7 +33,7 @@
 #include "akbd.h"
 #endif
 
-#ifndef          __wm_event_h
+#ifndef            WM_EVENT_H
 #include "cmodules/wm_event.h"
 #endif
 

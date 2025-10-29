@@ -11,8 +11,8 @@
 
 /* SKS May 1991  */
 
-#ifndef __im_cache_h
-#define __im_cache_h
+#ifndef IM_CACHE_H
+#define IM_CACHE_H
 
 /*
 exported typedefs from im_cache.c
@@ -268,6 +268,6 @@ image_convert_do_convert_file(
     _OutRef_    P_PTSTR p_converted_name,
     _In_z_      PCTSTR source_file_name);
 
-#endif /* __im_cache_h */
+#endif /* IM_CACHE_H */
 
 /* end of im_cache.h */

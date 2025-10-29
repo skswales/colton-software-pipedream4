@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2023 Stuart Swales */
+/* Copyright (C) 2014-2025 Stuart Swales */
 
 /* More mathematical function routines for evaluator */
 
@@ -870,7 +870,7 @@ PROC_EXEC_PROTO(c_sumproduct)
                 const PC_SS_DATA array_i = args[i];
                 SS_DATA ss_data;
 
-                (void) array_range_index(&ss_data, array_i, ix, iy, EM_REA);
+                (void) array_range_index_REA(&ss_data, array_i, ix, iy);
 
                 product *= ss_data_get_real(&ss_data);
             }
@@ -922,8 +922,8 @@ sumx2opy2_common(
                 SS_DATA ss_data_x, ss_data_y;
                 F64 x2, y2;
 
-                (void) array_range_index(&ss_data_x, array_x, ix, iy, EM_REA);
-                (void) array_range_index(&ss_data_y, array_y, ix, iy, EM_REA);
+                (void) array_range_index_REA(&ss_data_x, array_x, ix, iy);
+                (void) array_range_index_REA(&ss_data_y, array_y, ix, iy);
 
                 x2 = ss_data_get_real(&ss_data_x) * ss_data_get_real(&ss_data_x);
                 y2 = ss_data_get_real(&ss_data_y) * ss_data_get_real(&ss_data_y);
@@ -996,8 +996,8 @@ PROC_EXEC_PROTO(c_sum_xmy2)
                 SS_DATA ss_data_x, ss_data_y;
                 F64 difference;
 
-                (void) array_range_index(&ss_data_x, array_x, ix, iy, EM_REA);
-                (void) array_range_index(&ss_data_y, array_y, ix, iy, EM_REA);
+                (void) array_range_index_REA(&ss_data_x, array_x, ix, iy);
+                (void) array_range_index_REA(&ss_data_y, array_y, ix, iy);
 
                 difference = ss_data_get_real(&ss_data_x) - ss_data_get_real(&ss_data_y);
 

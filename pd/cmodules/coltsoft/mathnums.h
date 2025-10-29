@@ -11,8 +11,8 @@
 
 /* SKS May 1991 */
 
-#ifndef __mathnums_h
-#define __mathnums_h
+#ifndef MATHNUMS_H
+#define MATHNUMS_H
 
 #define _three_pi              9.424777960769379715387929
 #define _three_pi_div_two      4.712388980329689857693965
@@ -43,6 +43,6 @@
 #define _radians_per_degree    0.017453292519943295769237
 #define _degrees_per_radian   57.295779513082320876798155
 
-#endif /* __mathnums_h */
+#endif /* MATHNUMS_H */
 
 /* end of mathnums.h */

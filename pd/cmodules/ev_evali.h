@@ -11,8 +11,8 @@
 
 /* MRJC January 1991 */
 
-#ifndef __evali_h
-#define __evali_h
+#ifndef EV_EVALI_H
+#define EV_EVALI_H
 
 #define EV_MAX_ARGS         25      /* maximum number of arguments */
 
@@ -1180,6 +1180,14 @@ array_range_index(
     _InVal_     S32 iy,
     _InVal_     EV_TYPE types);
 
+/*ncr*/
+extern EV_IDNO
+array_range_index_REA(
+    _OutRef_    P_SS_DATA p_ss_data_out,
+    _InRef_     PC_SS_DATA p_ss_data_in,
+    _InVal_     S32 ix,
+    _InVal_     S32 iy);
+
 extern void
 array_range_mono_index(
     _OutRef_    P_SS_DATA p_ss_data_out,
@@ -1739,6 +1747,6 @@ tree_sort(
 extern void
 tree_sort_all(void);
 
-#endif /* __evali_h */
+#endif /* EV_EVALI_H */
 
 /* end of ev_evali.h */

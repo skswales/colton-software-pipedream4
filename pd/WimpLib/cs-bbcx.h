@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_bbcx_h
-#define __cs_bbcx_h
+#ifndef CS_BBCX_H
+#define CS_BBCX_H
 
 #if defined(NORCROFT_INLINE_SWIX)
 #include "C:swis.h"
@@ -81,6 +81,6 @@ riscos_vdu_define_graphics_window(
     _In_        GDI_COORD x2,
     _In_        GDI_COORD y2);
 
-#endif /* __cs_bbcx_h */
+#endif /* CS_BBCX_H */
 
 /* end of cs_bbcx.h */

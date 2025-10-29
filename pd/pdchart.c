@@ -15,15 +15,15 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"
 #endif
 
-#ifndef __cs_menu_h
+#ifndef   CS_MENU_H
 #include "cs-menu.h"
 #endif
 
@@ -4457,7 +4457,7 @@ pdchart_load_ended(
 required functions
 */
 
-#ifndef __cs_resspr_h
+#ifndef   CS_RESSPR_H
 #include "cs-resspr.h"
 #endif
 

@@ -15,7 +15,7 @@
 
 #include "wm_event.h"
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 
@@ -23,11 +23,11 @@
 #include "wimpt.h"
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 

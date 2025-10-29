@@ -15,15 +15,15 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 

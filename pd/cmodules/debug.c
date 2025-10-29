@@ -19,7 +19,7 @@
 #include "cmodules/debug.h"
 
 #if RISCOS
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 #endif

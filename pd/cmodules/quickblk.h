@@ -11,8 +11,8 @@
 
 /* SKS November 2006 split out of aligator.h */
 
-#ifndef __quickblk_h
-#define __quickblk_h
+#ifndef QUICKBLK_H
+#define QUICKBLK_H
 
 #if CHECKING && 1
 #define CHECKING_QUICK_BLOCK 1
@@ -38,9 +38,6 @@ QUICK_BLOCK, * P_QUICK_BLOCK; typedef const QUICK_BLOCK * PC_QUICK_BLOCK;
 
 #define QUICK_BLOCK_INIT_NULL() \
     { 0, NULL, 0, 0 }
-
-#define quick_block_array_handle_ref(p_quick_block) \
-    (p_quick_block)->h_array_buffer /* really only internal use but needed for QB sort, no brackets */
 
 /*
 functions as macros
@@ -111,6 +108,9 @@ _quick_block_setup(
     (p_quick_block)->p_static_buffer    = de_const_cast(P_BYTE, (buf)),             \
     (p_quick_block)->static_buffer_size = (buf_size),                               \
     (p_quick_block)->static_buffer_used = (p_quick_block)->static_buffer_size       )
+
+#define quick_block_array_handle_ref(p_quick_block) \
+    (p_quick_block)->h_array_buffer /* really only internal use but needed for QB sort, no brackets */
 
 /*
 exported routines
@@ -266,9 +266,9 @@ UCHARS-based quick block (for Fireworkz-derived numform and evaluator functions)
 
 #if USTR_IS_SBSTR
 
-#define    QUICK_UBLOCK    QUICK_BLOCK
-#define  P_QUICK_UBLOCK  P_QUICK_BLOCK
-#define PC_QUICK_UBLOCK PC_QUICK_BLOCK
+#define    QUICK_UBLOCK                                QUICK_BLOCK
+#define  P_QUICK_UBLOCK                              P_QUICK_BLOCK
+#define PC_QUICK_UBLOCK                             PC_QUICK_BLOCK
 
 #define P_QUICK_UBLOCK_NONE P_QUICK_BLOCK_NONE
 
@@ -315,9 +315,9 @@ TCHAR-based quick block (for Fireworkz-derived numform)
 
 #if TSTR_IS_SBSTR
 
-#define    QUICK_TBLOCK    QUICK_BLOCK
-#define  P_QUICK_TBLOCK  P_QUICK_BLOCK
-#define PC_QUICK_TBLOCK PC_QUICK_BLOCK
+#define    QUICK_TBLOCK                                QUICK_BLOCK
+#define  P_QUICK_TBLOCK                              P_QUICK_BLOCK
+#define PC_QUICK_TBLOCK                             PC_QUICK_BLOCK
 
 #define P_QUICK_TBLOCK_NONE P_QUICK_BLOCK_NONE
 
@@ -348,6 +348,6 @@ TCHAR-based quick block (for Fireworkz-derived numform)
 
 #endif /* TSTR_IS_SBSTR */
 
-#endif /* __quickblk_h */
+#endif /* QUICKBLK_H */
 
 /* end of quickblk.h */

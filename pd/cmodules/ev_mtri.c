@@ -15,7 +15,7 @@
 
 #include "cmodules/mathxtra.h"
 
-#ifndef                   __mathnums_h
+#ifndef                     MATHNUMS_H
 #include "cmodules/coltsoft/mathnums.h" /* for _pi */
 #endif
 
@@ -63,7 +63,7 @@ PROC_EXEC_PROTO(c_acosec)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_acosec(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_acosec(number));
 
     /* input of magnitude less than 1 invalid */
     if(errno /* == EDOM */)
@@ -84,7 +84,7 @@ PROC_EXEC_PROTO(c_acosech)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_acosech(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_acosech(number));
 
     /* input of zero invalid */
     /* input of magnitude near zero causes overflow */
@@ -126,7 +126,7 @@ PROC_EXEC_PROTO(c_acot)
 
     exec_func_ignore_parms();
 
-    ss_data_set_real(p_ss_data_res, mx_acot(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_acot(number));
 
     /* no error cases */
 }
@@ -145,7 +145,7 @@ PROC_EXEC_PROTO(c_acoth)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_acoth(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_acoth(number));
 
     /* input of magnitude less than 1 invalid */
     /* input of magnitude near 1 causes overflow */
@@ -167,7 +167,7 @@ PROC_EXEC_PROTO(c_asec)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_asec(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_asec(number));
 
     /* input of values less than 1 invalid */
     if(errno /* == EDOM */)
@@ -188,7 +188,7 @@ PROC_EXEC_PROTO(c_asech)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_asech(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_asech(number));
 
     /* negative input or positive values greater than one invalid */
     /* input of zero or small positive value causes overflow */
@@ -330,7 +330,7 @@ PROC_EXEC_PROTO(c_cosec)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_cosec(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_cosec(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
@@ -352,7 +352,7 @@ PROC_EXEC_PROTO(c_cosech)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_cosech(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_cosech(number));
 
     /* zero | small magnitude input -> infinity | overflows */
     if(errno /* == EDOM, ERANGE */)
@@ -394,7 +394,7 @@ PROC_EXEC_PROTO(c_cot)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_cot(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_cot(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
@@ -416,7 +416,7 @@ PROC_EXEC_PROTO(c_coth)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_coth(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_coth(number));
 
     /* zero | small magnitude input -> infinity | overflows */
     if(errno /* == EDOM, ERANGE */)
@@ -447,6 +447,7 @@ PROC_EXEC_PROTO(c_deg)
 PROC_EXEC_PROTO(c_pi)
 {
     exec_func_ignore_parms();
+
     UNREFERENCED_PARAMETER(args);
 
     ss_data_set_real(p_ss_data_res, _pi);
@@ -481,7 +482,7 @@ PROC_EXEC_PROTO(c_sec)
 
     errno = 0;
 
-    ss_data_set_real(p_ss_data_res, mx_sec(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_sec(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
@@ -501,7 +502,7 @@ PROC_EXEC_PROTO(c_sech)
 
     exec_func_ignore_parms();
 
-    ss_data_set_real(p_ss_data_res, mx_sech(number));
+    ss_data_set_real(p_ss_data_res, mathxtra_sech(number));
 
     /* no error cases */
 }

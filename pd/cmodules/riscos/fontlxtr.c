@@ -13,7 +13,7 @@
 
 #include "cmodules/riscos/fontlxtr.h"
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"
 #endif
 
@@ -25,7 +25,7 @@
 #include "fontselect.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 

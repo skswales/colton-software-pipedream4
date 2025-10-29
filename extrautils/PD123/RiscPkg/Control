@@ -8,5 +8,5 @@ Version: 1.16
 Recommends: PipeDream
 Description: PipeDream to Lotus 1-2-3 converter
 Components: Apps.Utilities.!PD123 (Movable LookAt)
-Homepage: https://www.croftnuisk.co.uk/coltsoft/pipedream/
+Homepage: https://www.croftnuisk.co.uk/coltsoft/pipedream
 Environment: arm

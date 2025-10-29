@@ -13,15 +13,15 @@
 
 #include "common/gflags.h"
 
-#ifndef __funclist_h
+#ifndef   FUNCLIST_H
 #include "funclist.h"
 #endif
 
-#ifndef __handlist_h
+#ifndef   HANDLIST_H
 #include "handlist.h"
 #endif
 
-#ifndef          __collect_h
+#ifndef            COLLECT_H
 #include "cmodules/collect.h"
 #endif
 

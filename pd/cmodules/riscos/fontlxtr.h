@@ -7,14 +7,14 @@
 /* Copyright (C) 1990-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __fontlxtr_h
-#define __fontlxtr_h
+#ifndef FONTLXTR_H
+#define FONTLXTR_H
 
 #ifndef __fontlist_h
 #include "fontlist.h"
 #endif
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 

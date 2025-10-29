@@ -11,8 +11,8 @@
 
 /* MRJC May 1988 */
 
-#ifndef __spell_h
-#define __spell_h
+#ifndef SPELL_H
+#define SPELL_H
 
 typedef S32 DICT_NUMBER;
 
@@ -213,6 +213,6 @@ error definition
 
 #define SPELL_ERR_END           SPELL_ERR(19)
 
-#endif /* __spell_h */
+#endif /* SPELL_H */
 
 /* end of spell.h */

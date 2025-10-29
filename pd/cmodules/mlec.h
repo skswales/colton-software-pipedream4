@@ -11,8 +11,8 @@
 
 /* RCM May 1991 */
 
-#ifndef __mlec_h
-#define __mlec_h
+#ifndef MLEC_H
+#define MLEC_H
 
 #define SUPPORT_SELECTION TRUE /* SKS 04nov95 for PD 4.50 */
 #define SUPPORT_LOADSAVE  TRUE
@@ -24,7 +24,7 @@
 
 #ifndef ERRDEF_EXPORT /* not errdef export */
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 
@@ -266,6 +266,6 @@ message definition (keep consistent with CModules.*.msg.mlec)
 
 #endif /* MLEC_OFF */
 
-#endif /* __mlec_h */
+#endif /* MLEC_H */
 
 /* end of mlec.h */

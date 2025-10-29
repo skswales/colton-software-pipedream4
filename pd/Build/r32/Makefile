@@ -7,12 +7,12 @@
 # Copyright © 1989-1998 Colton Software Limited
 # Copyright © 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.62
-TEXTUAL_VERSION_NUMBER=4.62.02
+TEXTUAL_VERSION_NUMBER=4.63
+#EXTUAL_VERSION_NUMBER=4.63.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
-URD=$.pipedream4.pipedream__4_62__branch
+URD=$.pipedream4.pipedream__4_63__branch
 
 #PD=$(URD).pd
 PD=^.^
@@ -285,12 +285,12 @@ AOFDB=$(AOFD) $(AOFMD)
 @.!PipeDream.!RunImage: @.Makefile \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.Stubs
+        C:o.Stubs30d
         @Echo If the link step fails, please look in o._MapIm for the error
         $(LD) -v $(Linkflags) -base &8000 \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.Stubs \
+        C:o.Stubs30d \
         -map -xref > @.o._MapIm 2>&1 -symbols @.o._SymIm
         @Info $@
         @Squeeze -v $@
@@ -300,17 +300,17 @@ AOFDB=$(AOFD) $(AOFMD)
 # You may wish to link with AnsiLib for better profiling resolution
 #
 o.aof_inter: Makefile
-        $(LD) $(AOFLinkflags) o.pdmain C:o.Stubs
+        $(LD) $(AOFLinkflags) o.pdmain C:o.Stubs30d
 
 o.aof: \
         @.Makefile \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.Stubs
+        C:o.Stubs30d
         $(LD) -v $(AOFLinkflags) \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.Stubs \
+        C:o.Stubs30d \
         -map -xref > @.o._Map00 2>&1 -symbols @.o._Sym00
 #
 # working copy of the United Kingdom release sprites file

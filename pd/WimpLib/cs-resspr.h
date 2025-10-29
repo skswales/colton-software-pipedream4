@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2020-2023 Stuart Swales */
+/* Copyright (C) 2020-2025 Stuart Swales */
 
-#ifndef __cs_resspr_h
-#define __cs_resspr_h
+#ifndef CS_RESSPR_H
+#define CS_RESSPR_H
 
 #ifndef __resspr_h
 #include "resspr.h"
@@ -22,6 +22,6 @@ extern BOOL
 resspr_mergesprites(
     _In_z_      const char *leafname);
 
-#endif /* __cs_resspr_h */
+#endif /* CS_RESSPR_H */
 
 /* end of cs-resspr.h */

@@ -1,5 +1,5 @@
---- _src	2022-10-26 16:47:18.830000000 +0000
-+++ _dst	2022-10-27 18:57:26.950000000 +0000
+--- _src	2023-05-05 15:30:11.590000000 +0000
++++ _dst	2023-05-05 15:40:56.400000000 +0000
 @@ -32,9 +32,11 @@
   *
   */
@@ -409,7 +409,7 @@
  BOOL xfersend_file_is_safe(void)
  {
    return xfersend__fileissafe;
-@@ -654,4 +860,99 @@
+@@ -654,4 +860,123 @@
    return xfersend__msgid;        /* my_ref of last DataSave message */
  }
  
@@ -418,24 +418,55 @@
 +  xfersend_.cancel_button = f; 
 +}
 +
++#ifdef SKS_ACW
++
 +/* Starts a drag using DragASprite */
++
++extern os_error * dragasprite_start
++(
++        dragasprite_options     options,
++        sprite_area             *area,
++        char                    *name,
++        wimp_box                *dragbox,
++        wimp_box                *boundbox
++)
++{
++        os_regset r;
++
++        r.r[0] = (int)options;
++        r.r[1] = (int)area;
++        r.r[2] = (int)name;
++        r.r[3] = (int)dragbox;
++        r.r[4] = (int)boundbox;
++
++        return os_swix( DragASprite_Start, &r );
++}
++
++extern os_error * dragasprite_stop
++(
++        void
++)
++{
++        os_regset r;
++
++        return os_swix( DragASprite_Stop, &r );
++}
 +
 +static int dragging_using_dragasprite = FALSE;
 +
 +static os_error *nd_dragstart(wimp_dragstr dr, int filetype)
 +{
-+    os_regset r;
-+    os_error * e;
 +    char icon_name[32];
-+
 +    fileicon_name(icon_name, filetype);
 +
-+    r.r[0]=0x85;
-+    r.r[1]=1;
-+    r.r[2]=(int) icon_name;
-+    r.r[3]=(int) &(dr.box);
-+    r.r[4]=0;
-+    e=os_swix(DragASprite_Start, &r);
++    os_error * e;
++    e = dragasprite_start( (dragasprite_options)
++            (dragasprite_HJUSTIFY_CENTRE |
++             dragasprite_VJUSTIFY_CENTRE |
++             dragasprite_BOUNDTO_SCREEN |
++             dragasprite_BOUND_POINTER |
++             dragasprite_DROPSHADOW_PRESENT),
++            wimp_spritearea, icon_name, &dr.box, NULL);
 +
 +    if(!e)
 +        dragging_using_dragasprite = TRUE;
@@ -451,15 +482,7 @@
 +    {
 +        dragging_using_dragasprite = FALSE;
 +
-+#ifdef SKS_ACW
-+#if defined(NORCROFT_INLINE_SWIX_NOT_YET) /* this _swix not yet optimised */
-+        (void) _swix(DragASprite_Stop, 0);
-+#else
-+        os_swix0(DragASprite_Stop);
-+#endif
-+#else
-+        os_swi0(DragASprite_Stop);
-+#endif
++        dragasprite_stop();
 +    }
 +}
 +
@@ -473,11 +496,10 @@
 +    wimp_dragstr dr;
 +    wimp_wstate wstate;
 +    wimp_icon icon;
-+    wimp_w w;
 +
 +    win_add_unknown_event_processor(xfersend__unknowns, d);
 +
-+    w = dbox_syshandle(d);
++    wimp_w w = dbox_syshandle(d);
 +
 +    tracef0 ("Initiate a drag.\n");
 +
@@ -487,10 +509,10 @@
 +    if(wimpt_complain(wimp_get_icon_info(w, xfersend_FIcon, &icon))) return(FALSE);
 +    dr.window = w; /* not relevant */
 +    dr.type   = wimp_USER_FIXED;
-+    dr.box.x0 = wstate.o.box.x0 - wstate.o.x + icon.box.x0;
-+    dr.box.y0 = wstate.o.box.y1 - wstate.o.y + icon.box.y0;
-+    dr.box.x1 = wstate.o.box.x0 - wstate.o.x + icon.box.x1;
-+    dr.box.y1 = wstate.o.box.y1 - wstate.o.y + icon.box.y1;
++    dr.box.x0 = (wstate.o.box.x0 - wstate.o.x) + icon.box.x0;
++    dr.box.y0 = (wstate.o.box.y1 - wstate.o.y) + icon.box.y0;
++    dr.box.x1 = (wstate.o.box.x0 - wstate.o.x) + icon.box.x1;
++    dr.box.y1 = (wstate.o.box.y1 - wstate.o.y) + icon.box.y1;
 +    dr.parent.x0 = 0;
 +    dr.parent.y0 = 0;
 +    dr.parent.x1 = bbc_vduvar(bbc_XWindLimit) << bbc_vduvar(bbc_XEigFactor);
@@ -507,5 +529,7 @@
 +
 +  return FALSE;
 +}
++
++#endif /* SKS_ACW */
 +
  /* end xfersend.c */

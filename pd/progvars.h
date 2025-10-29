@@ -11,8 +11,8 @@
 
 /* RJM 8-Apr-1989 */
 
-#ifndef __progvars_h
-#define __progvars_h
+#ifndef PROGVARS_H
+#define PROGVARS_H
 
 #define charheight normal_charheight
 #define charwidth  normal_charwidth
@@ -30,6 +30,8 @@ extern P_DOCU document_list;
 /* ------------------------------ pdmain.c --------------------------------- */
 
 extern int ctrlflag;
+
+extern BOOL g_fp_non_stop_mode;
 
 /* ------------------------------ savload.c -------------------------------- */
 
@@ -113,7 +115,7 @@ extern P_LIST_BLOCK highlight_list;
 
 extern char *word_to_invert;            /* invert a word in check screen display */
 
-#ifndef __spell_h
+#ifndef            SPELL_H
 #include "cmodules/spell.h"
 #endif
 
@@ -265,6 +267,6 @@ _Ret_valid_
 extern P_NUMFORM_CONTEXT
 get_p_numform_context(void);
 
-#endif /* __progvars_h */
+#endif /* PROGVARS_H */
 
 /* end of progvars.h */

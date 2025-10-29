@@ -9,8 +9,8 @@
 
 /* Some target-specific definitions for the target machine and OS */
 
-#ifndef __defineos_h
-#define __defineos_h
+#ifndef DEFINEOS_H
+#define DEFINEOS_H
 
 /*
  * target machine definition
@@ -142,7 +142,7 @@ check that setup from selectos.h is ok
 
 /* much more of differences covered in coltsoft/coltsoft.h ... */
 
-#endif /* __defineos_h */
+#endif /* DEFINEOS_H */
 
 /* end of defineos.h */
 

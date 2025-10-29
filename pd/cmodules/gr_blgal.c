@@ -23,23 +23,23 @@ local header
 
 #include "gr_chari.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
-#ifndef __cs_template_h
+#ifndef   CS_TEMPLATE_H
 #include "cs-template.h"/* includes template.h */
 #endif
 
-#ifndef                 __tristate_h
+#ifndef                   TRISTATE_H
 #include "cmodules/riscos/tristate.h" /* no includes */
 #endif
 

@@ -23,7 +23,7 @@ local header
 
 #include "gr_chari.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 

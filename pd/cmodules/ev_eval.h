@@ -11,10 +11,10 @@
 
 /* MRJC April 1991 */
 
-#ifndef __ev_eval_h
-#define __ev_eval_h
+#ifndef EV_EVAL_H
+#define EV_EVAL_H
 
-#ifndef          __ss_const_h
+#ifndef            SS_CONST_H
 #include "cmodules/ss_const.h"
 #endif
 
@@ -1266,11 +1266,6 @@ extern void
 ev_report_ERROR_CUSTOM(
     _InRef_     PC_SS_DATA p_ss_data);
 
-extern BOOL g_ev_C99_mode; /*const-to-you*/
-
-extern void
-ev_set_C99_mode(BOOL C99_mode);
-
 extern void
 ev_set_options(
     _OutRef_    P_EV_OPTBLOCK p_optblock,
@@ -1587,6 +1582,6 @@ error definition
 
 #define EVAL_ERR_TOO_MANY_FUNARGS    EVAL_ERR_FUNARGS
 
-#endif /* __ev_eval_h */
+#endif /* EV_EVAL_H */
 
 /* end of ev_eval.h */

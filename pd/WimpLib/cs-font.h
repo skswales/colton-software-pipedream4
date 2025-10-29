@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2023 Stuart Swales */
+/* Copyright (C) 2012-2025 Stuart Swales */
 
-#ifndef __cs_font_h
-#define __cs_font_h
+#ifndef CS_FONT_H
+#define CS_FONT_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h" /* ensure we get ours in first */
 #endif
 
@@ -25,6 +25,6 @@ extern _kernel_oserror *
 font_SetFont(
     font f);
 
-#endif /* __cs_font_h */
+#endif /* CS_FONT_H */
 
 /* end of cs-font.h */

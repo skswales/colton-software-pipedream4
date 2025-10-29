@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2006-2023 Stuart Swales */
+/* Copyright (C) 2006-2025 Stuart Swales */
 
-#ifndef __u0000_h
-#define __u0000_h
+#ifndef U0000_H
+#define U0000_H
 
 /*
 0000..007F Basic Latin
@@ -157,6 +157,6 @@
 #define UCH_TILDE 0x007EU
 #define UCH_DELETE 0x007FU
 
-#endif /* __u0000_h */
+#endif /* U0000_H */
 
 /* end of u0000.h */

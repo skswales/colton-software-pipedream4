@@ -9,10 +9,10 @@
 
 #if RISCOS
 
-#ifndef __riscdraw_h
-#define __riscdraw_h
+#ifndef RISCDRAW_H
+#define RISCDRAW_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 
@@ -325,7 +325,7 @@ extern S32 log2bpp;
 #define CARET_COLOURSHIFT   16              /* bits 16..23 */
 #define CARET_BODGE_Y       (charheight/4)  /* extra bits on top & bottom of caret */
 
-#endif  /* __riscdraw_h */
+#endif  /* RISCDRAW_H */
 
 #endif  /* RISCOS */
 

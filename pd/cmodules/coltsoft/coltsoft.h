@@ -11,8 +11,8 @@
 
 /* MRJC September 1989 / December 1991 */
 
-#ifndef __coltsoft_h
-#define __coltsoft_h
+#ifndef COLTSOFT_H
+#define COLTSOFT_H
 
 #if RISCOS
 
@@ -394,6 +394,7 @@ See https://www.cl.cam.ac.uk/~mgk25/unicode.html
 */
 
 #define TSTR_IS_SBSTR 1
+#define TSTR_IS_WSTR  !TSTR_IS_SBSTR
 
 #define USTR_IS_SBSTR 1
 
@@ -803,10 +804,6 @@ GDI_POINT, * P_GDI_POINT; typedef const GDI_POINT * PC_GDI_POINT;
 #define GDI_POINT_TFMT \
     TEXT("x = ") GDI_COORD_TFMT TEXT(", y = ") GDI_COORD_TFMT
 
-#define GDI_POINT_ARGS(gdi_point__ref) \
-    (gdi_point__ref).x, \
-    (gdi_point__ref).y
-
 typedef struct GDI_SIZE
 {
     GDI_COORD cx, cy;
@@ -827,12 +824,6 @@ GDI_BOX, * P_GDI_BOX; typedef const GDI_BOX * PC_GDI_BOX;
     TEXT("x0 = ") GDI_COORD_TFMT TEXT(", y0 = ") GDI_COORD_TFMT TEXT("; ") \
     TEXT("x1 = ") GDI_COORD_TFMT TEXT(", y1 = ") GDI_COORD_TFMT
 
-#define GDI_BOX_ARGS(gdi_box__ref) \
-    (gdi_box__ref).x0, \
-    (gdi_box__ref).y0, \
-    (gdi_box__ref).x1, \
-    (gdi_box__ref).y1
-
 /*
 ordered rectangles
 */
@@ -846,12 +837,6 @@ GDI_RECT, * P_GDI_RECT; typedef const GDI_RECT * PC_GDI_RECT;
 #define GDI_RECT_TFMT \
     TEXT("tl = ") GDI_COORD_TFMT TEXT(",") GDI_COORD_TFMT TEXT("; ") \
     TEXT("br = ") GDI_COORD_TFMT TEXT(",") GDI_COORD_TFMT
-
-#define GDI_RECT_ARGS(gdi_rect__ref) \
-    (gdi_rect__ref).tl.x, \
-    (gdi_rect__ref).tl.y, \
-    (gdi_rect__ref).br.x, \
-    (gdi_rect__ref).br.y
 
 /*
 S32 variants where we have neither GDI nor PIXIT units
@@ -1567,6 +1552,6 @@ typedef uint64_t U64; typedef U64 * P_U64, ** P_P_U64; typedef const U64 * PC_U6
     (v_int64) < 0 )
 #endif
 
-#endif /* __coltsoft_h */
+#endif /* COLTSOFT_H */
 
 /* end of coltsoft.h */

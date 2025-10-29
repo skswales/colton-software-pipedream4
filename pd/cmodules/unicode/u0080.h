@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2006-2023 Stuart Swales */
+/* Copyright (C) 2006-2025 Stuart Swales */
 
-#ifndef __u0080_h
-#define __u0080_h
+#ifndef U0080_H
+#define U0080_H
 
 /*
 0080..00FF Latin-1 Supplement
@@ -123,6 +123,6 @@
 #define UCH_LATIN_SMALL_LETTER_THORN 0x00FEU
 #define UCH_LATIN_SMALL_LETTER_Y_WITH_DIAERESIS 0x00FFU
 
-#endif /* __u0080_h */
+#endif /* U0080_H */
 
 /* end of u0080.h */

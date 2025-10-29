@@ -15,11 +15,11 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"
 #endif
 
-#ifndef __cs_xfersend_h
+#ifndef   CS_XFERSEND_H
 #include "cs-xfersend.h"
 #endif
 
@@ -34,7 +34,7 @@
 
 #include "dtpsave.h"
 
-#ifndef __cs_xferrecv_h
+#ifndef   CS_XFERRECV_H
 #include "cs-xferrecv.h"
 #endif
 
@@ -2332,7 +2332,7 @@ loadfile_convert_lotus123(
     }
     tstr_xstrkat(new_filename, BUF_MAX_PATHSTRING, "/pd");
 
-    return(str_set(p_new_filename, new_filename));
+    status_return(str_set(p_new_filename, new_filename));
 
     if(NULL == command_line_buffer)
         if(NULL == (command_line_buffer = al_ptr_alloc_elem(TCHAR, elemof_command_line_buffer, &status)))

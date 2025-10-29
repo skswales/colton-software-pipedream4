@@ -243,6 +243,7 @@
     <ClCompile Include="..\..\..\..\strings.c" />
     <ClCompile Include="..\..\..\..\UserIO.c" />
     <ClCompile Include="..\..\..\..\userdict.c" />
+    <ClCompile Include="..\..\..\..\utils\u_helpmess.c" />
     <ClCompile Include="..\..\..\..\utils\u_reperr.c" />
     <ClCompile Include="..\..\..\..\utils\u_strings.c" />
     <ClCompile Include="..\..\..\..\version.c">
@@ -269,6 +270,10 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-resspr.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">common/gflags.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\cs-templat.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -359,6 +364,8 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\resspr.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\..\WimpLib\werr.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -483,7 +490,10 @@
     <ClInclude Include="..\..\..\..\WimpLib\cs-fileicon.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-flex.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-font.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-kernel.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-menu.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-msgs.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-resspr.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-template.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-wimp.h" />
     <ClInclude Include="..\..\..\..\WimpLib\cs-wimptx.h" />
@@ -524,6 +534,7 @@
   <ItemGroup>
     <None Include="..\..\..\..\..\docs\LICENCE" />
     <None Include="..\..\..\..\..\docs\MakeRiscPkg,fd7" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\.editorconfig" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\alignment.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\arrays.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\ascii.html" />
@@ -557,6 +568,7 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\highlights.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\hotlinks.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\iconmenu.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\images\LICENCE" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\indentingparagraphs.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\intro.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\keyboard.html" />
@@ -610,6 +622,7 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\comdoc.htm" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\cmds.htm" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\conven.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\images\LICENCE" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\tutor.css" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\db.htm" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\gloss.htm" />
@@ -620,23 +633,29 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\index.html" />
     <None Include="..\..\..\..\..\docs\RiscPkg\Control" />
     <None Include="..\..\..\..\..\docs\RiscPkg\Copyright" />
+    <None Include="..\..\..\..\..\docs\RiscPkg\LICENCE" />
     <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\!Help" />
     <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\Desc" />
     <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\Messages" />
+    <None Include="..\..\..\..\..\extrautils\123PD\CopyToTemp,feb" />
     <None Include="..\..\..\..\..\extrautils\123PD\MakeRiscPkg,fd7" />
     <None Include="..\..\..\..\..\extrautils\123PD\RiscPkg\Control" />
     <None Include="..\..\..\..\..\extrautils\123PD\RiscPkg\Copyright" />
+    <None Include="..\..\..\..\..\extrautils\123PD\RiscPkg\LICENCE" />
     <None Include="..\..\..\..\..\extrautils\LICENCE" />
     <None Include="..\..\..\..\..\extrautils\Makef123" />
     <None Include="..\..\..\..\..\extrautils\PD123\Apps\Utilities\!PD123\!Help" />
     <None Include="..\..\..\..\..\extrautils\PD123\Apps\Utilities\!PD123\Desc" />
     <None Include="..\..\..\..\..\extrautils\PD123\Apps\Utilities\!PD123\Messages" />
+    <None Include="..\..\..\..\..\extrautils\PD123\CopyToTemp,feb" />
     <None Include="..\..\..\..\..\extrautils\PD123\MakeRiscPkg,fd7" />
     <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Control" />
     <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Copyright" />
+    <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\LICENCE" />
     <None Include="..\..\..\..\..\extrautils\Relnotes" />
-    <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
-    <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
+    <None Include="..\..\..\..\cmodules\utils\en_GB\msg\gr_chart" />
+    <None Include="..\..\..\..\cmodules\utils\en_GB\msg\mlec" />
+    <None Include="..\..\..\..\LICENCE" />
     <None Include="..\..\..\..\RelHistPrev.html" />
     <None Include="..\..\..\..\Relnotes.html" />
     <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\cmds.htm">
@@ -696,7 +715,17 @@
     </None>
     <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\Text" />
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\ReadMe" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_git_co,fd7" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_git_co.cmd" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_git_co.sh" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\apply,fd7" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\apply.cmd" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\apply.sh" />
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\generate,fd7" />
+    <None Include="..\..\..\..\WimpLib\r32\Build,fd7" />
     <None Include="..\..\..\..\WimpLib\r32\Makefile" />
+    <None Include="..\..\..\..\WimpLib\ReadMe" />
     <None Include="..\..\..\..\WimpLib\swi.s" />
     <None Include="..\..\..\..\WimpLib\utils\en_GB\hlp_risc" />
     <None Include="..\..\..\..\WimpLib\utils\en_GB\msg_risc" />
@@ -707,6 +736,7 @@
     <None Include="..\..\..\r32\MakeRiscPkg,fd7" />
     <None Include="..\..\..\r32\RiscPkg\Control" />
     <None Include="..\..\..\r32\RiscPkg\Copyright" />
+    <None Include="..\..\..\r32\RiscPkg\LICENCE" />
     <None Include="..\..\..\Tools\BootRunGen" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

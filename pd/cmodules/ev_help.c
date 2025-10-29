@@ -681,6 +681,19 @@ array_range_index(
     return(ss_data_get_data_id(p_ss_data_out));
 }
 
+/* very common usage, common to save caller code */
+
+/*ncr*/
+extern EV_IDNO
+array_range_index_REA(
+    _OutRef_    P_SS_DATA p_ss_data_out,
+    _InRef_     PC_SS_DATA p_ss_data_in,
+    _InVal_     S32 ix,
+    _InVal_     S32 iy)
+{
+    return(array_range_index(p_ss_data_out, p_ss_data_in, ix, iy, EM_REA));
+}
+
 /******************************************************************************
 *
 * extract an element of array or range using single index (across rows first)

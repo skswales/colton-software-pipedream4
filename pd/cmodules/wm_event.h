@@ -11,8 +11,8 @@
 
 /* SKS October 1990 */
 
-#ifndef __wm_event_h
-#define __wm_event_h
+#ifndef WM_EVENT_H
+#define WM_EVENT_H
 
 /*
 exported functions
@@ -30,7 +30,7 @@ wm_events_get(
 requires
 */
 
-#ifndef __monotime_h
+#ifndef   MONOTIME_H
 #include "monotime.h"
 #endif
 
@@ -94,6 +94,6 @@ Null_EventHandlerRemove(
     P_PROC_NULL_EVENT proc,
     P_ANY client_handle);
 
-#endif /* __wm_event_h */
+#endif /* WM_EVENT_H */
 
 /* end of wm_event.h */

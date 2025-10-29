@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2023 Stuart Swales */
+/* Copyright (C) 2014-2025 Stuart Swales */
 
 /* Statistical function routines for evaluator */
 
@@ -348,7 +348,7 @@ PROC_EXEC_PROTO(c_median)
 
         {
         SS_DATA ss_data;
-        (void) array_range_index(&ss_data, &ss_data_temp_array, 0, y_half, EM_REA);
+        (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, y_half);
         median = ss_data_get_real(&ss_data);
         } /*block*/
 
@@ -356,7 +356,7 @@ PROC_EXEC_PROTO(c_median)
         {
             /* if there are an even number of elements, the median is the mean of the two middle ones */
             SS_DATA ss_data;
-            (void) array_range_index(&ss_data, &ss_data_temp_array, 0, y_half - 1, EM_REA);
+            (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, y_half - 1);
             median = (median + ss_data_get_real(&ss_data)) / 2.0;
         }
 
@@ -393,12 +393,12 @@ median_calc_span(
     SS_DATA ss_data;
     F64 median;
 
-    (void) array_range_index(&ss_data, p_ss_data, 0, y_start + ys_half, EM_REA);
+    (void) array_range_index_REA(&ss_data, p_ss_data, 0, y_start + ys_half);
     median = ss_data_get_real(&ss_data);
 
     if(0 == (ys_effective & 1))
     {   /* there are an even number of elements in this span, so the median is the mean of the two middle ones */
-        (void) array_range_index(&ss_data, p_ss_data, 0, y_start + ys_half - 1, EM_REA);
+        (void) array_range_index_REA(&ss_data, p_ss_data, 0, y_start + ys_half - 1);
         median = (median + ss_data_get_real(&ss_data)) * 0.5;
     }
 
@@ -516,24 +516,24 @@ percentile_calc(
 
     if(exclusive && (k == 0))
     {   /* exclusive: bottom end-stop */
-        (void) array_range_index(&ss_data, p_ss_data, 0, (1) - 1, EM_REA);
+        (void) array_range_index_REA(&ss_data, p_ss_data, 0, (1) - 1);
         v_p = ss_data_get_real(&ss_data);
     }
     else if(exclusive && (k >= y_size))
     {   /* exclusive: top end-stop */
-        (void) array_range_index(&ss_data, p_ss_data, 0, (y_size) - 1, EM_REA);
+        (void) array_range_index_REA(&ss_data, p_ss_data, 0, (y_size) - 1);
         v_p = ss_data_get_real(&ss_data);
     }
     else
     {   /* linear interpolation between values */
-        (void) array_range_index(&ss_data, p_ss_data, 0, (k + 0) - 1, EM_REA);
+        (void) array_range_index_REA(&ss_data, p_ss_data, 0, (k + 0) - 1);
         v_k = ss_data_get_real(&ss_data);
 
         if(0.0 == d)
             v_p = v_k;
         else
         {
-            (void) array_range_index(&ss_data, p_ss_data, 0, (k + 1) - 1, EM_REA);
+            (void) array_range_index_REA(&ss_data, p_ss_data, 0, (k + 1) - 1);
             v_kp1 = ss_data_get_real(&ss_data);
 
             v_p = v_k + d * (v_kp1 - v_k);
@@ -672,7 +672,7 @@ percentrank_inc_exc_common(
         SS_DATA ss_data_t;
         S32 res;
 
-        (void) array_range_index(&ss_data_t, &ss_data_temp_array, 0, iy, EM_REA);
+        (void) array_range_index_REA(&ss_data_t, &ss_data_temp_array, 0, iy);
 
         res = ss_data_compare(number, &ss_data_t, FALSE, FALSE);
 
@@ -701,7 +701,7 @@ percentrank_inc_exc_common(
                     const S32 divisor = (y_size + 1 - 2*alpha);
                     F64 this_value = ss_data_get_real(&ss_data_t);
                     F64 fraction_beween;
-                    (void) array_range_index(&ss_data_t, &ss_data_temp_array, 0, iy - 1, EM_REA);
+                    (void) array_range_index_REA(&ss_data_t, &ss_data_temp_array, 0, iy - 1);
                     fraction_beween = interpolate_fraction_between(ss_data_get_real(&ss_data_t), this_value, ss_data_get_real(number));
                     percentrank_result = ((((F64) position - 1) - alpha) + fraction_beween) / divisor;
                     /* [1,y_size] -> [0,1] for .INC */
@@ -839,7 +839,7 @@ PROC_EXEC_PROTO(c_quartile_inc)
         {
         default: default_unhandled();
         case 0: /* minimum value */
-            (void) array_range_index(&ss_data, &ss_data_temp_array, 0, 0, EM_REA);
+            (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, 0);
             quartile_result = ss_data_get_real(&ss_data);
             break;
 
@@ -856,16 +856,16 @@ PROC_EXEC_PROTO(c_quartile_inc)
                 break;
 
             case 1: /* 4n+1 */
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (n + 0) - 1, EM_REA); /* (n)th value of the ordered data set */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (n + 0) - 1); /* (n)th value of the ordered data set */
                 quartile_result  = 0.25 * ss_data_get_real(&ss_data);
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (n + 1) - 1, EM_REA); /* (n+1)th value */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (n + 1) - 1); /* (n+1)th value */
                 quartile_result += 0.75 * ss_data_get_real(&ss_data);
                 break;
 
             case 3: /* 4n+3 */
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (n + 1) - 1, EM_REA); /* (n+1)th value of the ordered data set */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (n + 1) - 1); /* (n+1)th value of the ordered data set */
                 quartile_result  = 0.75 * ss_data_get_real(&ss_data);
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (n + 2) - 1, EM_REA); /* (n+2)th value */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (n + 2) - 1); /* (n+2)th value */
                 quartile_result += 0.25 * ss_data_get_real(&ss_data);
                 break;
             }
@@ -890,16 +890,16 @@ PROC_EXEC_PROTO(c_quartile_inc)
                 break;
 
             case 1: /* 4n+1 */
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (3*n + 1) - 1, EM_REA); /* (3n+1)th value of the ordered data set */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (3*n + 1) - 1); /* (3n+1)th value of the ordered data set */
                 quartile_result  = 0.75 * ss_data_get_real(&ss_data);
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (3*n + 2) - 1, EM_REA); /* (3n+2)th value */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (3*n + 2) - 1); /* (3n+2)th value */
                 quartile_result += 0.25 * ss_data_get_real(&ss_data);
                 break;
 
             case 3: /* 4n+3 */
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (3*n + 2) - 1, EM_REA); /* (3n+2)th value of the ordered data set */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (3*n + 2) - 1); /* (3n+2)th value of the ordered data set */
                 quartile_result  = 0.25 * ss_data_get_real(&ss_data);
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, (3*n + 3) - 1, EM_REA); /* (3n+3)th value */
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, (3*n + 3) - 1); /* (3n+3)th value */
                 quartile_result += 0.75 * ss_data_get_real(&ss_data);
                 break;
             }
@@ -908,7 +908,7 @@ PROC_EXEC_PROTO(c_quartile_inc)
             }
 
         case 4: /* maximum value */
-            (void) array_range_index(&ss_data, &ss_data_temp_array, 0, y_size - 1, EM_REA);
+            (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, y_size - 1);
             quartile_result = ss_data_get_real(&ss_data);
             break;
         }
@@ -1016,7 +1016,7 @@ PROC_EXEC_PROTO(c_rank_eq)
         SS_DATA ss_data_t;
         S32 res;
 
-        (void) array_range_index(&ss_data_t, &ss_data_temp_array, 0, iy, EM_REA);
+        (void) array_range_index_REA(&ss_data_t, &ss_data_temp_array, 0, iy);
 
         res = ss_data_compare(number, &ss_data_t, FALSE, FALSE);
 
@@ -1118,7 +1118,7 @@ PROC_EXEC_PROTO(c_trimmean)
             {
                 SS_DATA ss_data;
 
-                (void) array_range_index(&ss_data, &ss_data_temp_array, 0, iy, EM_REA);
+                (void) array_range_index_REA(&ss_data, &ss_data_temp_array, 0, iy);
 
                 mean += ss_data_get_real(&ss_data);
             }

@@ -11,10 +11,10 @@
 
 /* MRJC December 1991 */
 
-#ifndef __aligator_h
-#define __aligator_h
+#ifndef ALIGATOR_H
+#define ALIGATOR_H
 
-#if defined(ALIGATOR_USE_ALLOC) && !defined(__alloc_h)
+#if defined(ALIGATOR_USE_ALLOC) && !defined(ALLOC_H)
 #include "cmodules/alloc.h"
 #endif
 
@@ -84,21 +84,9 @@ extern void
 al_ptr_free(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any);
 
-static inline void
+extern void
 al_ptr_dispose(
-    _InoutRef_opt_ P_P_ANY p_p_any)
-{
-    if(NULL != p_p_any)
-    {
-        P_ANY p_any = *p_p_any;
-
-        if(NULL != p_any)
-        {
-            *p_p_any = NULL;
-            al_ptr_free(p_any);
-        }
-    }
-}
+    _InoutRef_opt_ P_P_ANY p_p_any);
 
 #if WINDOWS
 
@@ -474,8 +462,6 @@ ARRAY_INIT_BLOCK; typedef const ARRAY_INIT_BLOCK * PC_ARRAY_INIT_BLOCK;
 
 #define PC_ARRAY_INIT_BLOCK_NONE _P_DATA_NONE(PC_ARRAY_INIT_BLOCK)
 
-#define SC_ARRAY_INIT_BLOCK static const ARRAY_INIT_BLOCK /* an ARRAY_INIT_BLOCK out in const area */
-
 #define aib_init(size_increment, element_size, clear_new_block) \
     { (size_increment), (element_size), (clear_new_block), 0, { 0, 0 } }
 
@@ -643,16 +629,16 @@ _al_array_lsearch(
     CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 extern void
-_al_array_dispose(
+al_array_dispose(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle);
 
-static inline void
-al_array_dispose(
-    _InoutRef_  P_ARRAY_HANDLE p_array_handle)
-{
-    if(0 != *p_array_handle)
-        _al_array_dispose(p_array_handle);
-}
+//static inline void
+//_inl_al_array_dispose(
+//    _InoutRef_  P_ARRAY_HANDLE p_array_handle)
+//{
+//    if(0 != *p_array_handle)
+//        _al_array_dispose(p_array_handle);
+//}
 
 _Check_return_
 extern STATUS
@@ -902,6 +888,6 @@ simply-typed variants of ARRAY_HANDLE
 #define array_wstr(pc_array_handle_wstr) \
     wstr_from_h_wstr(pc_array_handle_wstr)
 
-#endif /* __aligator_h */
+#endif /* ALIGATOR_H */
 
 /* end of aligator.h */

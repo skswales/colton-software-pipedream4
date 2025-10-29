@@ -7,8 +7,8 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __filetype_h
-#define __filetype_h
+#ifndef FILETYPE_H
+#define FILETYPE_H
 
 /*
 RISC OS file types
@@ -78,6 +78,6 @@ typedef enum FILETYPE_RISC_OS
 }
 FILETYPE_RISC_OS, * P_FILETYPE_RISC_OS;
 
-#endif /* __filetype_h */
+#endif /* FILETYPE_H */
 
 /* end of coltsoft/filetype.h */

@@ -7,8 +7,8 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __bezier_h
-#define __bezier_h
+#ifndef BEZIER_H
+#define BEZIER_H
 
 /*
 exported functions
@@ -56,6 +56,6 @@ bezier_arc_start(
     _OutRef_    P_DRAW_POINT control1,
     _OutRef_    P_DRAW_POINT control2);
 
-#endif /* __bezier_h */
+#endif /* BEZIER_H */
 
 /* end of bezier.h */

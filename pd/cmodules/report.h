@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2013-2023 Stuart Swales */
+/* Copyright (C) 2013-2025 Stuart Swales */
 
 /* Header file for the report module */
 
 /* SKS February 2013 */
 
-#ifndef __report_h
-#define __report_h
+#ifndef REPORT_H
+#define REPORT_H
 
 /*
 exported type
@@ -125,6 +125,6 @@ _Check_return_
 extern BOOL
 reporting_is_enabled(void);
 
-#endif /* __report_h */
+#endif /* REPORT_H */
 
 /* end of report.h */

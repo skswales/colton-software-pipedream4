@@ -157,7 +157,7 @@ ENDIF
 PROCo(f%,"|")
 PROCs(f%,FNvar_product("Help"),var_product_dir$+".!Help",boot%)
 PROCs(f%,FNvar_product("Version"),version$,boot%)
-PROCs(f%,FNvar_product("Web"),"https://croftnuisk.co.uk/coltsoft/pipedream/",boot%)
+PROCs(f%,FNvar_product("Web"),"https://croftnuisk.co.uk/coltsoft/pipedream",boot%)
 PROCs(f%,FNvar_product("Title"),true_product$,boot%)
 PROCs(f%,FNvar_product("Description"),"Integrated spreadsheet and word processor",boot%)
 PROCs(f%,FNvar_product("Publisher"),"Colton Software",boot%)

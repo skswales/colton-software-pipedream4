@@ -11,8 +11,8 @@
 
 /* Stuart K. Swales 24-May-1991 */
 
-#ifndef __osfile_h
-#define __osfile_h
+#ifndef OSFILE_H
+#define OSFILE_H
 
 /*
 OS_File reason codes
@@ -130,6 +130,6 @@ enum OSFind_ExtraRCBits
     OSFind_EnsureOpen   = 0x08  /* gives error instead of handle = 0 return */
 };
 
-#endif /* __osfile_h */
+#endif /* OSFILE_H */
 
 /* end of riscos/osfile.h */

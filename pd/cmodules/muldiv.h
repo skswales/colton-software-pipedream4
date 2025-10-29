@@ -9,8 +9,8 @@
 
 /* SKS July 1991 */
 
-#ifndef __muldiv_h
-#define __muldiv_h
+#ifndef MULDIV_H
+#define MULDIV_H
 
 #if defined(__cplusplus)
 extern "C" {
@@ -53,6 +53,6 @@ muldiv64_limiting(
 }
 #endif
 
-#endif /* __muldiv_h */
+#endif /* MULDIV_H */
 
 /* end of muldiv.h */

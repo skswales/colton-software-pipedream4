@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2023 Stuart Swales */
+/* Copyright (C) 2014-2025 Stuart Swales */
 
-#ifndef __colourpick_h
-#define __colourpick_h
+#ifndef COLOURPICK_H
+#define COLOURPICK_H
 
 enum COLOUR_PICKER_TYPE
 {
@@ -29,6 +29,6 @@ riscos_colour_picker(
     _InVal_     BOOL allow_transparent,
     _In_z_      PC_U8Z p_title);
 
-#endif /* __colourpick_h */
+#endif /* COLOURPICK_H */
 
 /* end of colourpick.h */

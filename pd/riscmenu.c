@@ -27,19 +27,19 @@
 #include "pd_x.h"
 #include "ridialog.h"
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"
 #endif
 
-#ifndef __fontlxtr_h
+#ifndef FONTLXTR_H
 #include "cmodules/riscos/fontlxtr.h"
 #endif
 
@@ -258,7 +258,7 @@ iconbar_menu_handler(
     switch(selection)
     {
     case mo_iconbar_info:
-        if(CLICK_GIVES_DIALOG  ||  submenurequest)
+        if_constant( CLICK_GIVES_DIALOG  ||  submenurequest )
             riscdialog_execute(dproc_aboutprog,
                                "aboutprog", d_about, D_ABOUT);
         /* ignore clicks on 'Info' entry if !CLICK_GIVES_DIALOG */

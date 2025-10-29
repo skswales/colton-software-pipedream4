@@ -29,7 +29,7 @@
 
 #if RISCOS
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"
 #endif
 

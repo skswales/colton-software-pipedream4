@@ -9,8 +9,8 @@
 
 /* requires "riscos_x.h" */
 
-#ifndef __ridialog_x_h
-#define __ridialog_x_h
+#ifndef RIDIALOG_X_H
+#define RIDIALOG_X_H
 
 #if RISCOS
 
@@ -74,6 +74,6 @@ extern BOOLEAN dialog_window_has_caret;
 
 #endif
 
-#endif
+#endif /* RIDIALOG_X_H */
 
 /* end of ridialog_x.h */

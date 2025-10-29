@@ -18,15 +18,12 @@
 #endif
 
 #define F64_ZERO  0.0
-#define F64_HALF  0.5
 #define F64_ONE   1.0
-#define F64_TWO   2.0
-#define F64_EIGHT 8.0
 
-#if (FLT_RADIX == 2)
-#define __LN_RADIX_BASE _ln_two
+#if   (FLT_RADIX == 2)
+#define LN_RADIX_BASE _ln_two
 #elif (FLT_RADIX == 10)
-#define __LN_RADIX_BASE _ln_ten
+#define LN_RADIX_BASE _ln_ten
 #else
 #error Unable to compile mathxtra.c code for this radix
 #endif /* FLT_RADIX */

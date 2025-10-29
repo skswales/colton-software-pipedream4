@@ -7,10 +7,10 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __riscos_x_h
-#define __riscos_x_h
+#ifndef RISCOS_X_H
+#define RISCOS_X_H
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h" /* includes cs-wimp.h -> os.h, sprite.h; wimpt.h */
 #endif
 
@@ -240,6 +240,6 @@ extern void
 pdfontselect_finalise(
     BOOL kill);
 
-#endif  /* __riscos_x_h */
+#endif  /* RISCOS_X_H */
 
 /* end of riscos_x.h */

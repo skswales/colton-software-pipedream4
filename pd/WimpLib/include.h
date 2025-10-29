@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __include_h
-#define __include_h
+#ifndef INCLUDE_H
+#define INCLUDE_H
 
 #if defined(SB_GLOBAL_REGISTER)
 /*extern*/ __global_reg(6) struct DOCU * current_p_docu; /* keep current_p_docu in v6 register (so don't let WimpLib corrupt it) */
@@ -115,15 +115,12 @@ extern void message_output(_In_z_ PCTSTR buffer);
 
 #include "cmodules/aligator.h"
 
-#ifndef          __xstring_h
+#ifndef            XTSTRING_H
 #include "cmodules/xstring.h" /* for safe-string routines */
 #endif
 
+#define EXPOSE_RISCOS_SWIS 1
 #include "cs-kernel.h" /* C: */
-
-#ifndef __swis_h
-#include "swis.h" /* C: */
-#endif
 
 #define _XOS(swi_no) ((swi_no) | (1U << 17))
 
@@ -131,45 +128,45 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "os.h"
 #endif
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"    /* includes font.h -> os.h, drawmod.h, wimp.h */
 #endif
 
 #include "cmodules/riscos/osfile.h"
 
-#ifndef __cs_akbd_h
+#ifndef   CS_AKBD_H
 #include "cs-akbd.h"    /* includes akbd.h */
 #endif
 
-#ifndef __cs_bbcx_h
+#ifndef   CS_BBCX_H
 #include "cs-bbcx.h"    /* includes bbc.h */
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"   /* includes event.h -> menu.h, wimp.h */
 #endif
 
-#ifndef __cs_fileicon_h
+#ifndef   CS_FILEICON_H
 #include "cs-fileicon.h" /* includes fileicon.h -> wimp.h */
 #endif
 
-#ifndef __cs_flex_h
+#ifndef   CS_FLEX_H
 #include "cs-flex.h"    /* includes flex.h */
 #endif
 
-#ifndef __cs_menu_h
+#ifndef   CS_MENU_H
 #include "cs-menu.h"    /* includes menu.h */
 #endif
 
-#ifndef __cs_msgs_h
+#ifndef   CS_MSGS_H
 #include "cs-msgs.h"    /* includes msgs.h */
 #endif
 
@@ -189,11 +186,11 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "resspr.h"     /* includes sprite.h */
 #endif
 
-#ifndef __cs_xfersend_h
+#ifndef   CS_XFERSEND_H
 #include "cs-xfersend.h" /* includes xfersend.h */
 #endif
 
-#ifndef __cs_template_h
+#ifndef   CS_TEMPLATE_H
 #include "cs-template.h" /* includes template.h */
 #endif
 
@@ -201,15 +198,15 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "werr.h"       /* includes <stdarg.h> */
 #endif
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
@@ -219,6 +216,6 @@ extern void message_output(_In_z_ PCTSTR buffer);
 
 #endif /* INCLUDE_FOR_NO_DELTA */
 
-#endif  /* __include_h */
+#endif  /* INCLUDE_H */
 
 /* end of include.h */

@@ -7,8 +7,8 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __numform_h
-#define __numform_h
+#ifndef NUMFORM_H
+#define NUMFORM_H
 
 typedef struct NUMFORM_CONTEXT
 {
@@ -37,6 +37,6 @@ numform(
     _InRef_     PC_SS_DATA p_ss_data,
     _InRef_     PC_NUMFORM_PARMS p_numform_parms);
 
-#endif /* __numform_h */
+#endif /* NUMFORM_H */
 
 /* end of numform.h */

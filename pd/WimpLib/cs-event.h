@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_event_h
-#define __cs_event_h
+#ifndef CS_EVENT_H
+#define CS_EVENT_H
 
 #ifndef __event_h
 #include "event.h"
@@ -67,6 +67,6 @@ event_read_menuclickdata(
     _Out_       int * const p_icon_handle);
 /* Read the data associated with the mouse click that created the menu you're making or handling */
 
-#endif /* __cs_event_h */
+#endif /* CS_EVENT_H */
 
 /* end of cs-event.h */

@@ -7,10 +7,10 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_winx_h
-#define __cs_winx_h
+#ifndef CS_WINX_H
+#define CS_WINX_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h" /* ensure we get ours in first */
 #endif
 
@@ -18,7 +18,7 @@
 #include "win.h"
 #endif
 
-#ifndef __cs_winf_h
+#ifndef   CS_WINF_H
 #include "cs-winf.h"
 #endif
 
@@ -153,6 +153,6 @@ winx_submenu_query_is_submenu(
 extern BOOL
 winx_submenu_query_closed(void);
 
-#endif /* __cs_winx_h */
+#endif /* CS_WINX_H */
 
 /* end of cs-winx.h */

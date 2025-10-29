@@ -7,8 +7,8 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __tristate_h
-#define __tristate_h
+#ifndef TRISTATE_H
+#define TRISTATE_H
 
 #define RISCOS_TRISTATE_DONT_CARE 0
 #define RISCOS_TRISTATE_ON 1
@@ -35,6 +35,6 @@ riscos_tristate_set(
     _InVal_     int icon_handle,
     RISCOS_TRISTATE_STATE state);
 
-#endif /* __tristate_h */
+#endif /* TRISTATE_H */
 
 /* end of tristate.h */

@@ -9,8 +9,8 @@
 
 /* SKS September 1991 */
 
-#ifndef __mathxtr2_h
-#define __mathxtr2_h
+#ifndef MATHXTR2_H
+#define MATHXTR2_H
 
 /*
 colID states (NB PipeDream ones are NOT the same as Fireworkz ones)
@@ -66,6 +66,6 @@ linest(
     _InVal_     U32 ext_m /* number of independent x variables */,
     _InVal_     U32 n     /* number of data points */);
 
-#endif /* __mathxtr2_h */
+#endif /* MATHXTR2_H */
 
 /* end of mathxtr2.h */

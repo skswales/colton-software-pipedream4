@@ -23,8 +23,6 @@
 
 #pragma no_check_stack /* nothing goes deep here */
 
-#define mathxtra_square mx_fsquare /* for transition */
-
 /*
 internal functions
 */

@@ -11,8 +11,8 @@
 
 /* RCM October 1991 */
 
-#ifndef __userIO_x_h
-#define __userIO_x_h
+#ifndef USERIO_X_H
+#define USERIO_X_H
 
 /* exported types */
 
@@ -54,6 +54,6 @@ extern void
 userIO_input_from_user_close(
     userIO_handle *userp);
 
-#endif /* __userIO_x_h */
+#endif /* USERIO_X_H */
 
 /* end of userIO_x.h */

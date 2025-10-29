@@ -11,8 +11,8 @@
 
 /* MRJC November 1989 */
 
-#ifndef __typepack_h
-#define __typepack_h
+#ifndef TYPEPACK_H
+#define TYPEPACK_H
 
 /*#define TYPEPACK_EXPORT_ONLY_FUNCTIONS 1*/
 /*#define TYPEPACK_EXPORT_ONLY_MACROS 1*/
@@ -320,30 +320,30 @@ writing to memory - assume unaligned access works, even if slower
 /* used below for things that work ok by simple pointer op */
 #ifdef CROSS_COMPILE
 /* stop winges about narrowing with /W4 */
-#define __writeval_generic16(to, val, type) ( \
+#define writeval_generic16(to, val, type) ( \
     * (type *) (to) = (type) (val) )
 #else
-#define __writeval_generic16(to, val, type) ( \
+#define writeval_generic16(to, val, type) ( \
     * (type *) (to) = (val) )
 #endif
-#define __writeval_generic(to, val, type) ( \
+#define writeval_generic(to, val, type) ( \
     * (type *) (to) = (val) )
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define writeval_U16_BE(to, u16) __writeval_generic16(to, u16, U16)
-#define writeval_U32_BE(to, u32) __writeval_generic(to, u32, U32)
-#define writeval_S16_BE(to, s16) __writeval_generic16(to, s16, S16)
-#define writeval_S32_BE(to, s32) __writeval_generic(to, s32, S32)
+#define writeval_U16_BE(to, u16) writeval_generic16(to, u16, U16)
+#define writeval_U32_BE(to, u32) writeval_generic(to, u32, U32)
+#define writeval_S16_BE(to, s16) writeval_generic16(to, s16, S16)
+#define writeval_S32_BE(to, s32) writeval_generic(to, s32, S32)
 
 #define writeval_U16(to, u16) writeval_U16_BE(to, u16)
 #define writeval_U32(to, u32) writeval_U32_BE(to, u32)
 #define writeval_S16(to, s16) writeval_S16_BE(to, s16)
 #define writeval_S32(to, s32) writeval_S32_BE(to, s32)
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define writeval_U16_LE(to, u16) __writeval_generic16(to, u16, U16)
-#define writeval_U32_LE(to, u32) __writeval_generic(to, u32, U32)
-#define writeval_S16_LE(to, s16) __writeval_generic16(to, s16, S16)
-#define writeval_S32_LE(to, s32) __writeval_generic(to, s32, S32)
+#define writeval_U16_LE(to, u16) writeval_generic16(to, u16, U16)
+#define writeval_U32_LE(to, u32) writeval_generic(to, u32, U32)
+#define writeval_S16_LE(to, s16) writeval_generic16(to, s16, S16)
+#define writeval_S32_LE(to, s32) writeval_generic(to, s32, S32)
 
 #define writeval_U16(to, u16) writeval_U16_LE(to, u16)
 #define writeval_U32(to, u32) writeval_U32_LE(to, u32)
@@ -426,6 +426,6 @@ __inline_writeval_S32_BE(
 
 #endif /* TYPEPACK_EXPORT_ONLY_FUNCTIONS */
 
-#endif /* __typepack_h */
+#endif /* TYPEPACK_H */
 
 /* end of typepack.h */

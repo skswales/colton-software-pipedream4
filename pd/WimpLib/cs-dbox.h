@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_dbox_h
-#define __cs_dbox_h
+#ifndef CS_DBOX_H
+#define CS_DBOX_H
 
 #ifndef __dbox_h
 #include "dbox.h"
@@ -54,6 +54,6 @@ dbox_noted_position_save(void);
 extern void
 dbox_noted_position_trash(void);
 
-#endif /* __cs_dbox_h */
+#endif /* CS_DBOX_H */
 
 /* end of cs-dbox.h */

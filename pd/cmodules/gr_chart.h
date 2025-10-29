@@ -11,8 +11,8 @@
 
 /* SKS May 1991 */
 
-#ifndef __gr_chart_h
-#define __gr_chart_h
+#ifndef GR_CHART_H
+#define GR_CHART_H
 
 #ifndef ERRDEF_EXPORT /* not errdef export */
 
@@ -20,7 +20,7 @@
 required includes
 */
 
-#ifdef  __file_h
+#ifdef    FILE_H
 #include "file.h"
 #endif
 
@@ -849,6 +849,6 @@ gr_chart_ensure_sprites(void);
 extern FILETYPE_RISC_OS
 gr_chart_save_as_filetype(void);
 
-#endif /* __gr_chart_h */
+#endif /* GR_CHART_H */
 
 /* end of gr_chart.h */

@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2023 Stuart Swales */
+/* Copyright (C) 2012-2025 Stuart Swales */
 
 /* Additional math routines */
 
 /* SKS May 2012 */
 
-#ifndef __mathxtr3_h
-#define __mathxtr3_h
+#ifndef MATHXTR3_H
+#define MATHXTR3_H
 
 /*
 exported functions
@@ -40,6 +40,6 @@ extern bool
 uniform_distribution_test_seeded(
     _In_    const bool fEnsure);
 
-#endif /* __mathxtr3_h */
+#endif /* MATHXTR3_H */
 
 /* end of mathxtr3.h  */

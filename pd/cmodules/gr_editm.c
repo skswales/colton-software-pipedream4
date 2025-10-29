@@ -33,24 +33,24 @@ internal functions
 
 #if RISCOS
 
-#ifndef __cs_menu_h
+#ifndef   CS_MENU_H
 #include "cs-menu.h"
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"   /* includes event.h -> menu.h, wimp.h */
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
 #if defined(USE_RISCOS_COLOUR_PICKER)
-#ifndef                 __colourpick_h
+#ifndef                   COLOURPICK_H
 #include "cmodules/riscos/colourpick.h" /* no includes */
 #endif
 #else
@@ -59,7 +59,7 @@ internal functions
 #endif
 #endif /* USE_RISCOS_COLOUR_PICKER */
 
-#ifndef                 __tristate_h
+#ifndef                   TRISTATE_H
 #include "cmodules/riscos/tristate.h" /* no includes */
 #endif
 

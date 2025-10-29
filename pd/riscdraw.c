@@ -22,15 +22,15 @@
 #include "swis.h" /*C:*/
 #endif
 
-#ifndef __cs_bbcx_h
+#ifndef   CS_BBCX_H
 #include "cs-bbcx.h"
 #endif
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
@@ -470,7 +470,7 @@ new_font_leading(
             paper_size_millipoints = muldiv64(paper_size_millipoints, 100, d_print_QS);
 
             /* page length (round down) */
-            d_poptions_PL = paper_size_millipoints / global_font_leading_millipoints;
+            d_poptions_PL = (uchar) (paper_size_millipoints / global_font_leading_millipoints);
         }
     }
     else

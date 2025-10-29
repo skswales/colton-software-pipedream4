@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2023 Stuart Swales */
+/* Copyright (C) 2012-2025 Stuart Swales */
 
-#ifndef __target_riscos_host_windows_h
-#define __target_riscos_host_windows_h
+#ifndef TARGET_RISCOS_HOST_WINDOWS_H
+#define TARGET_RISCOS_HOST_WINDOWS_H
 
 #if !defined(_MSC_VER)
 #define      _MSC_VER 1500 /* VC2008 */
@@ -130,6 +130,6 @@ typedef unsigned int _Bool;
 #include "swis.h" /*C:*/
 #endif
 
-#endif /* __target_riscos_host_windows_h */
+#endif /* TARGET_RISCOS_HOST_WINDOWS_H */
 
 /* end of target_riscos_host_windows.h */

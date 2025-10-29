@@ -11,8 +11,8 @@
 
 /* Stuart K. Swales 09-May-1989 */
 
-#ifndef __wlalloc_h
-#define __wlalloc_h
+#ifndef WLALLOC_H
+#define WLALLOC_H
 
 /*
 exported functions
@@ -51,6 +51,6 @@ wlalloc_realloc(
 #define realloc(a, size)  wlalloc_realloc(a, size)
 #endif
 
-#endif /* __wlalloc_h */
+#endif /* WLALLOC_H */
 
 /* end of wlalloc.h */

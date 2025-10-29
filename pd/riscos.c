@@ -15,15 +15,15 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"
 #endif
 
@@ -31,7 +31,7 @@
 #include "menu.h"
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"
 #endif
 
@@ -39,11 +39,11 @@
 #include "akbd.h"
 #endif
 
-#ifndef __cs_resspr_h
+#ifndef   CS_RESSPR_H
 #include "cs-resspr.h"
 #endif
 
-#ifndef __cs_template_h
+#ifndef   CS_TEMPLATE_H
 #include "cs-template.h"
 #endif
 
@@ -55,7 +55,7 @@
 #include "riscmenu.h"
 #include "colh_x.h"
 
-#ifndef __cs_xferrecv_h
+#ifndef   CS_XFERRECV_H
 #include "cs-xferrecv.h"
 #endif
 
@@ -88,7 +88,7 @@ draw_insert_filename(
 #define TRACE_DRAW      (TRACE_APP_PD4 & 0)
 #define TRACE_NULL      (TRACE_APP_PD4)
 
-static BOOL g_kill_duplicates = FALSE;
+static const BOOL g_kill_duplicates = FALSE;
 
 /* try to get a sensible entity that we can select on
  * in mouse event handlers so that unexpected combinations
@@ -3124,7 +3124,7 @@ riscos_initialise_once(void)
     wimptx_atexit(actions_before_exiting);
 
     /* no point having more than one of this app loaded */
-    g_kill_duplicates = 1;
+    // g_kill_duplicates = 1;
 
     /* SKS 25oct96 allow templates to go out */
     template_require(0, WTEMPLATES_PREFIX "tem_risc");

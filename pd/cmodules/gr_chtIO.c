@@ -13,7 +13,7 @@
 
 #include "common/gflags.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
@@ -21,7 +21,7 @@
 #include "dbox.h"
 #endif
 
-#ifndef __cs_xfersend_h
+#ifndef   CS_XFERSEND_H
 #include "cs-xfersend.h"
 #endif
 

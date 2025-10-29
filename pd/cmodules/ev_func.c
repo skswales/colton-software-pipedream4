@@ -7,9 +7,9 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* Less common (was split) semantic routines for evaluator */
+/* Lookup function routines and less common function routines for evaluator */
 
-/* JAD September 1994 split */
+/* JAD September 1994 */
 
 #include "common/gflags.h"
 
@@ -37,7 +37,7 @@
 
 /******************************************************************************
 *
-* STRING address(row:integer, col:integer {, abs:integer {, a1:Logical {, ext_doc:string}}})
+* STRING address(row:integer, col:integer {, abs:integer {, a1:Boolean=TRUE {, ext_doc:string}}})
 *
 ******************************************************************************/
 
@@ -48,7 +48,7 @@ PROC_EXEC_PROTO(c_address)
     const COL col = ss_data_get_integer(args[1]) - 1;
     BOOL abs_row = TRUE;
     BOOL abs_col = TRUE;
-    BOOL a1 = TRUE;
+    const bool a1 = (n_args > 3) ? ss_data_get_logical(args[3]) : true;
     UCHARZ ustr_buf[BUF_EV_LONGNAMLEN];
     QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 32);
     quick_ublock_with_buffer_setup(quick_ublock);
@@ -76,9 +76,6 @@ PROC_EXEC_PROTO(c_address)
             break;
         }
     }
-
-    if(n_args > 3)
-        a1 = ss_data_get_logical(args[3]);
 
     if(n_args > 4)
     {   /* prepend external reference */
@@ -266,106 +263,61 @@ c_index_common(
     }
 }
 
-#if 1 /* new c_index from Fireworkz */
+/* new c_index from Fireworkz (old relict pruned from 463b) */
+
 PROC_EXEC_PROTO(c_index)
 {
     const PC_SS_DATA array_data = args[0];
     S32 ix, iy, x_size_in, y_size_in, x_size_out, y_size_out;
 
     exec_func_ignore_parms();
-
-    array_range_sizes(array_data, &x_size_in, &y_size_in);
-
-    /* NB Fireworkz and PipeDream INDEX() has x, y args */
-    if(0 == ss_data_get_integer(args[1]))
-    {   /* zero column number -> whole row */
-        ix = 0;
-        x_size_out = x_size_in;
-    }
-    else
-    {
-        ix = ss_data_get_integer(args[1]) - 1;
-        x_size_out = 1;
-    }
-
-    if(0 == ss_data_get_integer(args[2]))
-    {   /* zero row number -> whole column */
-        iy = 0;
-        y_size_out = y_size_in;
-    }
-    else
-    {
-        iy = ss_data_get_integer(args[2]) - 1;
-        y_size_out = 1;
-    }
-
-    /* get size out parameters */
-    if(n_args > 4)
-    {
-        if(0 == ss_data_get_integer(args[3]))
-        {   /* zero x_size -> all of row starting from column index x */
-            x_size_out = x_size_in - ix;
-        }
-        else
-            x_size_out = MAX(1, ss_data_get_integer(args[3]));
-
-        if(0 == ss_data_get_integer(args[4]))
-        {   /* zero y_size -> all of column starting from row index y */
-            y_size_out = y_size_in - iy;
-        }
-        else
-            y_size_out = MAX(1, ss_data_get_integer(args[4]));
-    }
-
-    /* check it's all in range */
-    if( ix < 0                           ||
-        iy < 0                           ||
-        ix + x_size_out - 1 >= x_size_in ||
-        iy + y_size_out - 1 >= y_size_in )
-    {
-        exec_func_status_return(p_ss_data_res, EVAL_ERR_BAD_INDEX);
-    }
-
-    c_index_common(p_ss_data_res, array_data, ix, iy, x_size_out, y_size_out);
-}
-
-#else
-PROC_EXEC_PROTO(c_index)
-{
-    const PC_SS_DATA array_data = args[0];
-    S32 ix, iy, x_size_in, y_size_in, x_size_out, y_size_out;
-
-    exec_func_ignore_parms();
-
-    x_size_out = y_size_out = 1;
 
     array_range_sizes(array_data, &x_size_in, &y_size_in);
 
     /* NB Fireworkz and PipeDream INDEX() has x, y args */
     ix = ss_data_get_integer(args[1]) - 1;
+    x_size_out = 1;
+    if(-1 == ix) /* other negative values handled below */
+    {   /* zero column number -> whole row */
+        ix = 0;
+        x_size_out = x_size_in;
+    }
+
     iy = ss_data_get_integer(args[2]) - 1;
+    y_size_out = 1;
+    if(-1 == iy) /* other negative values handled below */
+    {   /* zero row number -> whole column */
+        iy = 0;
+        y_size_out = y_size_in;
+    }
 
     /* get size out parameters */
     if(n_args > 4)
     {
-        x_size_out = ss_data_get_integer(args[3]);
-        x_size_out = MAX(1, x_size_out);
-        y_size_out = ss_data_get_integer(args[4]);
-        y_size_out = MAX(1, y_size_out);
+        x_size_out = MAX(0, ss_data_get_integer(args[3]));
+        if(0 == x_size_out)
+        {   /* zero x_size -> all of row starting from column index x */
+            x_size_out = x_size_in - ix;
+        }
+
+        y_size_out = MAX(0, ss_data_get_integer(args[4]));
+        if(0 == y_size_out)
+        {   /* zero y_size -> all of column starting from row index y */
+            y_size_out = y_size_in - iy;
+        }
     }
 
     /* check it's all in range */
-    if( ix < 0                           ||
-        iy < 0                           ||
-        ix + x_size_out - 1 >= x_size_in ||
-        iy + y_size_out - 1 >= y_size_in )
+    if( (ix < 0)                           ||
+        (iy < 0)                           ||
+        (ix + x_size_out - 1 >= x_size_in) ||
+        (iy + y_size_out - 1 >= y_size_in) )
     {
         exec_func_status_return(p_ss_data_res, EVAL_ERR_BAD_INDEX);
     }
 
     c_index_common(p_ss_data_res, array_data, ix, iy, x_size_out, y_size_out);
 }
-#endif
 
 #if 0 /* just for diff minimization */
 
@@ -597,7 +549,7 @@ PROC_EXEC_PROTO(c_false)
 {
     exec_func_ignore_parms();
 
-    ss_data_set_logical(p_ss_data_res, FALSE);
+    ss_data_set_logical(p_ss_data_res, false);
 }
 
 #endif
@@ -748,7 +700,7 @@ iseven_isodd_calc(
 #endif
 
     default: default_unhandled();
-        ss_data_set_logical(p_ss_data_out, FALSE);
+        ss_data_set_logical(p_ss_data_out, false);
         break;
     }
 }
@@ -1046,7 +998,7 @@ PROC_EXEC_PROTO(c_true)
 {
     exec_func_ignore_parms();
 
-    ss_data_set_logical(p_ss_data_res, TRUE);
+    ss_data_set_logical(p_ss_data_res, true);
 }
 
 #endif
@@ -1059,7 +1011,7 @@ PROC_EXEC_PROTO(c_true)
 
 PROC_EXEC_PROTO(c_type)
 {
-    EV_TYPE type_flags;
+    EV_TYPE type;
     PC_A7STR a7str_type;
 
     exec_func_ignore_parms();
@@ -1073,39 +1025,39 @@ PROC_EXEC_PROTO(c_type)
     case DATA_ID_WORD16:
     case DATA_ID_WORD32:
 #endif
-        type_flags = EM_REA;
+        type = EM_REA;
         break;
 
     case DATA_ID_DATE:
-        type_flags = EM_DAT;
+        type = EM_DAT;
         break;
 
     case DATA_ID_BLANK:
-        type_flags = EM_BLK;
+        type = EM_BLK;
         break;
 
     case DATA_ID_ERROR:
-        type_flags = EM_ERR;
+        type = EM_ERR;
         break;
 
     case DATA_ID_SLR:
-        type_flags = EM_SLR;
+        type = EM_SLR;
         break;
 
     case DATA_ID_RANGE:
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
-        type_flags = EM_ARY;
+        type = EM_ARY;
         break;
 
     case RPN_DAT_STRING:
     case RPN_TMP_STRING:
     case RPN_RES_STRING:
-        type_flags = EM_STR;
+        type = EM_STR;
         break;
     }
 
-    a7str_type = type_name_from_type_flags(type_flags);
+    a7str_type = type_name_from_type_flags(type);
     PTR_ASSERT(a7str_type);
 
     status_assert(ss_string_make_ustr(p_ss_data_res, (PC_USTR) a7str_type)); /* U is superset of A7 */

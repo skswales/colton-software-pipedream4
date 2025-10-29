@@ -7,8 +7,8 @@
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __errdef_h
-#define __errdef_h
+#ifndef ERRDEF_H
+#define ERRDEF_H
 
 /*
 exported functions
@@ -235,6 +235,6 @@ report_if_kernel_oserror(
     errorstring(-85, "No alternate command for this toolbar button") \
 
 
-#endif /* __errdef_h */
+#endif /* ERRDEF_H */
 
 /* end of errdef.h */

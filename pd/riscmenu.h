@@ -7,16 +7,16 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __pd__riscmenu_h
-#define __pd__riscmenu_h
+#ifndef RISCMENU_H
+#define RISCMENU_H
 
 #if RISCOS
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 
-#ifndef __cs_menu_h
+#ifndef   CS_MENU_H
 #include "cs-menu.h"
 #endif
 
@@ -85,6 +85,6 @@ LineSpacing_fn(void);
 
 #endif  /* RISCOS */
 
-#endif  /* __pd__riscmenu_h */
+#endif  /* RISCMENU_H */
 
 /* end of riscmenu.h */

@@ -9,8 +9,8 @@
 
 /* SKS July 1991 */
 
-#ifndef __mathxtra_h
-#define __mathxtra_h
+#ifndef MATHXTRA_H
+#define MATHXTRA_H
 
 /*
 exported functions
@@ -22,74 +22,74 @@ exported functions
 
 _Check_return_
 extern F64
-mx_acosh(
+mathxtra_acosh(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_acosec(
+mathxtra_acosec(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_acosech(
+mathxtra_acosech(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_acot(
+mathxtra_acot(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_acoth(
+mathxtra_acoth(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_asec(
+mathxtra_asec(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_asech(
+mathxtra_asech(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_asinh(
+mathxtra_asinh(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_atanh(
+mathxtra_atanh(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_cosec(
+mathxtra_cosec(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_cosech(
+mathxtra_cosech(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_cot(
+mathxtra_cot(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_coth(
+mathxtra_coth(
     _InVal_     F64 x);
 
 /* return the square of a number (or more likely, hard expression) */
 
 _Check_return_
 static inline F64
-mx_fsquare(
+mathxtra_square(
     _InVal_     F64 x)
 {
     return(x * x);
@@ -97,36 +97,22 @@ mx_fsquare(
 
 _Check_return_
 extern F64
-mx_fhypot(
+mathxtra_hypot(
     _InVal_     F64 x,
     _InVal_     F64 y);
 
 _Check_return_
 extern F64
-mx_sec(
+mathxtra_sec(
     _InVal_     F64 x);
 
 _Check_return_
 extern F64
-mx_sech(
+mathxtra_sech(
     _InVal_     F64 x);
 
 #define PRAGMA_SIDE_EFFECTS
 #include "coltsoft/pragma.h"
-
-#if defined(_MSC_VER)
-#if _MSC_VER < 1800 /* < VS2013 */
-
-extern double FreeBSD_erf(double);
-
-#define erf FreeBSD_erf
-
-extern double FreeBSD_erfc(double);
-
-#define erfc FreeBSD_erfc
-
-#endif
-#endif /* _MSC_VER */
 
 _Check_return_
 extern double FreeBSD_jn(int, double);
@@ -138,89 +124,6 @@ extern double FreeBSD_yn(int, double);
 
 #define bessel_yn(n, x) FreeBSD_yn(n, x)
 
-
-#if __STDC_VERSION__ < 199901L
-
-#define acosh(d) mx_acosh(d)
-#define asinh(d) mx_asinh(d)
-#define atanh(d) mx_atanh(d)
-
-#if !defined(CROSS_COMPILE)
-
-_Check_return_
-static inline bool
-isunordered(_InVal_ double a, _InVal_ double b)
-{
-    return(isnan(a) || isnan(b));
-}
-
-_Check_return_
-static inline bool
-isgreater(_InVal_ double a, _InVal_ double b)
-{
-    if(isnan(a) || isnan(b))
-        return(!isnan(b));
-
-    return(a > b);
-}
-
-_Check_return_
-static inline bool
-isless(_InVal_ double a, _InVal_ double b)
-{
-    if(isnan(a) || isnan(b))
-        return(!isnan(b));
-
-    return(a < b);
-}
-
-_Check_return_
-static inline double
-fmax(_InVal_ double a, _InVal_ double b)
-{
-    if(isnan(a))
-        return(b);
-
-    return(isgreater(a, b) ? a : b);
-}
-
-_Check_return_
-static inline double
-fmin(_InVal_ double a, _InVal_ double b)
-{
-    if(isnan(a))
-        return(b);
-
-    return(isless(a, b) ? a : b);
-}
-
-_Check_return_
-static inline double
-exp2(_InVal_ double d)
-{
-    return(pow(2.0, d));
-}
-
-#endif /* CROSS_COMPILE */
-
-#if WINDOWS
-
-#ifndef                   __mathnums_h
-#include "cmodules/coltsoft/mathnums.h" /* for _log2_e */
-#endif
-
-_Check_return_
-static inline double
-log2(_InVal_ double d)
-{
-    return(log(d) * _log2_e);
-}
-
-#endif /* OS */
-
-#endif /* __STDC_VERSION__ */
-
-
-#endif /* __mathxtra_h */
+#endif /* MATHXTRA_H */
 
 /* end of mathxtra.h  */

@@ -11,8 +11,8 @@
 
 /* MRJC March 1988 */
 
-#ifndef __pd123_h
-#define __pd123_h
+#ifndef PD123_H
+#define PD123_H
 
 /* flag for other modules */
 #define LOTUSREAD
@@ -89,6 +89,6 @@ error definition
 
 #define PD123_ERR_END     (-4005)
 
-#endif /* __pd123_h */
+#endif /* PD123_H */
 
 /* end of pd123.h */

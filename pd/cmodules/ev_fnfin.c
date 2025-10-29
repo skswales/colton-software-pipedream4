@@ -298,7 +298,7 @@ PROC_EXEC_PROTO(c_fvschedule)
             SS_DATA ss_data;
             F64 interest;
 
-            if(DATA_ID_ERROR == array_range_index(&ss_data, array_schedule, ix, iy, EM_REA)) /* blanks == 0 */
+            if(DATA_ID_ERROR == array_range_index_REA(&ss_data, array_schedule, ix, iy)) /* blanks == 0 */
             {
                 *p_ss_data_res = ss_data;
                 return;
@@ -356,7 +356,7 @@ PROC_EXEC_PROTO(c_odf_irr)
             {
                 SS_DATA ss_data;
 
-                if(DATA_ID_ERROR == array_range_index(&ss_data, array_values, ix, iy, EM_REA)) /* blanks == 0 */
+                if(DATA_ID_ERROR == array_range_index_REA(&ss_data, array_values, ix, iy)) /* blanks == 0 */
                 {
                     *p_ss_data_res = ss_data;
                     return;

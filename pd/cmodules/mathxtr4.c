@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2023 Stuart Swales */
+/* Copyright (C) 2014-2025 Stuart Swales */
 
 /* Additional math routines */
 
@@ -26,7 +26,7 @@
 
 _Check_return_
 extern F64
-mx_ln_beta(
+mathxtra_ln_beta(
     _InVal_     F64 a,
     _InVal_     F64 b)
 {
@@ -93,7 +93,7 @@ incomplete_beta_cf_d_even(
 
 _Check_return_
 static F64
-mx_incomplete_beta_continued_fraction(
+mathxtra_incomplete_beta_continued_fraction(
     _InVal_     F64 x, /* value now standardized */
     _InVal_     F64 alpha, /* alpha and beta are shape parameters */
     _InVal_     F64 beta)
@@ -182,7 +182,7 @@ mx_incomplete_beta_continued_fraction(
 
 _Check_return_
 extern F64
-mx_Ix_beta(
+mathxtra_Ix_beta(
     _InVal_     F64 x, /* in [0..1] */
     _InVal_     F64 alpha, /* alpha and beta are shape parameters, both > 0 */
     _InVal_     F64 beta)
@@ -216,7 +216,7 @@ mx_Ix_beta(
 
     {
     const F64 switchover = ((alpha - 1) / (alpha + beta - 2));
-    const F64 ln_reciprocal_term = mx_ln_reciprocal_beta(alpha, beta);
+    const F64 ln_reciprocal_term = mathxtra_ln_reciprocal_beta(alpha, beta);
     const F64 ln_alpha_power_term = log(x) * alpha;
     const F64 ln_beta_power_term = log(1 - x) * beta;
     const F64 common_term = exp(ln_reciprocal_term + ln_alpha_power_term + ln_beta_power_term);
@@ -225,12 +225,12 @@ mx_Ix_beta(
 
     if(x <= switchover)
     {
-        continued_fraction_term = mx_incomplete_beta_continued_fraction(x, alpha, beta);
+        continued_fraction_term = mathxtra_incomplete_beta_continued_fraction(x, alpha, beta);
         I_beta_result = common_term * (continued_fraction_term / alpha);
     }
     else
     {   /* Use A&S 26.5.2 relation */
-        continued_fraction_term = mx_incomplete_beta_continued_fraction(1.0 - x, beta, alpha);
+        continued_fraction_term = mathxtra_incomplete_beta_continued_fraction(1.0 - x, beta, alpha);
         I_beta_result = 1.0 - (common_term * (continued_fraction_term / beta));
     }
 
@@ -244,7 +244,7 @@ mx_Ix_beta(
 
 _Check_return_
 extern F64
-mx_ln_binomial_coefficient(
+mathxtra_ln_binomial_coefficient(
     _InVal_     S32 n,
     _InVal_     S32 k)
 {
@@ -256,12 +256,12 @@ mx_ln_binomial_coefficient(
         return(-HUGE_VAL);
     }
 
-    ln_numerator = mx_ln_factorial(n);
+    ln_numerator = mathxtra_ln_factorial(n);
 
     if(errno)
         return(HUGE_VAL);
 
-    ln_denominator = mx_ln_factorial(n - k) + mx_ln_factorial(k);
+    ln_denominator = mathxtra_ln_factorial(n - k) + mathxtra_ln_factorial(k);
 
     if(errno)
         return(HUGE_VAL);
@@ -283,18 +283,18 @@ mx_ln_binomial_coefficient(
 
 _Check_return_
 extern F64
-mx_P_gamma(
+mathxtra_P_gamma(
     _InVal_     F64 s,
     _InVal_     F64 x)
 {
     if(x < (s + 1.0))
     {   /* calculate using the series sum */
-        const F64 P_numerator = mx_y_gamma(s, x);
+        const F64 P_numerator = mathxtra_y_gamma(s, x);
         const F64 P_denominator = tgamma(s);
         const F64 P = P_numerator / P_denominator;
 
 #if 0 /* can cross-check against continued fraction if we want to */
-        const F64 Q_numerator = mx_Gu_gamma(s, x);
+        const F64 Q_numerator = mathxtra_Gu_gamma(s, x);
         const F64 Q_denominator = tgamma(s);
         const F64 Q = (Q_numerator / Q_denominator);
         const F64 P_Gu = 1.0 - Q;
@@ -307,7 +307,7 @@ mx_P_gamma(
     }
     else
     {   /* calculate using the continued fraction */
-        const F64 Q_numerator = mx_Gu_gamma(s, x);
+        const F64 Q_numerator = mathxtra_Gu_gamma(s, x);
         const F64 Q_denominator = tgamma(s);
         const F64 Q = (Q_numerator / Q_denominator);
         const F64 P = 1.0 - Q;
@@ -329,13 +329,13 @@ mx_P_gamma(
 
 _Check_return_
 extern F64
-mx_Q_gamma(
+mathxtra_Q_gamma(
     _InVal_     F64 s,
     _InVal_     F64 x)
 {
     if(x < (s + 1.0))
     {   /* calculate using the series sum */
-        const F64 P_numerator = mx_y_gamma(s, x);
+        const F64 P_numerator = mathxtra_y_gamma(s, x);
         const F64 P_denominator = tgamma(s);
         const F64 P = (P_numerator / P_denominator);
         const F64 Q = 1.0 - P;
@@ -344,7 +344,7 @@ mx_Q_gamma(
     }
     else
     {   /* calculate using the continued fraction */
-        const F64 Q_numerator = mx_Gu_gamma(s, x);
+        const F64 Q_numerator = mathxtra_Gu_gamma(s, x);
         const F64 Q_denominator = tgamma(s);
         const F64 Q = (Q_numerator / Q_denominator);
 
@@ -361,7 +361,7 @@ mx_Q_gamma(
 
 _Check_return_
 extern F64
-mx_y_gamma(
+mathxtra_y_gamma(
     _InVal_     F64 s,
     _InVal_     F64 x)
 {
@@ -392,14 +392,14 @@ mx_y_gamma(
 
         if(!isfinite(term))
         {
-            reportf(TEXT("non-finite term in mx_y_gamma(s=%f,x=%f): k=%d"), s, x, k);
+            //reportf(TEXT("non-finite term in mathxtra_y_gamma(s=%f,x=%f): k=%d"), s, x, k);
             break;
         }
     }
 
     y_gamma_result = common_product_term * sum;
 
-    //reportf(TEXT("mx_y_gamma(s=%f,x=%f): result=%f after k=%d"), s, x, y_gamma_result, k);
+    //reportf(TEXT("mathxtra_y_gamma(s=%f,x=%f): result=%f after k=%d"), s, x, y_gamma_result, k);
     return(y_gamma_result);
 }
 
@@ -431,7 +431,7 @@ incomplete_Gu_cf_alpha_n(
 
 _Check_return_
 static F64
-mx_incomplete_Gu_continued_fraction(
+mathxtra_incomplete_Gu_continued_fraction(
     _InVal_     F64 s,
     _InVal_     F64 x)
 {
@@ -497,15 +497,15 @@ mx_incomplete_Gu_continued_fraction(
 
 _Check_return_
 extern F64
-mx_Gu_gamma(
+mathxtra_Gu_gamma(
     _InVal_     F64 s,
     _InVal_     F64 x)
 {
     const F64 common_term = exp(-x) * pow(x, s) / (x + 1 - s);
-    const F64 continued_fraction_term = mx_incomplete_Gu_continued_fraction(s, x);
+    const F64 continued_fraction_term = mathxtra_incomplete_Gu_continued_fraction(s, x);
     F64 Gu_gamma_result = common_term * continued_fraction_term;
 
-    //reportf(TEXT("mx_Gu_gamma(s=%f,x=%f): result=%f"), s, x, Gu_gamma_result);
+    //reportf(TEXT("mathxtra_Gu_gamma(s=%f,x=%f): result=%f"), s, x, Gu_gamma_result);
     return(Gu_gamma_result);
 }
 

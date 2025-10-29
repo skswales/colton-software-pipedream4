@@ -1,0 +1,14 @@
+| Update for apcs_softpcs exports from their source into this PipeDream 4 tree
+
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+| Copyright © 2022-2023 Stuart Swales
+
+If "<PIPEDREAM_TBT>"="" Then Error 0 PIPEDREAM_TBT needs to be set appropriately
+IfThere $.coltsoft.<PIPEDREAM_TBT>.cs-free.SSwales.apcs_softpcs Then Else Error Have you checked out the appropriate branch of coltsoft/cs-free?
+CDir <Obey$Dir>.h
+Copy $.coltsoft.<PIPEDREAM_TBT>.cs-free.SSwales.apcs_softpcs.export.h <Obey$Dir>.h rf~cn~v
+CDir <Obey$Dir>.lib
+Copy $.coltsoft.<PIPEDREAM_TBT>.cs-free.SSwales.apcs_softpcs.export.lib <Obey$Dir>.lib rf~cn~v

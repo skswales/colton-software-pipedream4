@@ -15,15 +15,15 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_winf_h
+#ifndef   CS_WINF_H
 #include "cs-winf.h"
 #endif
 
-#ifndef __cs_resspr_h
+#ifndef   CS_RESSPR_H
 #include "cs-resspr.h"  /* includes resspr.h -> sprite.h */
 #endif
 
@@ -31,7 +31,7 @@
 #include "akbd.h"
 #endif
 
-#ifndef          __wm_event_h
+#ifndef            WM_EVENT_H
 #include "cmodules/wm_event.h"
 #endif
 

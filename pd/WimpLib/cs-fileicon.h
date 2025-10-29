@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2022-2023 Stuart Swales */
+/* Copyright (C) 2022-2025 Stuart Swales */
 
-#ifndef __cs_fileicon_h
-#define __cs_fileicon_h
+#ifndef CS_FILEICON_H
+#define CS_FILEICON_H
 
 #ifndef __fileicon_h
 #include "fileicon.h"
@@ -16,6 +16,6 @@
 extern void
 fileicon_name(char * icon_name /*[12]*/, int filetype);
 
-#endif /* __cs_fileicon_h */
+#endif /* CS_FILEICON_H */
 
 /* end of cs-fileicon.h */

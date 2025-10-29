@@ -11,14 +11,14 @@
 
 /* SKS October 1990 */
 
-#ifndef __funclist_h
-#define __funclist_h
+#ifndef FUNCLIST_H
+#define FUNCLIST_H
 
 /*
 requires
 */
 
-#ifndef __collect_h
+#ifndef   COLLECT_H
 #include "collect.h"
 #endif
 
@@ -97,6 +97,6 @@ funclist_writedata_ip(
     _InVal_     U32 offset,
     _InVal_     U32 nbytes);
 
-#endif /* __funclist_h */
+#endif /* FUNCLIST_H */
 
 /* end of funclist.h */

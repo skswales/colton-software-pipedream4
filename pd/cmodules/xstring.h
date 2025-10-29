@@ -11,8 +11,8 @@
 
 /* SKS May 1990 */
 
-#ifndef __xstring_h
-#define __xstring_h
+#ifndef XSTRING_H
+#define XSTRING_H
 
 #if RISCOS && CROSS_COMPILE
 #define u8_from_int(i) ((U8) (i))
@@ -241,6 +241,6 @@ xvsnprintf(
 #include "cmodules/xtstring.h"
 #include "cmodules/xustring.h"
 
-#endif /* __xstring_h */
+#endif /* XSTRING_H */
 
 /* end of xstring.h */

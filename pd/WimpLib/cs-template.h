@@ -7,10 +7,10 @@
 /* Copyright (C) 1990-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_template_h
-#define __cs_template_h
-
 /* SKS added to support new template mechanism */
+
+#ifndef CS_TEMPLATE_H
+#define CS_TEMPLATE_H
 
 #ifndef __wimp_h
 #include "wimp.h"
@@ -59,6 +59,6 @@ template_settitle(template * templateHandle, const char * title);
 extern WimpWindowWithBitset *
 template_syshandle_unaligned(const char *name);
 
-#endif /* __cs_template_h */
+#endif /* CS_TEMPLATE_H */
 
 /* end of cs-template.h */

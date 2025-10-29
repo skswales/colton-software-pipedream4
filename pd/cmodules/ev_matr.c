@@ -363,7 +363,7 @@ PROC_EXEC_PROTO(c_m_determ)
             {
                 SS_DATA ss_data;
 
-                if(DATA_ID_REAL != array_range_index(&ss_data, args[0], j, i, EM_REA)) /* NB j,i */
+                if(DATA_ID_REAL != array_range_index_REA(&ss_data, args[0], j, i)) /* NB j,i */
                     status_break(status = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 f64_copy(_Aij(a, m, i, j), ss_data.arg.fp);
@@ -430,7 +430,7 @@ PROC_EXEC_PROTO(c_m_inverse)
         {
             SS_DATA ss_data;
 
-            if(DATA_ID_REAL != array_range_index(&ss_data, args[0], j, i, EM_REA)) /* NB j,i */
+            if(DATA_ID_REAL != array_range_index_REA(&ss_data, args[0], j, i)) /* NB j,i */
             {
                 status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endpoint;
@@ -572,8 +572,8 @@ PROC_EXEC_PROTO(c_m_mult)
                 {
                     SS_DATA ss_data[2];
 
-                    (void) array_range_index(&ss_data[0], args[0], elem, iy, EM_REA);
-                    (void) array_range_index(&ss_data[1], args[1], ix, elem, EM_REA);
+                    (void) array_range_index_REA(&ss_data[0], args[0], elem, iy);
+                    (void) array_range_index_REA(&ss_data[1], args[1], ix, elem);
 
                     if( ss_data_is_real(&ss_data[0]) && ss_data_is_real(&ss_data[1]) )
                     {

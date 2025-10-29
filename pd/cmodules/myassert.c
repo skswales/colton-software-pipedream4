@@ -16,7 +16,7 @@
 #include "datafmt.h"
 
 #if RISCOS
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 #endif
@@ -303,7 +303,7 @@ __status_assert(
     {
     PCTSTR tstr_s = string_lookup(status);
     if(__myasserted(tstr_function, tstr_file, line_no, tstr_s ? TEXT("%s: status = ") S32_TFMT TEXT(", %s") : TEXT("%s: status = ") S32_TFMT, tstr, status, tstr_s))
-        __crash_and_burn_here();
+        CRASH_AND_BURN_HERE();
     } /*block*/
 
     return(status);
@@ -332,7 +332,7 @@ __WrapOsErrorChecking(
                     tstr,
                     p_kernel_oserror_real->errnum, p_kernel_oserror_real->errnum,
                     p_kernel_oserror_real->errmess))
-        __crash_and_burn_here();
+        CRASH_AND_BURN_HERE();
 
     return(p_kernel_oserror);
 }
@@ -387,7 +387,7 @@ __WrapOsBoolChecking(
                             tstr,
                             dwLastError, dwLastError,
                             buffer ? buffer : TEXT("Error message unavailable")))
-                __crash_and_burn_here();
+                CRASH_AND_BURN_HERE();
 
         }
 

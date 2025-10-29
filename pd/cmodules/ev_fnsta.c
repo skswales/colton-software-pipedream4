@@ -17,7 +17,7 @@
 
 #include "cmodules/mathxtr2.h" /* for linest() */
 #include "cmodules/mathxtr3.h" /* for uniform_distribution() */
-#include "cmodules/mathxtr4.h" /* for mx_ln_beta() */
+#include "cmodules/mathxtr4.h" /* for mathxtra_ln_beta() */
 
 /******************************************************************************
 *
@@ -60,7 +60,7 @@ PROC_EXEC_PROTO(c_beta)
 
     errno = 0;
 
-    beta_result = exp(mx_ln_beta(a, b));
+    beta_result = exp(mathxtra_ln_beta(a, b));
 
     ss_data_set_real(p_ss_data_res, beta_result);
 
@@ -300,7 +300,7 @@ binomial_coefficient_calc(
 
         errno = 0;
 
-        ln_binomial_coefficient = mx_ln_binomial_coefficient(n, k);
+        ln_binomial_coefficient = mathxtra_ln_binomial_coefficient(n, k);
 
         /* binomial coefficient always integer result - see if we can get one! */
         binomial_coefficient_result = floor(exp(ln_binomial_coefficient) + 0.5);
@@ -458,7 +458,7 @@ PROC_EXEC_PROTO(c_listcount)
                 {
                     SS_DATA ss_data_count;
                     /* ignore content of all columns between the first (data) and last (count) */
-                    if(DATA_ID_REAL == array_range_index(&ss_data_count, &ss_data_temp_array, x_size-1, iy, EM_REA))
+                    if(DATA_ID_REAL == array_range_index_REA(&ss_data_count, &ss_data_temp_array, x_size-1, iy))
                         count += ss_data_get_real(&ss_data_count); /* SKS 19may97 was just using [1, iy] before */
                     ss_data_free_resources(&ss_data_count);
                 }
@@ -534,8 +534,8 @@ permut_calc(
 
         errno = 0;
 
-        ln_numerator = mx_ln_factorial(n);
-        ln_denominator = mx_ln_factorial(n - k);
+        ln_numerator = mathxtra_ln_factorial(n);
+        ln_denominator = mathxtra_ln_factorial(n - k);
 
         /* nPk always integer result - see if we can get one! */
         permut_result = floor(exp(ln_numerator - ln_denominator) + 0.5);

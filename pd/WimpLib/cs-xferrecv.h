@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_xferrecv_h
-#define __cs_xferrecv_h
+#ifndef CS_XFERRECV_H
+#define CS_XFERRECV_H
 
 #ifndef __xferrecv_h
 #include "xferrecv.h"
@@ -20,6 +20,6 @@ xferrecv_import_via_file(const char * filename);
    Returns -1 - the next message you receive will be an insert request
 */
 
-#endif /* __cs_xferrecv_h */
+#endif /* CS_XFERRECV_H */
 
 /* end of cs-xferrecv.h */

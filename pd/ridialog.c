@@ -19,23 +19,23 @@
 #include "swis.h" /*C:*/
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
-#ifndef __cs_template_h
+#ifndef   CS_TEMPLATE_H
 #include "cs-template.h"
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"
 #endif
 
-#ifndef __cs_xfersend_h
+#ifndef   CS_XFERSEND_H
 #include "cs-xfersend.h"
 #endif
 
@@ -43,7 +43,7 @@
 #include "print.h"
 #endif
 
-#ifndef                 __colourpick_h
+#ifndef                   COLOURPICK_H
 #include "cmodules/riscos/colourpick.h" /* no includes */
 #endif
 
@@ -51,7 +51,7 @@
 #include "pd_x.h"
 #include "version_x.h"
 
-#ifndef          __ss_const_h
+#ifndef            SS_CONST_H
 #include "cmodules/ss_const.h"
 #endif
 
@@ -1715,7 +1715,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987" "\x97" "2023 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987" "\x97" "2025 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 
@@ -1992,7 +1992,7 @@ enum LOADFILE_OFFSETS
 #define loadfile_filetype_end loadfile_Paragraph
 };
 
-#ifndef __cs_xferrecv_h
+#ifndef   CS_XFERRECV_H
 #include "cs-xferrecv.h"
 #endif
 

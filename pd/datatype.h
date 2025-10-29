@@ -11,8 +11,8 @@
 
 /* RJM 8-Apr-1989 */
 
-#ifndef __datatype_h
-#define __datatype_h
+#ifndef DATATYPE_H
+#define DATATYPE_H
 
 #if RISCOS
 #define uchar char
@@ -464,6 +464,6 @@ typedef struct PD_CONFIG
 }
 PD_CONFIG, * P_PD_CONFIG; typedef const PD_CONFIG * PC_PD_CONFIG;
 
-#endif /* __datatype_h */
+#endif /* DATATYPE_H */
 
 /* end of datatype.h */

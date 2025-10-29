@@ -17,7 +17,7 @@
 
 #include "gr_chari.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h" /* for wimpt_dx */
 #endif
 
@@ -466,7 +466,7 @@ gr_diag_ensure_riscdiag_font_tableR_entry(
     } /*block*/
 
     { /* add new entry at end */
-    SC_ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(*p_f), FALSE);
+    static const ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(*p_f), FALSE);
     status_return(al_array_add(p_array_handle, GR_RISCDIAG_RISCOS_FONTLIST_ENTRY, 1, &array_init_block, p_f));
     } /*block*/
 
@@ -658,7 +658,7 @@ gr_diag_diagram_new(
 
     if(NULL != p_gr_diag)
     {
-        SC_ARRAY_INIT_BLOCK array_init_block = aib_init(512, sizeof32(U8), 1 /*zero allocation*/);
+        static const ARRAY_INIT_BLOCK array_init_block = aib_init(512, sizeof32(U8), 1 /*zero allocation*/);
         P_GR_DIAG_DIAGHEADER pDiagHdr;
         const U32 n_bytes = sizeof32(*pDiagHdr);
 

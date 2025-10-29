@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __strings_h
-#define __strings_h
+#ifndef STRINGS_H
+#define STRINGS_H
 
 extern void
 strings_init(void);
@@ -28,8 +28,8 @@ strings_lookup(
 
 #include "cmodules/stringlk.h"
 
-#ifndef __pd_strings_h /* stop multiple def warnings */
-#define __pd_strings_h
+#ifndef PD_STRINGS_H /* stop multiple def warnings */
+#define PD_STRINGS_H
 
 /* Macro definitions */
 
@@ -45,7 +45,7 @@ strings_lookup(
 
 #define WILD_STR        "*"
 
-#endif /* __pd_strings_h */
+#endif /* PD_STRINGS_H */
 
 #ifdef MAKE_MESSAGE_FILE
 #define stringdef(id)    /* nothing */
@@ -736,6 +736,6 @@ stringdef(ToText_STR)
 #define help_formwind_button_paste help_messages_lookup("m937")
 #endif
 
-#endif /* __strings_h */
+#endif /* STRINGS_H */
 
 /* end of strings.h */

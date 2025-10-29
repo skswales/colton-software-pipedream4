@@ -39,7 +39,7 @@
     <p>
         The <a href="file:///PipeDreamManuals:StartGuide/index.html"><em>Getting Started Guide</em></a>
         may be accessed from the <em>PipeDream-Manuals</em> package that you can install using PackMan,
-        or <a href="https://croftnuisk.co.uk/coltsoft/pipedream/getting_started/">online</a>.
+        or <a href="https://croftnuisk.co.uk/coltsoft/pipedream/getting_started">online</a>.
         The accompanying tutorial files may be found by installing the <em>PipeDream-Examples</em> package.
         The <em>PipeDream-Manuals</em> package also provides a copy of the
         <a href="file:///PipeDreamManuals:RefGuide/index.html"><em>Reference Guide</em></a>.
@@ -48,18 +48,18 @@
 
     <h2 id="OnlineResources">Online Resources</h2>
 
-    <p>Many resources for PipeDream 4 are available <a href="https://croftnuisk.co.uk/coltsoft/pipedream/">online</a>:</p>
+    <p>Many resources for PipeDream 4 are available <a href="https://croftnuisk.co.uk/coltsoft/pipedream">online</a>:</p>
 
     <ul>
-        <li><a href="https://croftnuisk.co.uk/coltsoft/pipedream/getting_started/">Getting Started Guide</a>;</li>
-        <li><a href="https://croftnuisk.co.uk/coltsoft/pipedream/reference_guide/">Reference Guide</a>;</li>
+        <li><a href="https://croftnuisk.co.uk/coltsoft/pipedream/getting_started">Getting Started Guide</a>;</li>
+        <li><a href="https://croftnuisk.co.uk/coltsoft/pipedream/reference_guide">Reference Guide</a>;</li>
         <li>
-            <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a>
+            <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata">Addenda and Errata</a>
             - updates since the documentation was printed, and errata therein;
         </li>
         <li><a href="https://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips">Hints and Tips</a>;</li>
         <li>
-            <a href="https://croftnuisk.co.uk/coltsoft/pipedream/downloads/">Downloads</a>
+            <a href="https://croftnuisk.co.uk/coltsoft/pipedream/downloads">Downloads</a>
             - updated PipeDream 4 packages, including tutorial files used in the PipeDream 4 <em>Getting Started Guide</em>.
         </li>
     </ul>
@@ -79,21 +79,32 @@
     <h2 id="Copyright">Copyright and <a href="file:///PipeDream:RISC_OS/Help/HTML/licenc.htm">Licence</a></h2>
 
     <p>
-        Copyright © 1987–2023 Colton Software<br>
+        Copyright © 1987–2025 Colton Software<br>
         <a href="file:///PipeDream:RISC_OS/Help/HTML/licenc.htm#CopyrightExtra">Additional copyright information</a>
     </p>
 
-    <p>Thanks to Richard Colton, PipeDream 4 is now open source and completely free to use!</p>
+    <p>Thanks to the late Richard Colton, PipeDream 4 is now open source and completely free to use!</p>
 
 
     <h2 id="ReleaseHistory">Release History</h2>
 
     <p>
-        The full release history may be found <a href="https://croftnuisk.co.uk/coltsoft/pipedream/release_history/">online</a>;
+        The full release history may be found <a href="https://croftnuisk.co.uk/coltsoft/pipedream/release_history">online</a>;
         just the last few revisions of PipeDream 4 are documented here.
     </p>
 
-    <p>Please refer to the <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> for details of changes to functionality.</p>
+    <p>Please refer to the <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata">Addenda and Errata</a> for details of changes to functionality.</p>
+
+
+<h4>4.63 (29 Oct 2025)</h4>
+
+<p>Save icon drag routine updated so that pointer position is less limited.</p>
+
+<p>Complex number spreadsheet function argument validation improved.</p>
+
+<p>URLs in package made consistent with canonical URLs declared by website.</p>
+
+<p>ROOL DDE 32 build environment used.</p>
 
 
 <h4>4.62.02 (05 Mar 2023)</h4>
@@ -103,12 +114,12 @@
 <p>Multiple instances of PipeDream 4 can now be launched.</p>
 
 <p>Document file buffering size now determined at run-time. This is:
-4KB for systems with less than 4MB of memory,
-16KB for systems up to 16MB memory;
-32KB for 'modern' systems.
+4KiB for systems with less than 4MiB of memory,
+16KiB for systems up to 16MiB memory;
+32KiB for 'modern' systems.
 </p>
 
-<p>WimpSlot required at startup reduced further (for 4KB page size systems).</p>
+<p>WimpSlot required at startup reduced further (for 4KiB page size systems).</p>
 
 <p>ROOL DDE 31b build environment used.</p>
 
@@ -167,74 +178,6 @@ with the prefixes W, X, x, w corresponding to the new prefixes Q, R, r, q.</p>
 <p>'PipeDream 4' used more throughout to discriminate vs PipeDream 3.</p>
 
 
-<h4>4.60.03 (23 Oct 2022)</h4>
-
-<p>Cosmetic fixes for menu and toolbar icons running on RISC OS 3.1.</p>
-
-<p>HTML documentation now encoded as UTF-8.</p>
-
-
-<h4>4.60.02 (18 Aug 2022)</h4>
-
-<p>PipeDream no longer attempts to parse expressions as ISO 8601 format
-date / times as this was messing up several users' existing spreadsheets.
-The DATEVALUE() spreadsheet function does still recognise such dates.</p>
-
-<p>CSV file loading no longer parses number fields as expressions. Dates
-such as 2022-08-18 are inserted as text rather than as a formula. This means
-that if you have a CSV file with a column of dates in ISO 8601 format, they
-can be loaded unchanged and then converted to usable dates using the
-DATEVALUE() spreadsheet function.</p>
-
-<p>Fix for dragging an icon from the Save dialogue box when the file type
-icon is not present in the Wimp Sprite Pool (e.g. TSV) - as elsewhere, the
-generic file_xxx icon is now used for solid drag in these cases.</p>
-
-
-<h4>4.60.01 (04 Aug 2022)</h4>
-
-<p>Loader and Splash had incorrect file types in 4.60 due to a packaging error.</p>
-
-
-<h4>4.60 (22 Jul 2022)</h4>
-
-<p>PipeDream can import tab-separated-value files of type TSV (&amp;F0D).</p>
-
-<p>The international currency symbol (&curren;: &amp;A4) can be used in the
-leading (or trailing - but not in both) characters definition string, where
-it is substituted during rendering with the appropriate currency string read
-from the Territory Manager (e.g. &pound; in the UK).</p>
-
-<p>The default leading characters string is now &curren; rather than &pound;.</p>
-
-<p>An empty default locale is set during startup so that the system default
-locale is used wherever possible by the SharedCLibrary functions, using the
-Territory Manager. This may be overridden by editing
- <code>!PipeDream.!Run</code> and adding
- <code>-l &lt;locale-specifier&gt;</code> to the PipeDream command line.</p>
-
-<p>Pressing Ctrl whilst clicking the Up icon in dialogue boxes may be used
-to set the value in the adjacent field to its maximum allowed value (or to
-the start of the list of values). Similarly, Ctrl-Down may be used to set
-the minimum allowed value (or to the end of the list of values).</p>
-
-<p>Numbers typed in the formula line (or imported from CSV files) with only
-trailing zeros immediately behind the decimal point (e.g. 1.0) are no longer
-immediately converted to integers for subsequent calculation, display or
-saving but now remain as floating point values (with zero fractional
-part).</p>
-
-<p>Interactive Help messages more consistent between row and column
-borders.</p>
-
-<p><code>SWI Portable_Idle</code> is called during pausing when printing to
-screen.</p>
-
-<p>More consistent use of https:// vs. http:// in URLs.</p>
-
-<p>ROOL DDE 30d build environment used.</p>
-
-
     <h2 id="KnownProblems">Known Problems In This Release</h2>
 
     <p>
@@ -269,7 +212,7 @@ screen.</p>
     <p>
         Please note that the latest distribution of !System for use with
         pre-RISC OS 5 computers may be found on the RISC OS Open web site at:
-        <a href="https://www.riscosopen.org/content/downloads/common/">https://www.riscosopen.org/content/downloads/common/</a>
+        <a href="https://www.riscosopen.org/content/downloads/common">https://www.riscosopen.org/content/downloads/common</a>
         under the heading: <strong>System resources</strong>.
         Please consult the ReadMe file in the downloaded archive.
     </p>

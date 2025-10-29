@@ -15,15 +15,15 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_bbcx_h
+#ifndef   CS_BBCX_H
 #include "cs-bbcx.h"
 #endif
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 
@@ -281,7 +281,7 @@ extern BOOL
 new_main_window_height(
     tcoord height)
 {
-    SC_ARRAY_INIT_BLOCK vertvec_init_block = aib_init(8, sizeof32(SCRROW), TRUE);
+    static const ARRAY_INIT_BLOCK vertvec_init_block = aib_init(8, sizeof32(SCRROW), TRUE);
     S32 nrows;
     STATUS status;
 
@@ -342,7 +342,7 @@ extern BOOL
 new_main_window_width(
     tcoord width)
 {
-    SC_ARRAY_INIT_BLOCK horzvec_init_block = aib_init(4, sizeof32(SCRCOL), TRUE);
+    static const ARRAY_INIT_BLOCK horzvec_init_block = aib_init(4, sizeof32(SCRCOL), TRUE);
     /* number of columns needed: +1 for terminating column */
     S32 ncols = (width + 1 /*one for LAST*/);
     STATUS status;

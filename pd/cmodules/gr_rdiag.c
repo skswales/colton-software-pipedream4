@@ -17,11 +17,11 @@
 
 #include "gr_chari.h"
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"
 #endif
 
-#ifndef __cs_flex_h
+#ifndef   CS_FLEX_H
 #include "cs-flex.h"
 #endif
 

@@ -23,15 +23,15 @@
 #include "os.h"
 #endif
 
-#ifndef __cs_bbcx_h
+#ifndef   CS_BBCX_H
 #include "cs-bbcx.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_flex_h
+#ifndef   CS_FLEX_H
 #include "cs-flex.h"    /* includes flex.h */
 #endif
 
@@ -251,9 +251,9 @@ init_serial_print(
 #define XPortable_Idle (0x42FC6 | (1U << 17))
 #endif
 #if defined(__CC_NORCROFT)
-extern int __swi(XPortable_Idle) __swi_XPortable_Idle(void);
+extern int __swi(XPortable_Idle)        __swi_XPortable_Idle(void);
 #else
-#define __swi_XPortable_Idle() /* nothing */
+#define __swi_XPortable_Idle()          /* nothing */
 #endif
 
 static S32

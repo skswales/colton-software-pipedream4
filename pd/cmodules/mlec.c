@@ -21,39 +21,39 @@
 #include "os.h"
 #endif
 
-#ifndef __cs_bbcx_h
+#ifndef   CS_BBCX_H
 #include "cs-bbcx.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes cs-wimp.h, wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_font_h
+#ifndef   CS_FONT_H
 #include "cs-font.h"    /* includes cs-wimp.h */
 #endif
 
-#ifndef __cs_flex_h
+#ifndef   CS_FLEX_H
 #include "cs-flex.h"    /* includes flex.h */
 #endif
 
-#ifndef __cs_menu_h
+#ifndef   CS_MENU_H
 #include "cs-menu.h"
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"   /* includes event.h -> menu.h, wimp.h */
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_akbd_h
+#ifndef   CS_AKBD_H
 #include "cs-akbd.h"    /* includes akbd.h */
 #endif
 
-#ifndef __cs_xferrecv_h
+#ifndef   CS_XFERRECV_H
 #include "cs-xferrecv.h"
 #endif
 
@@ -61,7 +61,7 @@
 #include "dbox.h"       /* needed by xfersend.h */
 #endif
 
-#ifndef __cs_xfersend_h
+#ifndef   CS_XFERSEND_H
 #include "cs-xfersend.h"
 #endif
 
@@ -99,7 +99,7 @@
 
 #include "mlec.h"
 
-#ifndef          __wm_event_h
+#ifndef            WM_EVENT_H
 #include "cmodules/wm_event.h"
 #endif
 

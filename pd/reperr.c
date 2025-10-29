@@ -14,7 +14,7 @@
 #ifndef MAKE_MESSAGE_FILE
 #include "datafmt.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"
 #endif
 #endif /* MAKE_MESSAGE_FILE */

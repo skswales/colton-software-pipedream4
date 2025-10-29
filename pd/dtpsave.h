@@ -9,8 +9,8 @@
 
 /* RJM Jul 1989 */
 
-#ifndef __fwpio_h
-#define __fwpio_h
+#ifndef DTPSAVE_H
+#define DTPSAVE_H
 
 #define FWP_LINESEP         LF
 #define FWP_LINELENGTH      ((uchar) 159)
@@ -95,6 +95,6 @@ dtp_save_slot(
     ROW trow,
     FILE_HANDLE output);
 
-#endif  /* __fwpio_h */
+#endif  /* DTPSAVE_H */
 
 /* end of dtpsave.h */

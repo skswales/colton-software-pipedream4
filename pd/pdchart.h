@@ -13,18 +13,18 @@
 private structure defs for pdchart.c
 */
 
-#ifndef __pdchart_h
-#define __pdchart_h
+#ifndef PDCHART_H
+#define PDCHART_H
 
-#ifndef __gr_chart_h
+#ifndef   GR_CHART_H
 #include "gr_chart.h"
 #endif
 
-#ifndef __handlist_h
+#ifndef   HANDLIST_H
 #include "handlist.h"
 #endif
 
-#ifndef          __wm_event_h
+#ifndef            WM_EVENT_H
 #include "cmodules/wm_event.h"
 #endif
 
@@ -239,6 +239,6 @@ typedef struct PDCHART_SORT_ELEM
 }
 PDCHART_SORT_ELEM, * P_PDCHART_SORT_ELEM;
 
-#endif /* __pdchart_h */
+#endif /* PDCHART_H */
 
 /* end of pdchart.h */

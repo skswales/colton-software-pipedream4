@@ -11,8 +11,8 @@
 
 /* SKS October 1990 */
 
-#ifndef __monotime_h
-#define __monotime_h
+#ifndef MONOTIME_H
+#define MONOTIME_H
 
 /*
 types
@@ -106,6 +106,6 @@ monotime_difftimes(
     return((MONOTIMEDIFF) a - (MONOTIMEDIFF) b);
 }
 
-#endif /* __monotime_h */
+#endif /* MONOTIME_H */
 
 /* end of monotime.h */

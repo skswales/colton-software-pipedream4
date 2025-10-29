@@ -9,10 +9,10 @@
 
 /* RCM Aug 1991 */
 
-#ifndef __colh_x_h
-#define __colh_x_h
+#ifndef COLH_X_H
+#define COLH_X_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"
 #endif
 
@@ -247,6 +247,6 @@ formline_mergebacktext(
 extern void
 formline_claim_focus(void);
 
-#endif /* __colh_x_h */
+#endif /* COLH_X_H */
 
 /* end of colh_x.h */

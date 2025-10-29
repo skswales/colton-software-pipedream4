@@ -22,7 +22,7 @@
 
 #include "common/gflags.h"
 
-#ifndef          __quickblk_h
+#ifndef            QUICKBLK_H
 #include "cmodules/quickblk.h"
 #endif
 

@@ -13,8 +13,8 @@
 
 #if RISCOS
 
-#ifndef __pd__riscdialog_h
-#define __pd__riscdialog_h
+#ifndef RIDIALOG_H
+#define RIDIALOG_H
 
 /*
 exported functions from riscdialog.c
@@ -318,7 +318,7 @@ extern void
 dproc_insert_time(
     DIALOG *dptr);
 
-#endif  /* __pd__riscdialog_h */
+#endif  /* RIDIALOG_H */
 
 #endif  /* RISCOS */
 

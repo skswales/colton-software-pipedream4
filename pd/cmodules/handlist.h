@@ -11,8 +11,8 @@
 
 /* MRJC January 1989 */
 
-#ifndef __handlist_h
-#define __handlist_h
+#ifndef HANDLIST_H
+#define HANDLIST_H
 
 /*
 types
@@ -276,6 +276,6 @@ list_register(
 extern S32
 list_unlockpools(void);
 
-#endif /* __handlist_h */
+#endif /* HANDLIST_H */
 
 /* end of handlist.h */

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2020-2023 Stuart Swales */
+/* Copyright (C) 2020-2025 Stuart Swales */
 
 #include "include.h"
 
@@ -39,7 +39,7 @@ resspr_locatesprites(
     e = _swix(Wimp_Extend, _INR(0,3)|_OUT(3), wimp_extend_code, file_name, file_name, elemof_file_name, &bufferspace);
     // reportf("locatesprites0: e %s f %s (s %u b %u)", e?e->errmess:"-", file_name, elemof_file_name, bufferspace);
 
-    if(bufferspace != elemof_file_name) /* Wimp_Extend 13 is supported on this Wimp (i.e. it has modified R3) */
+    if(bufferspace != (int) elemof_file_name) /* Wimp_Extend 13 is supported on this Wimp (i.e. it has modified R3) */
     {
         if(e)
         {

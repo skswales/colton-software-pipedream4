@@ -11,8 +11,8 @@
 
 /* SKS February 1990 */
 
-#ifndef __file_h
-#define __file_h
+#ifndef FILE_H
+#define FILE_H
 
 #include "cmodules/coltsoft/filetype.h"
 
@@ -642,6 +642,6 @@ error definition
 
 #define FILE_ERR_END              (-6016)
 
-#endif /* __file_h */
+#endif /* FILE_H */
 
 /* end of file.h */

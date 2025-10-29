@@ -9,8 +9,8 @@
 
 /* Standard includes */
 
-#ifndef __ansi_h
-#define __ansi_h
+#ifndef ANSI_H
+#define ANSI_H
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -20,7 +20,7 @@
 #define VA_END_SUPERFLUOUS 1 /* NB the compiler does a good job of optimising this out anyhow */
 #endif
 
-#ifndef __arm
+#ifndef __CC_NORCROFT
 #ifndef __stdint_ll
 #define __stdint_ll /* DO need 64-bit integer base types even though cross ain't C99 */
 #define __stdint_ll_hack_defined
@@ -44,14 +44,15 @@
 #include <limits.h>
 
 #include <math.h>
-#if 1
-#undef fma /* Norcroft is currently broken w.r.t. __d_fma inline */
-#endif
 
 #include <float.h>
 
 #include <errno.h>
 
-#endif /* __ansi_h */
+#if defined(__SOFTFP__)
+#include "external/SSwales/apcs_softpcs/apcs_softpcs.h"
+#endif
+
+#endif /* ANSI_H */
 
 /* end of ansi.h */

@@ -11,8 +11,8 @@
 
 /* SKS Nov 2006 */
 
-#ifndef __xtstring_h
-#define __xtstring_h
+#ifndef XTSTRING_H
+#define XTSTRING_H
 
 /*
 exported functions
@@ -204,6 +204,6 @@ _tstr_from_sbstr(
 
 #endif /* TSTR_IS_SBSTR && USTR_IS_SBSTR */
 
-#endif /* __xtstring_h */
+#endif /* XTSTRING_H */
 
 /* end of xtstring.h */

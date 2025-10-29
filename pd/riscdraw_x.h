@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __riscdraw_x_h
-#define __riscdraw_x_h
+#ifndef RISCDRAW_X_H
+#define RISCDRAW_X_H
 
 #if RISCOS
 
@@ -88,7 +88,7 @@ extern int      yorg;
 
 #endif
 
-#endif
+#endif /* RISCDRAW_X_H */
 
 /* end of riscdraw_x.h */
 

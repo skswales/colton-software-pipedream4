@@ -17,7 +17,7 @@
 #include "swis.h" /*C:*/
 #endif
 
-#ifndef          __wm_event_h
+#ifndef            WM_EVENT_H
 #include "cmodules/wm_event.h"
 #endif
 
@@ -25,27 +25,27 @@
 #include "os.h"
 #endif
 
-#ifndef __cs_bbcx_h
+#ifndef   CS_BBCX_H
 #include "cs-bbcx.h"
 #endif
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_template_h
+#ifndef   CS_TEMPLATE_H
 #include "cs-template.h" /* includes template.h */
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"   /* includes event.h -> menu.h, wimp.h */
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef __cs_dbox_h
+#ifndef   CS_DBOX_H
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
@@ -53,7 +53,7 @@
 #include "drawmod.h"
 #endif
 
-#ifndef __fontlxtr_h
+#ifndef                   FONTLXTR_H
 #include "cmodules/riscos/fontlxtr.h" /* includes fontlist.h */
 #endif
 

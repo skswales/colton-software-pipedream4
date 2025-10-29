@@ -1,4 +1,4 @@
-﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/"><strong>Downloads</strong></a>
+﻿<a href="/coltsoft/pipedream/getting_started">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads"><strong>Downloads</strong></a>
 
 Here you will find the latest releases and archive of older versions.
 

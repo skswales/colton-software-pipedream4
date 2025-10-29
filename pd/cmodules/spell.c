@@ -1163,7 +1163,7 @@ spell_opendict(
     _In_z_      PCTSTR name,
     _Out_opt_   char **copy_right)
 {
-    SC_ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(struct IXSTRUCT), TRUE);
+    static const ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(struct IXSTRUCT), TRUE);
 
     STATUS err;
     S32 fpos;

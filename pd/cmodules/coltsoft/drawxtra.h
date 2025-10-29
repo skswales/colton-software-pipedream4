@@ -9,8 +9,8 @@
 
 /* RISC OS Draw file / object structure definition */
 
-#ifndef __drawxtra_h
-#define __drawxtra_h
+#ifndef DRAWXTRA_H
+#define DRAWXTRA_H
 
 /*
 structure
@@ -39,10 +39,6 @@ DRAW_POINT, * P_DRAW_POINT; typedef const DRAW_POINT * PC_DRAW_POINT;
 #define DRAW_POINT_TFMT \
     TEXT("x = ") DRAW_COORD_TFMT TEXT(", y = ") DRAW_COORD_TFMT
 
-#define DRAW_POINT_ARGS(draw_point__ref) \
-    (draw_point__ref).x, \
-    (draw_point__ref).y
-
 typedef struct DRAW_SIZE
 {
     DRAW_COORD cx, cy;
@@ -62,12 +58,6 @@ DRAW_BOX, * P_DRAW_BOX; typedef const DRAW_BOX * PC_DRAW_BOX;
 #define DRAW_BOX_TFMT \
     TEXT("x0 = ") GR_COORD_TFMT TEXT(", y0 = ") DRAW_COORD_TFMT TEXT("; ") \
     TEXT("x1 = ") GR_COORD_TFMT TEXT(", y1 = ") DRAW_COORD_TFMT
-
-#define DRAW_BOX_ARGS(draw_box__ref) \
-    (draw_box__ref).x0, \
-    (draw_box__ref).y0, \
-    (draw_box__ref).x1, \
-    (draw_box__ref).y1
 
 /*
 matrix transforms
@@ -673,6 +663,6 @@ DS_DRAW_CAP_JOIN_SPEC;
 #define DMFT_PATH_Thicken   0x20000000  /* thicken the path */
 #define DMFT_PATH_Reflatten 0x40000000  /* re-flatten the path */
 
-#endif /* __drawxtra_h */
+#endif /* DRAWXTRA_H */
 
 /* end of drawxtra.h */

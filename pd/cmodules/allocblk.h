@@ -11,8 +11,8 @@
 
 /* SKS December 1992 */
 
-#ifndef __allocblk_h
-#define __allocblk_h
+#ifndef ALLOCBLK_H
+#define ALLOCBLK_H
 
 typedef struct ALLOCBLOCK /* really private to implementation, but stop old ARM compiler barfing over debug info */
 {
@@ -86,6 +86,6 @@ alloc_block_tstr_clr(
     *aa = NULL; /* doesn't need freeing */
 }
 
-#endif /* __allocblk_h */
+#endif /* ALLOCBLK_H */
 
 /* end of allocblk.h */

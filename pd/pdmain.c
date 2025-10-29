@@ -15,11 +15,13 @@
 
 #include "datafmt.h"
 
-#ifndef __cs_wimptx_h
+#include <fenv.h>
+
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"   /* includes event.h */
 #endif
 
@@ -270,7 +272,10 @@ main(
 
     decode_run_options();
 
-    // for 4.62 ev_set_C99_mode(TRUE);
+    /* enter floating-point non-stop mode - no need to remember previous env */
+    // not yet for 4.63 fenv_t fe;
+    // if(0 == feholdexcept(&fe))
+    //    g_fp_non_stop_mode = true;
 
     /* startup Window Manager interface */
     wimptx_set_spritename(product_spritename); /* For RISC OS 3.5 and later error reporting */
@@ -295,10 +300,7 @@ main(
 #endif
 
 #if defined(APCS_SOFTPCS)
-    apcs_softpcs_initialise(); /* not too early */
-
-    if(atexit(application__atexit_apcs_softpcs)) /* ensure closedown proc called on exit */
-        return(EXIT_FAILURE);
+    apcs_softpcs_initialise(APCS_SOFTPCS_TIDY_ATEXIT); /* not too early */
 #endif
 
     if(status_fail(aligator_init()))

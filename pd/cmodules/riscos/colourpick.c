@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2023 Stuart Swales */
+/* Copyright (C) 2014-2025 Stuart Swales */
 
 /* RISC OS specific colour picker routines for PipeDream (derived from Fireworkz) */
 
@@ -16,19 +16,19 @@
 
 #include "cs-kernel.h"
 
-#ifndef __cs_wimptx_h
+#ifndef   CS_WIMPT_H
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __cs_event_h
+#ifndef   CS_EVENT_H
 #include "cs-event.h"   /* includes event.h -> menu.h, wimp.h */
 #endif
 
-#ifndef __cs_winx_h
+#ifndef   CS_WINX_H
 #include "cs-winx.h"    /* includes win.h */
 #endif
 
-#ifndef                 __colourpick_h
+#ifndef                   COLOURPICK_H
 #include "cmodules/riscos/colourpick.h" /* no includes */
 #endif
 

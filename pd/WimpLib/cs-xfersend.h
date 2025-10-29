@@ -7,10 +7,10 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_xfersend_h
-#define __cs_xfersend_h
+#ifndef CS_XFERSEND_H
+#define CS_XFERSEND_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h" /* ensure we get ours in first */
 #endif
 
@@ -41,6 +41,6 @@ xfersend_x(
 
 void xfersend_set_cancel_button(dbox_field f);
 
-#endif /* __cs_xfersend_h */
+#endif /* CS_XFERSEND_H */
 
 /* end of cs-xfersend.h */

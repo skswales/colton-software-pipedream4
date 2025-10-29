@@ -11,8 +11,8 @@
 
 /* MRJC May 1989 */
 
-#ifndef __vsload_h
-#define __vsload_h
+#ifndef VSLOAD_H
+#define VSLOAD_H
 
 /*
 functions
@@ -70,6 +70,6 @@ error definition
 
 #define VSLOAD_ERR_END       (-5002)
 
-#endif /* __vsload_h */
+#endif /* VSLOAD_H */
 
 /* end of vsload.h */

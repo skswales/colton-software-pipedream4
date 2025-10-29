@@ -20,7 +20,7 @@
 
 #include "colh_x.h"
 
-#ifndef          __wm_event_h
+#ifndef            WM_EVENT_H
 #include "cmodules/wm_event.h"
 #endif
 

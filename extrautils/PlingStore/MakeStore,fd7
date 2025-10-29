@@ -4,15 +4,15 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright © 2020-2023 Stuart Swales
+| Copyright © 2020-2025 Stuart Swales
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
 | It helps to MakeRiscPkg all the individual packages first
 
 | NB As this whole bundle will be named in !Store
-Set pd$Release pd-46200
-Set pd$Release pd-46202
+Set pd$Release pd-46300
+|et pd$Release pd-46301
 
 Set MakeStore$Dir <Obey$Dir>
 

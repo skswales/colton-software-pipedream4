@@ -7,10 +7,10 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_winf_h
-#define __cs_winf_h
+#ifndef CS_WINF_H
+#define CS_WINF_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h" /* ensure we get ours in first */
 #endif
 
@@ -203,6 +203,6 @@ winf_whichonoffpair(
     _HwndRef_   HOST_WND window_handle,
     int first_icon_handle);
 
-#endif /* __cs_winf_h */
+#endif /* CS_WINF_H */
 
 /* end of cs-winf.h */

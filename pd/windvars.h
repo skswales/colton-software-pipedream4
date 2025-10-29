@@ -11,8 +11,8 @@
 
 /* RJM 8-Apr-1989 */
 
-#ifndef __windvars_h
-#define __windvars_h
+#ifndef WINDVARS_H
+#define WINDVARS_H
 
 typedef struct SS_INSTANCE_DATA
 {
@@ -893,6 +893,6 @@ functions as macros
 
 #endif /* TRACE_DOC */
 
-#endif  /* __windvars_h */
+#endif  /* WINDVARS_H */
 
 /* end of windvars.h */

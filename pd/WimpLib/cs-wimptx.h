@@ -7,10 +7,10 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_wimptx_h
-#define __cs_wimptx_h
+#ifndef CS_WIMPT_H
+#define CS_WIMPT_H
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h" /* ensure we get ours in first */
 #endif
 
@@ -285,6 +285,6 @@ riscos_hourglass_smash(void);
 
 #endif /* NORCROFT_INLINE_ASM */
 
-#endif /* __cs_wimptx_h */
+#endif /* CS_WIMPT_H */
 
 /* end of cs-wimptx.h */

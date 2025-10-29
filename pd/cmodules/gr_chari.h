@@ -15,39 +15,39 @@
 required includes
 */
 
-#ifndef          __bezier_h
+#ifndef            BEZIER_H
 #include "cmodules/bezier.h"
 #endif
 
-#ifndef          __collect_h
+#ifndef            COLLECT_H
 #include "cmodules/collect.h"
 #endif
 
-#ifndef          __funclist_h
+#ifndef            FUNCLIST_H
 #include "cmodules/funclist.h"
 #endif
 
-#ifndef          __gr_coord_h
+#ifndef            GR_COORD_H
 #include "cmodules/gr_coord.h"
 #endif
 
-#ifndef          __handlist_h
+#ifndef            HANDLIST_H
 #include "cmodules/handlist.h"
 #endif
 
-#ifndef          __mathxtr2_h
+#ifndef            MATHXTR2_H
 #include "cmodules/mathxtr2.h"
 #endif
 
-#ifndef                   __mathnums_h
+#ifndef                     MATHNUMS_H
 #include "cmodules/coltsoft/mathnums.h"
 #endif
 
-#ifndef __stringlk_h
+#ifndef   STRINGLK_H
 #include "stringlk.h"
 #endif
 
-#ifndef __cs_wimp_h
+#ifndef   CS_WIMP_H
 #include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
 #endif
 

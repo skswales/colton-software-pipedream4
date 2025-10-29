@@ -1,5 +1,5 @@
---- _src	2021-12-31 14:59:30.010000000 +0000
-+++ _dst	2022-08-18 16:55:46.590000000 +0000
+--- _src	2023-05-05 15:30:11.200000000 +0000
++++ _dst	2023-05-05 16:56:39.690000000 +0000
 @@ -73,21 +73,26 @@
    menu m;
    event_menu_maker maker;
@@ -89,7 +89,7 @@
  static wimp_w event__current_menu_window = 0;
    /* 0 if no menu currently visible */
  static menu event__current_menu;
-@@ -124,89 +163,243 @@
+@@ -124,89 +163,240 @@
  static BOOL event__last_was_menu_hit = FALSE;
  static BOOL event__recreation;
  
@@ -101,7 +101,7 @@
 +#ifdef SKS_ACW
 +
 +static void event__createmenu(BOOL recreate)
-+{
+ {
 +    mstr *          p = NULL;
 +    wimp_menuhdr *  m;
 +    wimp_menuitem * mi;
@@ -160,9 +160,8 @@
 +
 +extern BOOL
 +event__process(wimp_eventstr * e)
- {
++{
 +  wimp_msgstr *m = &e->data.msg;
-+  wimp_mousestr ms;
 +  char hit[20];
 +  int i;
 +  BOOL submenu_fake_hit = FALSE;
@@ -229,6 +228,11 @@
 -        m = (wimp_menuhdr*) menu_syshandle(p->m);
 -      }
 -      else if (p->maker != 0)
+-      {
+-        event__current_destroy_after = FALSE;
+-        event__recreation = 0 ;
+-        event__current_menu = p->maker(p->handle);
+-        m = (wimp_menuhdr*) menu_syshandle(event__current_menu);
 +        if(e->data.but.m.bbits & wimp_BMID)
 +        {
 +            /* don't use Menu to get menus for registered to icons; fake work area */
@@ -273,20 +277,15 @@
 +    if(p)
 +    {
 +      if(!submenu_fake_hit)
-       {
--        event__current_destroy_after = FALSE;
--        event__recreation = 0 ;
--        event__current_menu = p->maker(p->handle);
--        m = (wimp_menuhdr*) menu_syshandle(event__current_menu);
-+        
-+        event_statics.recreatepending = winx_adjustclicked();
++      {        
++          event_statics.recreatepending = winx_adjustclicked();
        }
        else
-       {
+-      {
 -        m = (wimp_menuhdr *) -1;
-+        /* say the submenu opening cache is valid */
-+        event_statics.submenu.valid = TRUE;
-+        event_statics.recreatepending = FALSE;
++      {   /* say the submenu opening cache is valid */
++          event_statics.submenu.valid = TRUE;
++          event_statics.recreatepending = FALSE;
        }
 -      if (event__current_menu_window == win_ICONBAR)
 +
@@ -390,7 +389,7 @@
    if (e->e == wimp_ENULL)
    {
      int dummy_time;
-@@ -221,12 +414,14 @@
+@@ -221,12 +411,14 @@
      if ((event_getmask() & wimp_EMNULL) != 0)
         return TRUE;
    }
@@ -405,7 +404,7 @@
    else if (e->e == wimp_ENULL)
    {
      /* machine idle: say so */
-@@ -237,12 +432,20 @@
+@@ -237,12 +429,20 @@
      /* Assume it's a menu being moved */
      wimpt_complain(wimp_open_wind(&e->data.o));
    }
@@ -426,7 +425,7 @@
    if (event__last_was_menu_hit && wimpt_last_event()->e == wimp_EMENU)
    {
      wimp_mousestr m;
-@@ -273,6 +476,8 @@
+@@ -273,6 +473,8 @@
        }
      }
    }
@@ -435,7 +434,7 @@
    tracef0("doing poll.\n");
    wimpt_complain(wimpt_poll(mask, result));
    tracef0("poll done.\n");
-@@ -281,7 +486,9 @@
+@@ -281,7 +483,9 @@
  void event_process(void)
  {
    tracef0("event_process.\n");
@@ -445,7 +444,7 @@
    {
      wimp_eventstr e;
      event__poll(event_getmask(), &e);
-@@ -289,6 +496,8 @@
+@@ -289,6 +493,8 @@
    }
  }
  
@@ -454,7 +453,7 @@
  #ifndef UROM
  BOOL event_anywindows()
  {
-@@ -296,8 +505,15 @@
+@@ -296,8 +502,15 @@
  }
  #endif
  

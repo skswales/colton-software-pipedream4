@@ -82,8 +82,8 @@ complex_check_arg_array(
     case DATA_ID_RANGE:
         { /* extract elements from the array */
         SS_DATA ss_data_1, ss_data_2;
-        const EV_IDNO t1 = array_range_index(&ss_data_1, p_ss_data_in, 0, 0, EM_REA);
-        const EV_IDNO t2 = array_range_index(&ss_data_2, p_ss_data_in, 1, 0, EM_REA);
+        const EV_IDNO t1 = array_range_index_REA(&ss_data_1, p_ss_data_in, 0, 0);
+        const EV_IDNO t2 = array_range_index_REA(&ss_data_2, p_ss_data_in, 1, 0);
 
         if( (DATA_ID_REAL == t1) && (DATA_ID_REAL == t2) )
         {

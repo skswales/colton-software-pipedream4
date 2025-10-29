@@ -293,6 +293,22 @@ _al_ptr_calloc(
 *
 ******************************************************************************/
 
+extern void
+al_ptr_dispose(
+    _InoutRef_opt_ P_P_ANY p_p_any)
+{
+    if(NULL != p_p_any)
+    {
+        P_ANY p_any = *p_p_any;
+
+        if(NULL != p_any)
+        {
+            *p_p_any = NULL;
+            al_ptr_free(p_any);
+        }
+    }
+}
+
 #if TRACE_ALLOWED && defined(AL_PTR_MAP_TO_HANDLE)
 
 extern void
@@ -744,7 +760,7 @@ _al_array_lsearch(
 ******************************************************************************/
 
 extern void
-_al_array_dispose(
+al_array_dispose(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle)
 {
     ARRAY_HANDLE array_handle = *p_array_handle;
@@ -1622,7 +1638,7 @@ al_full_event_client_register(
     _In_        P_PROC_AL_FULL_EVENT proc)
 {
     FULL_EVENT_CLIENT full_event_client;
-    SC_ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(FULL_EVENT_CLIENT), TRUE);
+    static const ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(FULL_EVENT_CLIENT), TRUE);
 
     /* save routine address */
     full_event_client.proc = proc;

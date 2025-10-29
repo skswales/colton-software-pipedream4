@@ -11,8 +11,8 @@
 
 /* SKS July 1991 */
 
-#ifndef __stringlk_h
-#define __stringlk_h
+#ifndef STRINGLK_H
+#define STRINGLK_H
 
 #ifndef MODULE_ERR_BASE
 #define MODULE_ERR_BASE      (-1000)
@@ -50,6 +50,6 @@ string_lookup_buffer(
 #define resource_lookup_ustr(stringid) \
     string_lookup(stringid)
 
-#endif /* __stringlk_h */
+#endif /* STRINGLK_H */
 
 /* end of stringlk.h */

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2022-2023 Stuart Swales */
+/* Copyright (C) 2022-2025 Stuart Swales */
 
-#ifndef __cs_msgs_h
-#define __cs_msgs_h
+#ifndef CS_MSGS_H
+#define CS_MSGS_H
 
 #ifndef __msgs_h
 #include "msgs.h"
@@ -31,9 +31,8 @@ implemented by PipeDream but needed as old flavour by FontSelect
 extern const char *
 help_messages_lookup(const char * tag);
 
-#define help_msgs_lookup(tag) \
-    de_const_cast(char *, help_messages_lookup(tag))
+#define help_msgs_lookup(tag)           de_const_cast(char *, help_messages_lookup(tag))
 
-#endif /* __cs_msgs_h */
+#endif /* CS_MSGS_H */
 
 /* end of cs_msgs.h */

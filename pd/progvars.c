@@ -48,6 +48,8 @@ P_DOCU document_list = NO_DOCUMENT;  /* list of all the documents */
 
 int ctrlflag = 0;
 
+BOOL g_fp_non_stop_mode = false;
+
 /* ----------------------------- savload.c ------------------------------- */
 
 BOOL in_load = FALSE;

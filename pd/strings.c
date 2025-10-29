@@ -20,7 +20,7 @@
 
 /* header file (internal) */
 #define EXPORT_STRING_ALLOCATION
-#undef __strings_h
+#undef    STRINGS_H
 #include "strings.h"
 
 #include "cs-msgs.h"

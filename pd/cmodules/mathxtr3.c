@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2023 Stuart Swales */
+/* Copyright (C) 2012-2025 Stuart Swales */
 
 /* Additional math routines */
 
@@ -18,7 +18,7 @@
 'random' numbers
 */
 
-#if !defined(USE_STD_MT19937)
+#if !defined(USE_RNG_STD_MT19937)
 
 /*
 Polar method of generating (paired) normal random variables.
@@ -69,7 +69,7 @@ normal_distribution(void)
 static bool
 uniform_distribution_seeded;
 
-#if WINDOWS
+#if defined(USE_RNG_DSFMT)
 
 /*
 
@@ -138,7 +138,7 @@ uniform_distribution_seed(
     srand(seed);
 }
 
-#endif /* OS */
+#endif /* USE_RNG_DSFMT */
 
 #include <time.h>
 
@@ -156,6 +156,6 @@ uniform_distribution_test_seeded(
     return(true);
 }
 
-#endif /* USE_STD_MT19937 */
+#endif /* USE_RNG_STD_MT19937 */
 
 /* end of mathxtr3.c */

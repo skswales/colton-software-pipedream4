@@ -9,14 +9,14 @@
 
 /* MRJC December 1991 */
 
-#ifndef __collect_h
-#define __collect_h
+#ifndef COLLECT_H
+#define COLLECT_H
 
 /*
 requires
 */
 
-#ifndef __handlist_h
+#ifndef   HANDLIST_H
 #include "handlist.h"
 #endif
 
@@ -150,6 +150,6 @@ collect_subtract_entry(
     _InRef_     P_P_LIST_BLOCK p_p_list_block,
     _InVal_     LIST_ITEMNO key);
 
-#endif /* __collect_h */
+#endif /* COLLECT_H */
 
 /* end of collect.h */

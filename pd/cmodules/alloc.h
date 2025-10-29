@@ -11,8 +11,8 @@
 
 /* SKS 23-Aug-1989 */
 
-#ifndef __alloc_h
-#define __alloc_h
+#ifndef ALLOC_H
+#define ALLOC_H
 
 /*
 types
@@ -121,6 +121,6 @@ extern ALLOC_FUNCTION_SET alloc_barf;
 
 #endif /* REALLY_DONT_REDIRECT_ALLOCS */
 
-#endif /* __alloc_h */
+#endif /* ALLOC_H */
 
 /* end of alloc.h */

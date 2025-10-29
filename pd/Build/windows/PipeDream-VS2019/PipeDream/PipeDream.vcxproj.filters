@@ -590,6 +590,12 @@
     <ClCompile Include="..\..\..\..\WimpLib\cs-fileicon.c">
       <Filter>Source Files\WimpLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-resspr.c">
+      <Filter>Source Files\WimpLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\utils\u_helpmess.c">
+      <Filter>Source Files\pd</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\cmodules\pd123.h">
@@ -1000,6 +1006,15 @@
     <ClInclude Include="..\..\..\..\WimpLib\cs-fileicon.h">
       <Filter>Source Files\WimpLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\WimpLib\cs-resspr.h">
+      <Filter>Source Files\WimpLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\WimpLib\cs-msgs.h">
+      <Filter>Source Files\WimpLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\WimpLib\cs-kernel.h">
+      <Filter>Source Files\WimpLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\r32\as_flags_h">
@@ -1254,10 +1269,10 @@
     <None Include="..\..\..\..\..\docs\LICENCE">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\..\..\cmodules\GB\msg\gr_chart">
+    <None Include="..\..\..\..\cmodules\utils\en_GB\msg\gr_chart">
       <Filter>Source Files\chart_cmodules</Filter>
     </None>
-    <None Include="..\..\..\..\cmodules\GB\msg\mlec">
+    <None Include="..\..\..\..\cmodules\utils\en_GB\msg\mlec">
       <Filter>Source Files\pd_cmodules_riscos</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\toolbar.html">
@@ -1450,6 +1465,66 @@
       <Filter>Source Files\WimpLib</Filter>
     </None>
     <None Include="..\..\..\..\WimpLib\utils\en_GB\msg_risc">
+      <Filter>Source Files\WimpLib</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\images\LICENCE">
+      <Filter>docs\RefGuide</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\images\LICENCE">
+      <Filter>docs\StartGuide</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\.editorconfig">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\RiscPkg\LICENCE">
+      <Filter>docs\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\..\..\extrautils\123PD\CopyToTemp,feb">
+      <Filter>Source Files\pd_extrautils\pd_extrautils_123pd\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\..\..\extrautils\123PD\RiscPkg\LICENCE">
+      <Filter>Source Files\pd_extrautils\pd_extrautils_123pd\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\..\..\extrautils\PD123\CopyToTemp,feb">
+      <Filter>Source Files\pd_extrautils\pd_extrautils_pd123\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\LICENCE">
+      <Filter>Source Files\pd_extrautils\pd_extrautils_pd123\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\r32\RiscPkg\LICENCE">
+      <Filter>Source Files\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\..\LICENCE">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\ReadMe">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_git_co,fd7">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_git_co.cmd">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_git_co.sh">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\apply,fd7">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\apply.cmd">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\apply.sh">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\external\RISC_OSLib\rlib_patch\generate,fd7">
+      <Filter>Source Files\WimpLib\RISC_OSLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\r32\Build,fd7">
+      <Filter>Source Files\WimpLib</Filter>
+    </None>
+    <None Include="..\..\..\..\WimpLib\ReadMe">
       <Filter>Source Files\WimpLib</Filter>
     </None>
   </ItemGroup>

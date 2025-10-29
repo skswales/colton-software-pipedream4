@@ -11,8 +11,8 @@
 
 /* SKS February 1992 / March 2013 */
 
-#ifndef __profile_h
-#define __profile_h
+#ifndef PROFILE_H
+#define PROFILE_H
 
 #ifndef  _kernel_h
 #include "kernel.h"
@@ -93,6 +93,6 @@ profile_fini(void)
     return(_kernel_swi(Profiler_Fini, &rs, &rs));
 }
 
-#endif /* __profile_h */
+#endif /* PROFILE_H */
 
 /* end of profile.h */

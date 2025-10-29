@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_wimp_h
-#define __cs_wimp_h
+#ifndef CS_WIMP_H
+#define CS_WIMP_H
 
 #ifndef __swis_h
 #include "swis.h"
@@ -577,6 +577,6 @@ _kernel_oserror *tbl_wimp_delete_icon       (WimpDeleteIconBlock *block);
 
 #endif /* NORCROFT_INLINE_SWIX */
 
-#endif /* __cs_wimp_h */
+#endif /* CS_WIMP_H */
 
 /* end of cs-wimp.h */

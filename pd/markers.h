@@ -7,8 +7,8 @@
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __pd__markers_h
-#define __pd__markers_h
+#ifndef MARKERS_H
+#define MARKERS_H
 
 /*
 exported functions from markers.c
@@ -155,6 +155,6 @@ application_drag(
 #define ACTIVE_COL  ((blkanchor.col == blkstart.col) ? blkend.col : blkstart.col)
 #define ACTIVE_ROW  ((blkanchor.row == blkstart.row) ? blkend.row : blkstart.row)
 
-#endif  /* __pd__markers_h */
+#endif  /* MARKERS_H */
 
 /* end of markers.h */

@@ -35,11 +35,11 @@
 
 #include "cmodules/mathxtri.h"
 
-#ifndef          __mathxtra_h
+#ifndef            MATHXTRA_H
 #include "cmodules/mathxtra.h"
 #endif
 
-#ifndef                    _mathnums_h
+#ifndef                     MATHNUMS_H
 #include "cmodules/coltsoft/mathnums.h"
 #endif
 
@@ -76,13 +76,11 @@ mathxtra_range_error(
 
 _Check_return_
 extern F64
-mx_cosec(
+mathxtra_cosec(
     _InVal_     F64 x)
 {
     /* trivial implementation */
-    F64 y;
-
-    y = sin(x);
+    F64 y = sin(x);
 
     /* about to divide result by (near) zero? */
     if(fabs(y) < F64_MIN_RECIP)
@@ -95,13 +93,11 @@ mx_cosec(
 
 _Check_return_
 extern F64
-mx_cot(
+mathxtra_cot(
     _InVal_     F64 x)
 {
     /* trivial implementation */
-    F64 y;
-
-    y = tan(x);
+    F64 y = tan(x);
 
     /* about to divide result by (near) zero? */
     if(fabs(y) < F64_MIN_RECIP)
@@ -114,13 +110,11 @@ mx_cot(
 
 _Check_return_
 extern F64
-mx_sec(
+mathxtra_sec(
     _InVal_     F64 x)
 {
     /* trivial implementation */
-    F64 y;
-
-    y = cos(x);
+    F64 y = cos(x);
 
     /* about to divide result by (near) zero? */
     if(fabs(y) < F64_MIN_RECIP)
@@ -141,7 +135,7 @@ mx_sec(
 
 _Check_return_
 extern F64
-mx_acosec(
+mathxtra_acosec(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -168,7 +162,7 @@ mx_acosec(
 
 _Check_return_
 extern F64
-mx_acot(
+mathxtra_acot(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -195,7 +189,7 @@ mx_acot(
 
 _Check_return_
 extern F64
-mx_asec(
+mathxtra_asec(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -238,7 +232,7 @@ mx_asec(
 
 _Check_return_
 extern F64
-mx_cosech(
+mathxtra_cosech(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -275,7 +269,7 @@ mx_cosech(
 
 _Check_return_
 extern F64
-mx_coth(
+mathxtra_coth(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -308,11 +302,11 @@ mx_coth(
 
 /* symmetric about x=0, result always 0..+1 */
 
-#define __sech_simple_arg ((F64_MANT_DIG / 2) * __LN_RADIX_BASE)
+#define SECH_SIMPLE_ARG ((F64_MANT_DIG / 2) * LN_RADIX_BASE)
 
 _Check_return_
 extern F64
-mx_sech(
+mathxtra_sech(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -326,13 +320,13 @@ mx_sech(
 
     ax = (negative) ? -x : x;
 
-#ifdef __sech_simple_arg
-    if(ax > __sech_simple_arg)
+#ifdef __SECH_SIMPLE_ARG
+    if(ax > SECH_SIMPLE_ARG)
         /* small, nearing zero result, exp will set ERANGE on underflow? */
-        y = F64_TWO * exp(-ax);
+        y = 2.0 * exp(-ax);
     else
 #endif
-        y = F64_ONE / cosh(ax);
+        y = 1.0 / cosh(ax);
 
     return(y);
 }
@@ -362,11 +356,11 @@ mx_sech(
 
 /* ln(x + sqrt(x^2 - 1)) */
 
-#define __acosh_max_arg F64_MAX_SQUAREABLE
+#define ACOSH_MAX_ARG F64_MAX_SQUAREABLE
 
 _Check_return_
 extern F64
-mx_acosh(
+mathxtra_acosh(
     _InVal_     F64 x)
 {
     if(x <= F64_ONE)
@@ -377,12 +371,12 @@ mx_acosh(
         return(mathxtra_domain_error());
     }
 
-    if(x > __acosh_max_arg)
+    if(x > ACOSH_MAX_ARG)
         return(mathxtra_range_error(x));
 
     /* another test could be done to test significance to just do log(2x) */
-#ifdef __acosh_max_sig_arg
-    if(x > __acosh_max_sig_arg)
+#ifdef ACOSH_MAX_SIG_ARG
+    if(x > ACOSH_MAX_SIG_ARG)
 #ifdef _ln_two
         return(log(x) + _ln_two);
 #else
@@ -412,12 +406,12 @@ mx_acosh(
 /* ln((1/x) + sqrt((1/x)^2 + 1)) for |x| > 0 */
 
 /* mustn't let (1/x)^2 overflow */
-#define __acosech_min_arg (F64_MIN)
+#define ACOSECH_MIN_ARG (F64_MIN)
 /* guess for now, will be something like FLT_RADIX**(FLT_MANT_DIG/2) */
 
 _Check_return_
 extern F64
-mx_acosech(
+mathxtra_acosech(
     _InVal_     F64 x)
 {
     F64 ax, y, invax;
@@ -427,7 +421,7 @@ mx_acosech(
 
     ax = (negative) ? -x : x;
 
-    if(ax < __acosech_min_arg)
+    if(ax < ACOSECH_MIN_ARG)
     {
         if(ax == F64_ZERO)
             return(mathxtra_domain_error());
@@ -461,11 +455,11 @@ mx_acosech(
 
 /* (1/2) * ln((x+1) / (x-1)) for |x| > 1 */
 
-#define __acoth_min_arg (F64_ONE + F64_EPSILON)
+#define ACOTH_MIN_ARG (F64_ONE + F64_EPSILON)
 
 _Check_return_
 extern F64
-mx_acoth(
+mathxtra_acoth(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -475,7 +469,7 @@ mx_acoth(
 
     ax = (negative) ? -x : x;
 
-    if(ax < __acoth_min_arg)
+    if(ax < ACOTH_MIN_ARG)
     {
         if(ax < F64_ONE)
             return(mathxtra_domain_error());
@@ -483,7 +477,7 @@ mx_acoth(
         return(mathxtra_range_error(x));
     }
 
-    y = F64_HALF * log((ax + F64_ONE) / (ax - F64_ONE));
+    y = 0.5 * log((ax + F64_ONE) / (ax - F64_ONE));
 
     return((negative) ? -y : +y);
 }
@@ -507,11 +501,11 @@ mx_acoth(
 /* two-valued symmetric about y=0, yield +ve value */
 
 /* mustn't let (1/x)^2 overflow */
-#define __asech_min_arg (F64_MIN)
+#define ASECH_MIN_ARG (F64_MIN)
 
 _Check_return_
 extern F64
-mx_asech(
+mathxtra_asech(
     _InVal_     F64 x)
 {
     F64 y, invax;
@@ -524,7 +518,7 @@ mx_asech(
         return(mathxtra_domain_error());
     }
 
-    if(x < __asech_min_arg)
+    if(x < ASECH_MIN_ARG)
     {
         /* rationale for exact zero similar to that for log, but debatable */
         if(x < F64_ZERO)
@@ -559,17 +553,17 @@ mx_asech(
 
 /* ln(x + sqrt(x^2 + 1)) */
 
-#define __asinh_max_arg F64_MAX_SQUAREABLE
+#define ASINH_MAX_ARG F64_MAX_SQUAREABLE
 
 _Check_return_
 extern F64
-mx_asinh(
+mathxtra_asinh(
     _InVal_     F64 x)
 {
     if(x == F64_ZERO)
         return(F64_ZERO);
 
-    if(fabs(x) > __asinh_max_arg)
+    if(fabs(x) > ASINH_MAX_ARG)
         return(mathxtra_range_error(x));
 
     /* another test could be done to test significance to just do log(2x) */
@@ -606,11 +600,11 @@ mx_asinh(
 
 /* (1/2) * ln((1+x) / (1-x)) */
 
-#define __atanh_max_absarg (F64_ONE - F64_EPSILON)
+#define ATANH_MAX_ABSARG (F64_ONE - F64_EPSILON)
 
 _Check_return_
 extern F64
-mx_atanh(
+mathxtra_atanh(
     _InVal_     F64 x)
 {
     F64 y, ax;
@@ -624,7 +618,7 @@ mx_atanh(
     ax = (negative) ? -x : x;
 
     /* tanh quickly approaches +/-1 at ends of range */
-    if(ax > __atanh_max_absarg)
+    if(ax > ATANH_MAX_ABSARG)
     {
         if(ax >= F64_ONE)
             return(mathxtra_domain_error());
@@ -632,13 +626,12 @@ mx_atanh(
         return(mathxtra_range_error(x));
     }
 
-    y = F64_HALF * log((F64_ONE + ax) / (F64_ONE - ax));
+    y = 0.5 * log((F64_ONE + ax) / (F64_ONE - ax));
 
     return((negative) ? -y : +y);
 }
 
 #endif /* __STDC_VERSION__ */
-
 
 #if __STDC_VERSION__ >= 199901L
 /* Use C99 hypot() */
@@ -651,7 +644,7 @@ mx_atanh(
 
 _Check_return_
 extern F64
-mx_fhypot(
+mathxtra_hypot(
     _InVal_     F64 x,
     _InVal_     F64 y)
 {
@@ -665,11 +658,64 @@ mx_fhypot(
         return(abs_x);
 
     if(abs_x >= abs_y)
-        return(abs_x * sqrt(F64_ONE + mx_fsquare(abs_y / abs_x)));
+        return(abs_x * sqrt(F64_ONE + mathxtra_square(abs_y / abs_x)));
     else
-        return(abs_y * sqrt(F64_ONE + mx_fsquare(abs_x / abs_y)));
+        return(abs_y * sqrt(F64_ONE + mathxtra_square(abs_x / abs_y)));
 }
 
 #endif /* __STDC_VERSION__ */
+
+#if 0 /* just for diff minimization */
+
+/******************************************************************************
+*
+* compute the greatest common divisor of two numbers - Euclid's algorithm
+*
+******************************************************************************/
+
+_Check_return_
+extern F64
+mathxtra_gcd(
+    _InVal_     F64 a_in,
+    _InVal_     F64 b_in)
+{
+    F64 a = a_in;
+    F64 b = b_in;
+    F64 t;
+
+    assert(floor(fabs(a)) == a);
+    assert(floor(fabs(b)) == b);
+
+    while(0.0 != b)
+    {
+        t = b;
+        b = fmod(a, b);
+        a = t;
+    }
+
+    return(a);
+}
+
+/******************************************************************************
+*
+* compute the least common multiple of two numbers
+*
+******************************************************************************/
+
+_Check_return_
+extern F64
+mathxtra_lcm(
+    _InVal_     F64 a,
+    _InVal_     F64 b)
+{
+    const F64 gcd_ab = mathxtra_gcd(a, b);
+
+    if(0.0 == gcd_ab)
+        return(0.0);
+
+    return(fabs(a * b) / gcd_ab);
+}
+
+#endif /* diff minimization */
 
 /* end of mathxtra.c */

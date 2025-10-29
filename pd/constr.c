@@ -812,9 +812,9 @@ sortblock_fn_core(void)
     ROW i, n, row;
     S32 nrecs, rec, nrows;
     COL pkeycol;
-    SC_ARRAY_INIT_BLOCK sortblk_init_block = aib_init(1, sizeof32(SORT_ENTRY), FALSE);
+    static const ARRAY_INIT_BLOCK sortblk_init_block = aib_init(1, sizeof32(SORT_ENTRY), FALSE);
     ARRAY_HANDLE sortblkh = 0;
-    SC_ARRAY_INIT_BLOCK sortrowblk_init_block = aib_init(1, sizeof32(ROW), FALSE);
+    static const ARRAY_INIT_BLOCK sortrowblk_init_block = aib_init(1, sizeof32(ROW), FALSE);
     ARRAY_HANDLE sortrowblkh = 0;
     P_SORT_ENTRY sortblkp, sortp;
     P_ROW sortrowblkp, rowtp;

@@ -1,4 +1,4 @@
-﻿<a href="/coltsoft/pipedream/getting_started/">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide/">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips/">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history/">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads/">Downloads</a>
+﻿<a href="/coltsoft/pipedream/getting_started">Getting Started Guide</a> &bull; <a href="/coltsoft/pipedream/reference_guide">Reference Guide</a> &bull; <a href="/coltsoft/pipedream/addenda_and_errata">Addenda and Errata</a> &bull; <a href="/coltsoft/pipedream/hints_and_tips">Hints and Tips</a> &bull; <a href="/coltsoft/pipedream/release_history">Release History</a>  &bull; <a href="/coltsoft/pipedream/downloads">Downloads</a>
 
 <h2>What is PipeDream 4?</h2>
 
@@ -22,7 +22,7 @@ PipeDream 4 is available only for RISC OS. It can be used under emulation (using
 
 <h2>Where can I find PipeDream 4?</h2>
 
-Under <a href="/coltsoft/pipedream/downloads/" title="Downloads">Downloads</a>, you will find the latest released program and an archive of older versions, together with a copy of the Examples package and the Manuals package (containing the <em>Getting Started Guide</em> and <em>Reference Guide</em> for off-line use).
+Under <a href="/coltsoft/pipedream/downloads" title="Downloads">Downloads</a>, you will find the latest released program and an archive of older versions, together with a copy of the Examples package and the Manuals package (containing the <em>Getting Started Guide</em> and <em>Reference Guide</em> for off-line use).
 
 If you download either of the <a href="https://www.marutan.net/rpcemu/">RPCEmu<a/> <a href="https://www.marutan.net/rpcemu/easystart.html">Easy Start Bundles</a> you will find a copy of PipeDream 4 already installed.
 
@@ -30,11 +30,11 @@ The source is available from a Subversion repository kindly hosted on <a href="h
 
 <h2>Open Source Licensing</h2>
 
-Thanks to Richard Colton, PipeDream 4 is now open source and completely free to use!
+Thanks to the late Richard Colton, PipeDream 4 is now open source and completely free to use!
 
 PipeDream 4 is released under the <a href="https://mozilla.org/MPL/2.0/">Mozilla Public License 2.0</a> (MPL). Why MPL you may ask? <a href="https://julien.ponge.org/blog/mozilla-public-license-v2-a-good-middleground/" target="_blank">This blog</a> shows why it's a good thing.
 
-PipeDream 4 <a href="/coltsoft/pipedream/getting_started/" title="Getting Started Guide"><em>Getting Started Guide</em></a> and <a href="/coltsoft/pipedream/reference_guide/" title="Reference Guide"><em>Reference Guide</em></a> are also released under the MPL.
+PipeDream 4 <a href="/coltsoft/pipedream/getting_started" title="Getting Started Guide"><em>Getting Started Guide</em></a> and <a href="/coltsoft/pipedream/reference_guide" title="Reference Guide"><em>Reference Guide</em></a> are also released under the MPL.
 
 PipeDream 4 Examples are licensed under a <a href="http://creativecommons.org/licenses/by-sa/4.0/deed.en_GB">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
 

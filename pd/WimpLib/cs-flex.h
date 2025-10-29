@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_flex_h
-#define __cs_flex_h
+#ifndef CS_FLEX_H
+#define CS_FLEX_H
 
 #ifndef __flex_h
 #if defined(__CC_NORCROFT)
@@ -81,6 +81,6 @@ _Check_return_
 extern int
 flex_storefree(void);
 
-#endif /* __cs_flex_h */
+#endif /* CS_FLEX_H */
 
 /* end of cs-flex.h */

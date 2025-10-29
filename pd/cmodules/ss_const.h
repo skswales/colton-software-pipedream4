@@ -13,8 +13,8 @@
 
 /* SKS derived from Fireworkz for PipeDream use */
 
-#ifndef __ss_const_h
-#define __ss_const_h
+#ifndef SS_CONST_H
+#define SS_CONST_H
 
 #define LEAP_YEAR_ACTUAL(year) ( \
     (((year    ) % 4  ) ? 0 : 1) && \
@@ -763,6 +763,6 @@ int32_multiply_check_overflow(
     _In_        const int32_t multiplicand_b,
     _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow);
 
-#endif /* __ss_const_h */
+#endif /* SS_CONST_H */
 
 /* end of ss_const.h */

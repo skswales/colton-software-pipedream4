@@ -76,10 +76,9 @@ PROC_EXEC_PROTO(c_growth)
 
                 /* start with the constant */
                 if(DATA_ID_REAL !=
-                    array_range_index(&a_data, array_logest_data,
-                                      0, /* NB!*/
-                                      0,
-                                      EM_REA))
+                    array_range_index_REA(&a_data, array_logest_data,
+                                          0, /* NB!*/
+                                          0))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 /* if initial y data was all -ve then this is a possibility ... */
@@ -98,18 +97,16 @@ PROC_EXEC_PROTO(c_growth)
                         SS_DATA x_data;
 
                         if(DATA_ID_REAL != 
-                            array_range_index(&a_data, array_logest_data,
-                                              ci + 1, /* NB. skip constant! */
-                                              0,
-                                              EM_REA))
+                            array_range_index_REA(&a_data, array_logest_data,
+                                                  ci + 1, /* NB. skip constant! */
+                                                  0))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
 
                         if(DATA_ID_REAL != 
-                            array_range_index(&x_data, array_known_x,
-                                              ci, /* NB. extract from nth col ! */
-                                              row,
-                                              EM_REA))
+                            array_range_index_REA(&x_data, array_known_x,
+                                                  ci, /* NB. extract from nth col ! */
+                                                  row))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                         product += log(ss_data_get_real(&a_data)) * ss_data_get_real(&x_data);
@@ -154,10 +151,9 @@ PROC_EXEC_PROTO(c_growth)
                 /* start with the constant */
 
                 if(DATA_ID_REAL !=
-                    array_range_index(&a_data, array_logest_data,
-                                      0, /* NB!*/
-                                      0,
-                                      EM_REA))
+                    array_range_index_REA(&a_data, array_logest_data,
+                                          0, /* NB!*/
+                                          0))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 errno = 0;
@@ -178,18 +174,16 @@ PROC_EXEC_PROTO(c_growth)
                         SS_DATA x_data;
 
                         if(DATA_ID_REAL !=
-                            array_range_index(&a_data, array_logest_data,
-                                              ci + 1, /* NB. skip constant! */
-                                              0,
-                                              EM_REA))
+                            array_range_index_REA(&a_data, array_logest_data,
+                                                  ci + 1, /* NB. skip constant! */
+                                                  0))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
 
                         if(DATA_ID_REAL !=
-                            array_range_index(&x_data, array_known_x,
-                                              col,
-                                              ci, /* NB. extract from nth row ! */
-                                              EM_REA))
+                            array_range_index_REA(&x_data, array_known_x,
+                                                  col,
+                                                  ci /* NB. extract from nth row ! */ ))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                         product += log(a_data.arg.fp) * x_data.arg.fp;
@@ -407,10 +401,9 @@ PROC_EXEC_PROTO(c_linest)
         for(i = 0; i < y_items; ++i)
         {
             if(DATA_ID_REAL !=
-                array_range_index(&ss_data, args[0],
-                                  (data_in_cols) ? 0 : i,
-                                  (data_in_cols) ? i : 0,
-                                  EM_REA))
+                array_range_index_REA(&ss_data, args[0],
+                                      (data_in_cols) ? 0 : i,
+                                      (data_in_cols) ? i : 0))
             {
                 status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
@@ -427,10 +420,9 @@ PROC_EXEC_PROTO(c_linest)
                 for(j = 0; j < x_vars; ++j)
                 {
                     if(DATA_ID_REAL !=
-                        array_range_index(&ss_data, args[1],
-                                          (data_in_cols) ? j : i,
-                                          (data_in_cols) ? i : j,
-                                          EM_REA))
+                        array_range_index_REA(&ss_data, args[1],
+                                              (data_in_cols) ? j : i,
+                                              (data_in_cols) ? i : j))
                     {
                         status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
@@ -455,10 +447,9 @@ PROC_EXEC_PROTO(c_linest)
                 if(i < ((data_in_cols) ? known_e.rows : known_e.cols))
                 {
                     if(DATA_ID_REAL !=
-                        array_range_index(&ss_data, args[4],
-                                          (data_in_cols) ? 0 : i,
-                                          (data_in_cols) ? i : 0,
-                                          EM_REA))
+                        array_range_index_REA(&ss_data, args[4],
+                                              (data_in_cols) ? 0 : i,
+                                              (data_in_cols) ? i : 0))
                     {
                         status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
@@ -583,7 +574,7 @@ PROC_EXEC_PROTO(c_logest)
 
         for(col = 0; col < x; ++col)
         {
-            if(DATA_ID_REAL != array_range_index(&ss_data, args[3], col, 0, EM_REA))
+            if(DATA_ID_REAL != array_range_index_REA(&ss_data, args[3], col, 0))
             {
                 err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel2;
@@ -616,7 +607,7 @@ PROC_EXEC_PROTO(c_logest)
     {
         for(row = 0; row < y; ++row)
         {
-            if(DATA_ID_REAL != array_range_index(&ss_data, args[0], col, row, EM_REA))
+            if(DATA_ID_REAL != array_range_index_REA(&ss_data, args[0], col, row))
             {
                 err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
@@ -752,10 +743,9 @@ PROC_EXEC_PROTO(c_trend)
 
                 /* start with the constant */
                 if(DATA_ID_REAL !=
-                    array_range_index(&a_data, array_linest_data,
-                                      0, /* NB!*/
-                                      0,
-                                      EM_REA))
+                    array_range_index_REA(&a_data, array_linest_data,
+                                          0, /* NB!*/
+                                          0))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 sum = ss_data_get_real(&a_data);
@@ -766,17 +756,15 @@ PROC_EXEC_PROTO(c_trend)
                     SS_DATA x_data;
 
                     if(DATA_ID_REAL !=
-                        array_range_index(&a_data, array_linest_data,
-                                          ci + 1, /* NB. skip constant! */
-                                          0,
-                                          EM_REA))
+                        array_range_index_REA(&a_data, array_linest_data,
+                                              ci + 1, /* NB. skip constant! */
+                                              0))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                     if(DATA_ID_REAL !=
-                        array_range_index(&x_data, array_known_x,
-                                          ci, /* NB. extract from ci'th col (if across_rows) */
-                                          row,
-                                          EM_REA))
+                        array_range_index_REA(&x_data, array_known_x,
+                                              ci, /* NB. extract from ci'th col (if across_rows) */
+                                              row))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                     sum += ss_data_get_real(&a_data) * ss_data_get_real(&x_data);
@@ -804,10 +792,9 @@ PROC_EXEC_PROTO(c_trend)
 
                 /* start with the constant */
                 if(DATA_ID_REAL !=
-                    array_range_index(&a_data, array_linest_data,
-                                      0, /* NB!*/
-                                      0,
-                                      EM_REA))
+                    array_range_index_REA(&a_data, array_linest_data,
+                                          0, /* NB!*/
+                                          0))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 sum = ss_data_get_real(&a_data);
@@ -818,17 +805,15 @@ PROC_EXEC_PROTO(c_trend)
                     SS_DATA x_data;
 
                     if(DATA_ID_REAL !=
-                        array_range_index(&a_data, array_linest_data,
-                                          ci + 1, /* NB. skip constant! */
-                                          0,
-                                          EM_REA))
+                        array_range_index_REA(&a_data, array_linest_data,
+                                              ci + 1, /* NB. skip constant! */
+                                              0))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                     if(DATA_ID_REAL !=
-                        array_range_index(&x_data, array_known_x,
-                                          col,
-                                          ci, /* NB. extract from ci-th row (if down_columns) */
-                                          EM_REA))
+                        array_range_index_REA(&x_data, array_known_x,
+                                              col,
+                                              ci /* NB. extract from ci-th row (if down_columns) */ ))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                     sum += ss_data_get_real(&a_data) * ss_data_get_real(&x_data);

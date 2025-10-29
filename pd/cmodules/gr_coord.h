@@ -11,8 +11,8 @@
 
 /* SKS July 1991 */
 
-#ifndef __gr_coord_h
-#define __gr_coord_h
+#ifndef GR_COORD_H
+#define GR_COORD_H
 
 /*
 structure
@@ -41,10 +41,6 @@ GR_POINT, * P_GR_POINT; typedef const GR_POINT * PC_GR_POINT;
 #define GR_POINT_TFMT \
     TEXT("x = ") GR_COORD_TFMT TEXT(", y = ") GR_COORD_TFMT
 
-#define GR_POINT_ARGS(gr_point__ref) \
-    (gr_point__ref).x, \
-    (gr_point__ref).y
-
 typedef struct GR_SIZE
 {
     GR_COORD cx, cy;
@@ -64,12 +60,6 @@ GR_BOX, * P_GR_BOX; typedef const GR_BOX * PC_GR_BOX;
 #define GR_BOX_TFMT \
     TEXT("x0 = ") GR_COORD_TFMT TEXT(", y0 = ") GR_COORD_TFMT TEXT("; ") \
     TEXT("x1 = ") GR_COORD_TFMT TEXT(", y1 = ") GR_COORD_TFMT
-
-#define GR_BOX_ARGS(gr_box__ref) \
-    (gr_box__ref).x0, \
-    (gr_box__ref).y0, \
-    (gr_box__ref).x1, \
-    (gr_box__ref).y1
 
 /*
 ordered rectangles
@@ -385,6 +375,6 @@ draw_point_xform(
     gr_point_xform((const P_GR_POINT) xpoint, (const PC_GR_POINT) apoint, xform);
 }
 
-#endif /* __gr_coord_h */
+#endif /* GR_COORD_H */
 
 /* end of gr_coord.h */

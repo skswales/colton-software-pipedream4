@@ -11,8 +11,8 @@
 
 /* Stuart K. Swales 14-Feb-1989 */
 
-#ifndef __flags_h
-#define __flags_h
+#ifndef FLAGS_H
+#define FLAGS_H
 
 #ifdef RELEASED
 #undef UNRELEASED
@@ -186,6 +186,6 @@ void_WrapOsErrorReporting_Faster(
 #define sbchar_tolower /*"C"*/tolower
 #endif
 
-#endif /* __flags_h */
+#endif /* FLAGS_H */
 
 /* end of gflags.h */

@@ -7,8 +7,8 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-#ifndef __cs_menu_h
-#define __cs_menu_h
+#ifndef CS_MENU_H
+#define CS_MENU_H
 
 #ifndef __menu_h
 #include "menu.h"
@@ -36,6 +36,6 @@ extern void
 menu_entry_changetext(menu m, int entry, const char *text);
 /* Change the text of a menu entry - only works if the entry is currently non-indirected text */
 
-#endif /* __cs_menu_h */
+#endif /* CS_MENU_H */
 
 /* end of cs-menu.h */
